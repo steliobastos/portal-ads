@@ -47,10 +47,13 @@ function useLocal(chave: string, inicial = "") {
 export function Rascunho({
   encontro,
   numero,
+  exemplo,
   children,
 }: {
   encontro: number;
   numero: number;
+  /** Começo de resposta, para destravar quem olha o campo em branco. */
+  exemplo?: string;
   children: ReactNode;
 }) {
   const id = useId();
@@ -78,8 +81,9 @@ export function Rascunho({
         aria-describedby={`${id}-pergunta`}
         value={texto}
         onChange={(e) => setTexto(e.target.value)}
+        placeholder={exemplo}
         rows={4}
-        className="mt-2 w-full resize-y rounded-lg border border-line bg-card p-3 text-sm text-ink"
+        className="mt-2 w-full resize-y rounded-lg border border-line bg-card p-3 text-sm text-ink placeholder:text-ink-faint placeholder:italic"
       />
 
       <p
@@ -103,7 +107,16 @@ type ContextoChecklist = {
 const Checklist_ = createContext<ContextoChecklist | null>(null);
 
 /** Checklist final, com barra de progresso e memória entre sessões. */
-export function Checklist({ encontro, children }: { encontro: number; children: ReactNode }) {
+export function Checklist({
+  encontro,
+  titulo,
+  children,
+}: {
+  encontro: number;
+  /** Cadeia vazia omite o cabeçalho — a seção em volta já nomeia o checklist. */
+  titulo?: string;
+  children: ReactNode;
+}) {
   const chave = `roteiro:${encontro}:checklist`;
   const [bruto, setBruto] = useLocal(chave, "{}");
 
@@ -125,7 +138,9 @@ export function Checklist({ encontro, children }: { encontro: number; children: 
 
   return (
     <section className="mb-12">
-      <h2 className="mb-4 text-lg">Checklist final</h2>
+      {(titulo ?? "Checklist final") !== "" && (
+        <h2 className="mb-4 text-lg">{titulo ?? "Checklist final"}</h2>
+      )}
 
       <Checklist_.Provider value={{ marcados, alternar }}>
         <ul className="flex flex-col gap-2.5">{children}</ul>

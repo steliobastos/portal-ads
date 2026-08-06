@@ -21,7 +21,14 @@ const nextConfig: NextConfig = {
  * compilado — dois exemplares de React — e a página quebra com `Cannot read
  * properties of undefined (reading 'recentlyCreatedOwnerStacks')`. O build de
  * produção nunca sofreu disso; era falha só de desenvolvimento.
+ *
+ * `remark-gfm` entra por causa das tabelas: tabela não faz parte do Markdown
+ * original, e sem ele os guias de avaliação renderizavam a grade de critérios
+ * como uma linha de canos literais. Declarado pelo **nome**, não pelo módulo
+ * importado — o Turbopack precisa serializar a configuração dos plugins.
  */
-const comMDX = createMDX({});
+const comMDX = createMDX({
+  options: { remarkPlugins: [["remark-gfm", {}]] },
+});
 
 export default comMDX(nextConfig);

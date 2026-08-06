@@ -15,7 +15,7 @@ web moderna — o código é público de propósito, para ser lido em Programaç
 |---|---|
 | Framework | Next.js 15 (App Router) · React 19 · TypeScript |
 | Estilo | Tailwind CSS v4, com a paleta institucional em `src/app/globals.css` |
-| Conteúdo | Módulos TypeScript tipados em `src/content/` |
+| Conteúdo | Módulos TypeScript tipados em `src/content/`; roteiros em MDX (`@next/mdx` + `remark-gfm`) |
 | Deploy | Vercel (plano Hobby) |
 | Banco (fase 3) | Supabase — PostgreSQL + Auth |
 
@@ -97,10 +97,14 @@ Se o arquivo não existe em disco, ele simplesmente não aparece no site.
 
 ### Roteiros em MDX
 
-Os roteiros migrados vivem em `src/content/so/roteiros/<numero>.mdx` e usam os componentes de
+Os roteiros vivem em `src/content/so/roteiros/<numero>.mdx` e usam os componentes de
 `src/components/aula.tsx` (`<Passo>`, `<Comando>`, `<Terminal>`, `<Dica>`, `<Checklist>`…). A rota
 `/so/encontros/<n>/roteiro` só existe se o `.mdx` existir; enquanto não existir, a página do
 encontro continua oferecendo o HTML avulso. Os dois nunca aparecem juntos.
+
+Os 18 (Semana 0 + 17 encontros) já foram migrados. Diferente do HTML original, o que o aluno
+escreve nos rascunhos de observação e marca no checklist **sobrevive ao recarregamento** — fica no
+navegador dele (`localStorage`), não no servidor.
 
 `scripts/converter-roteiro.mjs` fez a conversão inicial a partir do HTML. Ele **relata** todo bloco
 que não reconhece em vez de descartá-lo em silêncio — omissão em material didático é pior que erro
@@ -152,10 +156,8 @@ O endereço absoluto alimenta o `metadataBase` (prévia do link em WhatsApp e Cl
 - [x] **Fase 1** — esqueleto, identidade visual, conteúdo dos 17 encontros, material servido,
       favicon, prévia de compartilhamento, `sitemap.xml`/`robots.txt` e deploy na Vercel
 - [ ] **Fase 2** — migrar os HTMLs para MDX, com componentes React reaproveitáveis.
-      **12 de 18 roteiros migrados** (todos os do padrão dominante). Faltam Semana 0 e
-      Encontro 1, de vocabulário anterior à padronização, e os quatro guias de projeto
-      (Encontros 8, 15, 16 e 17). Os slides seguem como HTML avulso por decisão: são
-      apresentação, não documento
+      **Os 18 roteiros e guias estão migrados.** Restam os quizzes, que dependem do banco
+      (fase 3). Os slides seguem como HTML avulso por decisão: são apresentação, não documento
 - [ ] **Fase 3** — quiz nativo com Supabase: aluno envia por rota server-side, vê só o próprio
       resultado; painel do professor autenticado, com exportação para planilha
 - [ ] **Fase 4** — testes (Vitest + Playwright) e CI no GitHub Actions

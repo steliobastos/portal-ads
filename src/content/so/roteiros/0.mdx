@@ -1,0 +1,325 @@
+<Abertura duracao="~120 min" titulo="Preparando o ambiente">
+
+Hoje você vai criar sua própria máquina virtual Linux e instalar o Docker nela. Esse ambiente vai
+te acompanhar no curso inteiro — vale a pena entender cada passo, não só clicar em "próximo".
+
+</Abertura>
+
+<Partes>
+  <Parte>Ubuntu 24.04 LTS</Parte>
+  <Parte>VirtualBox</Parte>
+  <Parte>Docker</Parte>
+</Partes>
+
+<Painel titulo="Antes de começar">
+
+Confira os três itens abaixo. Se algum não estiver ok, chame o professor **antes** de tentar
+seguir — os dois primeiros não têm solução rápida em sala.
+
+- O ícone do **VirtualBox** está disponível na sua máquina (já vem instalado pelo professor).
+- Você sabe onde está o arquivo `ubuntu-24.04-desktop-amd64.iso` nesta máquina (pergunte ao
+  professor o caminho exato se não souber — provavelmente algo como `C:\SO-ADS23\`).
+- Tenha em mãos um nome de usuário e senha que você vai lembrar depois — você vai criá-los daqui
+  a pouco, dentro da VM.
+
+</Painel>
+
+<Passo numero={1} de={5} tempo="~20 min" titulo="Criar a máquina virtual">
+
+<Explica>
+  <Caixa titulo="O que é">
+
+  Uma **máquina virtual (VM)** é um computador simulado por software, rodando dentro do seu
+  computador de verdade. Ela tem sua própria CPU virtual, memória e disco — isolada do Windows que
+  está por baixo.
+
+  </Caixa>
+  <Caixa titulo="Por que importa">
+
+  Você vai instalar, quebrar, reinstalar e mexer em configurações do Linux sem medo de estragar a
+  máquina do laboratório. É seu laboratório pessoal dentro da máquina do IFCE.
+
+  </Caixa>
+</Explica>
+
+<Etapa titulo="1.1 · Abrir o assistente">
+Abra o VirtualBox e clique em **Novo** (ou `Ctrl+N`).
+</Etapa>
+
+<Etapa titulo="1.2 · Nome e tipo">
+Nome: algo que te identifique, ex. `aluno-SO-seunome`. Tipo: **Linux**. Versão: **Ubuntu (64-bit)**.
+</Etapa>
+
+<Etapa titulo="1.3 · Selecionar a ISO">
+
+Em "Imagem ISO", selecione o arquivo `ubuntu-24.04-desktop-amd64.iso` que o professor indicou.
+
+<Dica titulo="Apareceu uma opção &quot;Instalação sem Supervisão&quot; com usuário/senha já preenchidos">
+
+Marque a caixa **"Pular Instalação sem Supervisão"**. Se você deixar essa opção ativa, o
+VirtualBox instala o Ubuntu sozinho, sem te mostrar as telas do instalador — e o objetivo aqui é
+você ver e controlar cada etapa.
+
+</Dica>
+
+</Etapa>
+
+<Etapa titulo="1.4 · Memória e processadores">
+Memória principal: **4096 MB**. Processadores: **2**.
+</Etapa>
+
+<Etapa titulo="1.5 · Disco rígido virtual">
+Criar um disco rígido virtual agora, tipo **VDI**, alocação **dinâmica**, tamanho **25 GB**.
+</Etapa>
+
+<Etapa titulo="1.6 · Finalizar">
+Revise o resumo e clique em **Finalizar**. Sua VM aparece na lista à esquerda — ainda desligada.
+</Etapa>
+
+<Esperar>
+  uma entrada nova na lista do VirtualBox com o nome que você deu, status "Desligada". Ainda não
+  tem Ubuntu instalado dentro — só a "caixa vazia" pronta pra receber o sistema.
+</Esperar>
+
+<Dica titulo="Erro sobre virtualização (VT-x/AMD-V) ao tentar ligar a VM">
+
+Isso significa que a virtualização está desabilitada na BIOS desta máquina física — não é algo que
+você resolve sozinho. Chame o professor imediatamente; a solução é trocar de estação, não insistir
+tentando de novo.
+
+</Dica>
+
+</Passo>
+
+<Passo numero={2} de={5} tempo="~25 min" titulo="Instalar o Ubuntu">
+
+<Explica>
+  <Caixa titulo="O que é">
+
+  O mesmo instalador gráfico que roda em qualquer notebook Linux — só que agora rodando dentro da
+  sua VM, num "disco" que na verdade é um arquivo no Windows.
+
+  </Caixa>
+  <Caixa titulo="Por que importa">
+
+  É seguro escolher "apagar o disco inteiro" aqui — o "disco" é o arquivo virtual de 25 GB que
+  você acabou de criar, não o disco real da máquina do laboratório.
+
+  </Caixa>
+</Explica>
+
+<Etapa titulo="2.1 · Ligar a VM">
+Selecione sua VM e clique na seta verde **Iniciar**. Ela vai bootar a partir da ISO e abrir o instalador do Ubuntu.
+</Etapa>
+
+<Etapa titulo="2.2 · Idioma e teclado">
+Escolha o idioma (Português ou English, tanto faz) e o layout de teclado (se tiver dúvida, deixe o padrão sugerido).
+</Etapa>
+
+<Etapa titulo="2.3 · Atualizações e outros programas">
+
+Escolha **Instalação Normal**. **Desmarque** a opção "Baixar atualizações ao instalar o Ubuntu".
+
+<Dica titulo="Por que desmarcar isso?">
+
+Baixar atualizações agora, com a internet do laboratório compartilhada entre a turma toda, pode
+deixar a instalação bem mais lenta. A gente atualiza depois, com calma, já logado no sistema.
+
+</Dica>
+
+</Etapa>
+
+<Etapa titulo="2.4 · Tipo de instalação">
+Escolha **"Apagar disco e instalar o Ubuntu"**. Confirme quando ele perguntar — de novo, isso afeta só o disco virtual, não a máquina física.
+</Etapa>
+
+<Etapa titulo="2.5 · Fuso horário">
+Selecione Fortaleza (ou o mapa vai sugerir automaticamente).
+</Etapa>
+
+<Etapa titulo="2.6 · Criar sua conta">
+
+Preencha seu nome, nome da máquina (pode deixar o sugerido), **nome de usuário** e **senha**.
+Escolha "Exigir minha senha para entrar" — evite login automático.
+
+<Dica titulo="Anote essa senha em algum lugar">
+
+Não existe "esqueci minha senha" fácil numa VM local. Se esquecer, o caminho é reinstalar. Vale
+escrever num papel ou no celular antes de continuar.
+
+</Dica>
+
+</Etapa>
+
+<Etapa titulo="2.7 · Aguardar">
+
+Clique em instalar e espere. Essa parte demora — normal levar de 15 a 20 minutos.
+
+<Dica titulo="Enquanto espera">
+
+Aproveite pra ler o passo 4 (Docker) mais abaixo, ou ajude quem está do seu lado. Não precisa
+ficar olhando a barra de progresso.
+
+</Dica>
+
+</Etapa>
+
+<Etapa titulo="2.8 · Reiniciar">
+Ao terminar, clique em **Reiniciar Agora**. Se pedir para remover a mídia de instalação, pode apertar Enter — a VM cuida disso sozinha na maioria das vezes.
+</Etapa>
+
+<Esperar>depois do reboot, uma tela de login gráfica do Ubuntu pedindo seu usuário e senha.</Esperar>
+
+<Dica titulo="Tela preta ou travada depois de reiniciar">
+
+Vá em **Dispositivos → Unidades de Óptico → Remover disco da unidade virtual** no menu da janela
+da VM, depois **Máquina → Redefinir**. Isso costuma resolver quando a VM tenta bootar da ISO de
+novo em vez do disco instalado.
+
+</Dica>
+
+</Passo>
+
+<Passo numero={3} de={5} tempo="~10 min" titulo="Primeiro login e atualização">
+
+<Etapa titulo="3.1 · Login">
+Entre com o usuário e senha que você criou.
+</Etapa>
+
+<Etapa titulo="3.2 · Abrir o terminal">
+Pressione `Ctrl+Alt+T`, ou clique em "Atividades" (canto superior esquerdo) e digite "Terminal".
+</Etapa>
+
+<Etapa titulo="3.3 · Atualizar o sistema">
+
+<Terminal>{`$ sudo apt update && sudo apt upgrade -y`}</Terminal>
+
+<Esperar>
+  vai pedir sua senha (a mesma da conta — não aparece nada na tela enquanto você digita, é normal).
+  Depois, uma lista de pacotes sendo baixados e atualizados. Pode levar alguns minutos.
+</Esperar>
+
+<Dica titulo="Com pouco tempo? Pode pular esta etapa">
+
+Se o relógio estiver apertado, priorize o Docker (passo 4) e volte pra atualizar o sistema depois,
+em casa ou no próximo encontro. Não é bloqueante.
+
+</Dica>
+
+</Etapa>
+
+</Passo>
+
+<Passo numero={4} de={5} tempo="~20 min" titulo="Instalar o Docker">
+
+<Explica>
+  <Caixa titulo="O que é">
+
+  Docker empacota uma aplicação com tudo que ela precisa pra rodar (bibliotecas, dependências,
+  configuração) numa unidade isolada chamada **container**.
+
+  </Caixa>
+  <Caixa titulo="Por que importa">
+
+  Container vai ser o eixo do curso inteiro — cada unidade (processos, memória, E/S) vai te fazer
+  olhar de novo pra dentro de um container. Hoje é só a instalação; o conceito aprofunda a partir
+  do Encontro 4.
+
+  </Caixa>
+</Explica>
+
+<Etapa titulo="4.1 · Baixar e rodar o instalador oficial">
+
+<Terminal>{`$ curl -fsSL https://get.docker.com -o get-docker.sh
+$ sudo sh get-docker.sh`}</Terminal>
+
+<Esperar>
+  um bocado de texto passando na tela enquanto ele detecta seu sistema e instala os pacotes do
+  Docker. Termina voltando pro prompt normal.
+</Esperar>
+
+<Dica titulo="Isso é &quot;o jeito certo&quot; de instalar Docker?">
+
+É o método rápido, recomendado para aprendizado e testes — não é o que se usa num servidor de
+produção. Vamos ver o método "oficial" (repositório apt) mais adiante no curso, quando o foco for
+operação real.
+
+</Dica>
+
+</Etapa>
+
+<Etapa titulo="4.2 · Testar com sudo">
+
+<Terminal>{`$ sudo docker run hello-world`}</Terminal>
+
+<Esperar>
+  uma mensagem começando com `Hello from Docker!` — isso confirma que o Docker está funcionando.
+</Esperar>
+
+</Etapa>
+
+<Etapa titulo="4.3 · Rodar sem sudo">
+
+Digitar `sudo` toda vez é chato. Vamos liberar seu usuário:
+
+<Terminal>{`$ sudo usermod -aG docker $USER
+$ newgrp docker`}</Terminal>
+
+Agora teste de novo, sem `sudo`:
+
+<Terminal>{`$ docker run hello-world`}</Terminal>
+
+<Dica titulo="Erro &quot;permission denied&quot; mesmo depois do usermod">
+
+O `newgrp docker` às vezes não é suficiente. Faça logout e login de novo na sua conta do Ubuntu
+(não precisa desligar a VM) e tente novamente.
+
+</Dica>
+
+<Dica titulo="&quot;Cannot connect to the Docker daemon&quot; ou sem internet">
+
+Confira se a VM tem internet abrindo o Firefox dentro dela. Se não tiver, avise o professor — o
+adaptador de rede da VM deve estar em modo NAT por padrão, geralmente não precisa mexer em nada.
+
+</Dica>
+
+</Etapa>
+
+</Passo>
+
+<Passo numero={5} de={5} tempo="~15 min" titulo="Verificação final">
+
+<Intro>Marque cada item conforme for confirmando. Isso fica guardado só no seu navegador.</Intro>
+
+<Checklist encontro={0} titulo="">
+  <Item id="vm-liga">A VM liga e mostra a tela de login do Ubuntu</Item>
+  <Item id="login">Consigo fazer login com meu usuário e senha</Item>
+  <Item id="terminal">O terminal abre com `Ctrl+Alt+T`</Item>
+  <Item id="docker-versao">`docker --version` mostra um número de versão</Item>
+  <Item id="sem-sudo">`docker run hello-world` funciona **sem** precisar de `sudo`</Item>
+  <Item id="print">Tirei um print da tela do terminal mostrando o `hello-world` funcionando</Item>
+</Checklist>
+
+<Painel titulo="Guarde esse print">
+
+Esse print (terminal + `hello-world` + seu usuário visível no prompt) é a evidência mínima de que
+o ambiente está pronto. Ele vai ser pedido junto com o primeiro instrumento semanal do curso — não
+precisa entregar agora, só não perca o arquivo.
+
+</Painel>
+
+</Passo>
+
+<Painel titulo="Não deu tempo de terminar tudo?">
+
+Sem problema. A ordem de prioridade, se o tempo apertar, é:
+
+1. **Essencial:** VM criada, Ubuntu instalado, login funcionando.
+2. **Importante:** Docker instalado e testado com `sudo`.
+3. **Complementar:** Docker funcionando sem `sudo`, sistema atualizado.
+
+O que faltar pode ser terminado em casa antes do Encontro 1, seguindo este mesmo roteiro a partir
+de onde você parou. Se travar em algo que não tem solução aqui (ex. erro de virtualização), anote
+o erro exato e traga a dúvida no Encontro 1.
+
+</Painel>

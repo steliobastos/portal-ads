@@ -1,0 +1,272 @@
+<Abertura duracao="~90 min" titulo="Primeiro contato com o terminal">
+
+Cinco comandos, cinco perguntas ao sistema operacional. Ao fim do dia você não vai ter decorado
+nada — vai ter **reconhecido** as duas ideias da abertura acontecendo na sua própria tela.
+
+</Abertura>
+
+<Destaque titulo="Como usar este roteiro">
+
+Siga os passos na ordem. Para cada um: leia rapidinho o "por que importa", rode o comando no seu
+terminal, e compare com o que é esperado. Não precisa decorar nada — o objetivo hoje é
+**reconhecer**, não memorizar.
+
+Pode ir no seu próprio ritmo. Os tempos ao lado de cada passo são só uma referência — se você
+terminar tudo antes da hora, vá direto pro desafio bônus.
+
+</Destaque>
+
+<Aviso titulo="Antes de começar">
+
+- Terminal aberto e login funcionando (se algo da Semana 0 não funcionou, chame o professor agora,
+  antes de seguir).
+- Tenha um bloco de notas (físico ou digital) por perto — você vai escrever 3 observações no
+  final. Os campos deste roteiro guardam o rascunho no seu navegador.
+
+Dúvida a qualquer momento? Chame o professor — ele está circulando pela sala.
+
+</Aviso>
+
+<Passo numero={1} de={5} tempo="~5 min" titulo="whoami">
+
+<Explica>
+  <Caixa titulo="O que é">
+
+  Pergunta ao sistema operacional: "quem sou eu, do seu ponto de vista?"
+
+  </Caixa>
+  <Caixa titulo="Por que importa">
+
+  Todo processo que você roda carrega uma identidade. É assim que o SO decide o que você pode ou
+  não fazer — isso é o gerenciador de recursos controlando o acesso.
+
+  </Caixa>
+</Explica>
+
+<Terminal>{`$ whoami
+aluno23`}</Terminal>
+
+<Esperar>o nome vai ser o seu usuário real, não literalmente "aluno23".</Esperar>
+
+<Nota rotulo="Pense">esse nome é o mesmo que você usa pra fazer login?</Nota>
+
+<Dica titulo="Se algo der errado">
+
+Comando não encontrado? Confira se digitou exatamente `whoami`, tudo minúsculo, sem espaço.
+
+Nada aparece? Aperte Enter de novo. Se continuar travado, chame o professor.
+
+</Dica>
+
+</Passo>
+
+<Passo numero={2} de={5} tempo="~10 min" titulo="uname -a">
+
+<Explica>
+  <Caixa titulo="O que é">
+
+  Pergunta ao **kernel** (o núcleo do SO) informações sobre ele mesmo: nome, versão, arquitetura
+  da CPU.
+
+  </Caixa>
+  <Caixa titulo="Por que importa">
+
+  É o SO se apresentando. Toda vez que você roda um programa, ele está conversando com esse kernel
+  específico — não com o hardware diretamente.
+
+  </Caixa>
+</Explica>
+
+<Terminal>{`$ uname -a
+Linux ifce-lab 6.8.0-so #1 SMP x86_64 GNU/Linux`}</Terminal>
+
+<Nota rotulo="Desafio rápido">
+  na sua saída, encontre (1) o nome do kernel e (2) a arquitetura — se aparecer `x86_64`, é um
+  processador de 64 bits.
+</Nota>
+
+<Dica titulo="Se algo der errado">
+
+A saída ficou diferente do exemplo? Tudo bem — cada máquina/distribuição mostra um pouco
+diferente. O que importa é reconhecer o padrão: nome do SO + versão do kernel + arquitetura.
+
+</Dica>
+
+</Passo>
+
+<Passo numero={3} de={5} tempo="~5 min" titulo="hostname">
+
+<Explica>
+  <Caixa titulo="O que é">
+
+  Mostra o nome desta máquina na rede.
+
+  </Caixa>
+  <Caixa titulo="Por que importa">
+
+  Esse semestre você vai transitar entre várias "máquinas" — seu notebook, um servidor, um
+  container. `hostname` é o jeito mais rápido de responder "espera, onde eu estou agora?"
+
+  </Caixa>
+</Explica>
+
+<Terminal>{`$ hostname
+ifce-lab`}</Terminal>
+
+</Passo>
+
+<Passo numero={4} de={5} tempo="~15 min" titulo="ps aux | head -5">
+
+<Explica>
+  <Caixa titulo="O que é">
+
+  `ps aux` lista todos os processos rodando agora. O `| head -5` corta e mostra só os 5 primeiros,
+  pra não lotar a tela.
+
+  </Caixa>
+  <Caixa titulo="Por que importa">
+
+  Cada processo é um programa em execução — inclusive o próprio terminal que você está usando
+  agora. Esse comando é a ideia de **gerenciador de recursos** em ação: o SO organizando uma fila
+  de processos disputando CPU e memória.
+
+  </Caixa>
+</Explica>
+
+<Terminal>{`$ ps aux | head -5
+USER   PID  %CPU  %MEM  COMMAND
+root   1    0.0   0.1   /sbin/init
+root   842  0.2   0.4   systemd-journald
+root   1210 0.1   0.3   sshd`}</Terminal>
+
+<Nota rotulo="Pense">
+  qual processo tem PID 1? (dica: geralmente é o `init` ou `systemd` — o primeiro processo que o
+  kernel cria quando a máquina liga. Se você assistiu a animação de boot na abertura, é
+  literalmente a última linha daquela sequência virando realidade aqui.)
+</Nota>
+
+<Dica titulo="Se algo der errado">
+
+`head: command not found`? É raro, mas se acontecer, rode só `ps aux` sem o `| head -5` e ignore o
+resto da lista.
+
+</Dica>
+
+</Passo>
+
+<Passo numero={5} de={5} tempo="~15 min" titulo="ls -la /">
+
+<Explica>
+  <Caixa titulo="O que é">
+
+  Lista o conteúdo da raiz (`/`) do sistema de arquivos, com detalhes (`-la`).
+
+  </Caixa>
+  <Caixa titulo="Por que importa">
+
+  É o mapa de como o Linux organiza tudo. Cada pasta tem um papel — e você vai usar várias delas o
+  semestre inteiro.
+
+  </Caixa>
+</Explica>
+
+<Terminal>{`$ ls -la /
+drwxr-xr-x  bin
+drwxr-xr-x  etc
+drwxr-xr-x  home
+dr-xr-xr-x  proc
+drwxr-xr-x  var`}</Terminal>
+
+<Nota rotulo="Curiosidade">
+  a pasta `/proc` não guarda arquivos "de verdade" — é uma janela que o kernel abre pra você espiar
+  processos rodando em tempo real. A gente usa ela a partir do Encontro 2.
+</Nota>
+
+</Passo>
+
+<Secao sobretitulo="Opcional" titulo="🎯 Desafio bônus">
+
+<Intro>Terminou tudo e ainda tem tempo? Faça este teste:</Intro>
+
+<Lista>
+  <Ponto marca="1">Rode `ps aux | wc -l` e anote o número (é a contagem de processos rodando agora).</Ponto>
+  <Ponto marca="2">Abra o navegador de internet, deixe uma aba carregando.</Ponto>
+  <Ponto marca="3">Rode `ps aux | wc -l` de novo. O número mudou?</Ponto>
+</Lista>
+
+Isso é o gerenciador de recursos ao vivo: cada programa que você abre é mais um processo entrando
+na fila.
+
+</Secao>
+
+<Teoria>
+
+Na abertura da aula vimos duas ideias sobre o que o SO faz. Os comandos que você acabou de rodar
+são exemplos concretos das duas.
+
+</Teoria>
+
+<Cartoes>
+  <Cartao rotulo="Ideia 1" titulo="Máquina estendida">
+
+  O SO te entrega uma versão mais simples do hardware — você nunca precisou saber como o disco
+  grava bits fisicamente pra rodar `ls` ou `whoami`.
+
+  </Cartao>
+  <Cartao rotulo="Ideia 2" titulo="Gerenciador de recursos">
+
+  O `ps aux` mostrou o SO organizando a fila de processos disputando CPU e memória — mesmo antes
+  de você abrir qualquer programa.
+
+  </Cartao>
+</Cartoes>
+
+<Secao sobretitulo="Entrega" titulo="📝 O que entregar">
+
+<Aviso titulo="3 observações para o portfólio">
+
+Escreva 3 coisas que você notou durante a prática de hoje. Cada observação precisa **conectar o
+que você viu na tela com uma das duas ideias acima** (máquina estendida ou gerenciador de
+recursos) — não vale só descrever o que apareceu.
+
+</Aviso>
+
+<Rascunho encontro={1} numero={1}>
+  o que você notou rodando `whoami`, `uname -a` ou `hostname` — e com qual das duas ideias isso se conecta.
+</Rascunho>
+
+<Rascunho encontro={1} numero={2}>
+  o que o `ps aux | head -5` revelou sobre o que a máquina já estava fazendo antes de você chegar.
+</Rascunho>
+
+<Rascunho encontro={1} numero={3}>
+  livre: algo que te surpreendeu no `ls -la /`, no desafio bônus, ou uma dúvida que sobrou.
+</Rascunho>
+
+</Secao>
+
+<Exemplos>
+  <Exemplo tipo="fraca">
+
+  Rodei o `ps aux` e apareceram vários processos.
+
+  </Exemplo>
+  <Exemplo tipo="forte">
+
+  O `ps aux` mostrou dezenas de processos rodando mesmo sem eu ter aberto nenhum programa — isso é
+  a ideia de gerenciador de recursos na prática: o SO já estava ocupado organizando tudo antes de
+  eu fazer qualquer coisa.
+
+  </Exemplo>
+</Exemplos>
+
+<Intro>
+  Não precisa ser longo — 2 a 3 frases por observação já bastam. O que vale é a conexão com o
+  conceito, não o tamanho do texto. Copiar frase do livro não conta como observação.
+</Intro>
+
+<Checklist encontro={1} titulo="Antes de encerrar">
+  <Item id="comandos">Rodei os 5 comandos (`whoami`, `uname -a`, `hostname`, `ps aux | head -5`, `ls -la /`)</Item>
+  <Item id="observacoes">Escrevi 3 observações, cada uma conectada a um conceito (máquina estendida ou gerenciador de recursos)</Item>
+  <Item id="palavras-minhas">Nenhuma observação é cópia literal de texto — são palavras minhas</Item>
+</Checklist>

@@ -1,0 +1,105 @@
+<Abertura sobretitulo="Encerramento · N2 da 2ª etapa" titulo="Guia de Apresentação — Projeto Final">
+
+Último encontro da disciplina. Sua equipe apresenta o toolkit de automação, com demonstração ao
+vivo, num timebox de 10 minutos. Este guia reúne o que preparar, como estruturar a fala e como
+você será avaliado.
+
+</Abertura>
+
+<Aviso titulo="⚠️ Rubrica em versão de rascunho">
+
+Os pesos mostrados abaixo são uma proposta de trabalho e **podem ser ajustados pelo professor**
+antes da aplicação. O formato do instrumento (toolkit + demonstração + apresentação) já está
+confirmado.
+
+</Aviso>
+
+<Secao sobretitulo="O que levar" titulo="Checklist de preparação">
+
+<Intro>Confira tudo antes de sair de casa — não há tempo de resolver pendências no dia.</Intro>
+
+<Checklist encontro={17} titulo="">
+  <Item id="scripts">Os três scripts funcionando na máquina que vamos usar</Item>
+  <Item id="container">O container sobe com `--memory` e volume configurados</Item>
+  <Item id="restauracao">**A restauração do backup foi testada** — vai ser demonstrada</Item>
+  <Item id="readme">`README.md` finalizado e entregue no formato combinado</Item>
+  <Item id="cronometro">Ensaiamos com cronômetro e cabemos em 10 minutos</Item>
+  <Item id="fala">Definimos quem fala em cada parte</Item>
+  <Item id="plano-b">Temos **plano B** caso a demonstração falhe ao vivo</Item>
+  <Item id="todos-explicam">Todos da equipe conseguem explicar qualquer parte do trabalho</Item>
+</Checklist>
+
+</Secao>
+
+<Secao sobretitulo="Estrutura sugerida" titulo="Como dividir os 10 minutos">
+
+<Intro>Sugestão testada no ensaio do Encontro 16. Ajuste conforme o seu projeto, mas mantenha a demonstração ao vivo no centro.</Intro>
+
+| Tempo | O que apresentar |
+|---|---|
+| ~1 min | Contexto: qual serviço vocês operam e por que o escolheram |
+| ~2 min | **Deploy ao vivo** — subir o serviço com o script |
+| ~2 min | **Backup + restauração ao vivo** — item obrigatório |
+| ~2 min | **Monitoramento** — métricas, limites e a justificativa deles |
+| ~2 min | Conceitos da disciplina aplicados + limitações conhecidas |
+| ~1 min | Fechamento: o que fariam com mais tempo |
+
+</Secao>
+
+<Secao sobretitulo="Avaliação" titulo="Como sua apresentação é avaliada">
+
+<Intro>Os critérios completos ficam na [página de avaliação](/so/avaliacao) da disciplina. Resumo transparente dos critérios e pesos propostos:</Intro>
+
+| Critério | Peso | O que é observado |
+|---|---|---|
+| Funcionamento do toolkit | 3,5 pts | Os três scripts fazem o que prometem, com os requisitos técnicos do enunciado |
+| Demonstração ao vivo | 2,5 pts | O toolkit opera de verdade na hora, **incluindo a restauração do backup** |
+| Documentação (README) | 2,0 pts | Clareza de uso, justificativa das escolhas, conexão com conceitos |
+| Apresentação | 1,5 pt | Organização, domínio do conteúdo, respeito ao timebox |
+| Trabalho em equipe | 0,5 pt | Participação equilibrada; todos capazes de responder |
+
+</Secao>
+
+<Secao sobretitulo="Perguntas prováveis" titulo="Prepare-se para responder">
+
+<Intro>O professor vai perguntar, e pode direcionar a integrantes que falaram menos. Discutam essas respostas em equipe antes.</Intro>
+
+<Lista>
+  <Ponto marca="▸">"Se eu rodar o `deploy.sh` duas vezes seguidas, o que acontece?"</Ponto>
+  <Ponto marca="▸">"Por que vocês escolheram esse limite de memória para o container?"</Ponto>
+  <Ponto marca="▸">"O que aconteceria com os dados se o container fosse removido? Por quê?"</Ponto>
+  <Ponto marca="▸">"Qual conceito da disciplina vocês precisaram entender para escrever esse script?"</Ponto>
+  <Ponto marca="▸">"Qual foi a limitação que vocês não conseguiram resolver?"</Ponto>
+</Lista>
+
+<Destaque tom="positivo">
+
+**Sobre a última pergunta:** responder com honestidade conta a favor. Reconhecer uma limitação e
+explicar por que ela existe demonstra consciência técnica — o enunciado (seção 9) diz isso
+explicitamente. Fingir que está tudo perfeito quando não está costuma aparecer nas perguntas
+seguintes.
+
+</Destaque>
+
+</Secao>
+
+<Secao sobretitulo="Se algo falhar" titulo="Demonstração ao vivo dá errado — e tudo bem">
+
+<Intro>Falha técnica na hora acontece até em ambiente profissional. O que se observa é como a equipe reage.</Intro>
+
+<Exemplos titulo="Como reagir a uma falha na hora">
+  <Exemplo tipo="fraca" rotulo="Reação que prejudica">
+
+  Congelar, tentar o mesmo comando repetidamente por vários minutos, ou fingir que funcionou. O
+  tempo acaba e o resto da apresentação se perde.
+
+  </Exemplo>
+  <Exemplo tipo="forte" rotulo="Reação que preserva">
+
+  Reconhecer, dizer o que deveria acontecer e por quê, acionar o plano B (print, terminal já
+  preparado, explicação), e seguir. A equipe demonstra domínio mesmo sem a execução.
+
+  </Exemplo>
+</Exemplos>
+
+</Secao>

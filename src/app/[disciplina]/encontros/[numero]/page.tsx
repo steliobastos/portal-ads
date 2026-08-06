@@ -46,10 +46,12 @@ export default async function PaginaEncontro({ params }: Props) {
 
   // Migração gradual: existindo o roteiro em MDX, ele substitui o HTML avulso
   // na lista — os dois nunca aparecem juntos, para o aluno não escolher entre
-  // duas versões do mesmo material.
+  // duas versões do mesmo material. Vale para "roteiro" e para "guia", que são
+  // o mesmo papel com nomes diferentes (as semanas de projeto e os dias de
+  // avaliação nunca tiveram roteiro de laboratório).
   const roteiroNativo = await temRoteiro(slug, encontro.numero);
   const materiais = materiaisDo(slug, encontro.pasta).filter(
-    (m) => !(roteiroNativo && m.tipo === "roteiro"),
+    (m) => !(roteiroNativo && (m.tipo === "roteiro" || m.tipo === "guia")),
   );
   const rotulo = encontro.numero === 0 ? "Semana 0" : `Encontro ${encontro.numero}`;
 

@@ -1,0 +1,78 @@
+<Abertura sobretitulo="Semana de projeto · desenvolvimento" titulo="Colocando o toolkit de pé">
+
+Hoje não há conteúdo novo. A aula inteira é tempo de trabalho, com o professor circulando para
+destravar o que emperrar. A meta é sair daqui com o `deploy.sh` funcionando.
+
+</Abertura>
+
+<Partes>
+  <Parte rotulo="Meta do dia">deploy.sh subindo o serviço</Parte>
+  <Parte rotulo="Faltam">2 encontros até a apresentação</Parte>
+</Partes>
+
+<Secao sobretitulo="Por onde começar" titulo="A ordem que funciona">
+
+<Intro>Os três scripts têm uma dependência natural entre si. Fazer fora de ordem custa retrabalho.</Intro>
+
+<Lista>
+  <Ponto marca="1º">**Suba o serviço na mão, sem script.** Confirme que o container roda, com volume e limite de memória. Só depois automatize.</Ponto>
+  <Ponto marca="2º">**`deploy.sh`** — transforme os comandos que funcionaram num script, acrescentando as verificações.</Ponto>
+  <Ponto marca="3º">**`backup.sh`** — depende de já existir dado no volume, ou seja, do deploy funcionando.</Ponto>
+  <Ponto marca="4º">**`monitor.sh`** — depende do container estar no ar para haver o que monitorar.</Ponto>
+</Lista>
+
+<Destaque>
+
+**Regra de ouro:** nunca escreva um script para automatizar comandos que você ainda não viu
+funcionar manualmente. Automatizar algo quebrado só produz um script quebrado mais difícil de
+depurar.
+
+</Destaque>
+
+</Secao>
+
+<Secao sobretitulo="Destravando sozinho" titulo="Erros comuns e onde está a resposta">
+
+<Intro>Antes de chamar o professor, confira se o seu caso está aqui — quase todos estão.</Intro>
+
+| Sintoma | Causa provável | Onde revisar |
+|---|---|---|
+| Permission denied ao rodar o script | Faltou `chmod +x` | Enc. 13, passo 1 |
+| "command not found" numa atribuição | Espaço em volta do `=` | Enc. 13, passo 2 |
+| Erro de sintaxe no `if` | Faltam espaços dentro de `[ ]` | Enc. 13, passo 3 |
+| docker run falha: nome já em uso | Container parado, não removido | use `docker ps -aq` |
+| Dados somem ao recriar o container | Falta volume montado | Enc. 11, passos 6–7 |
+| Container morre com código 137 | Limite de memória baixo demais | Enc. 9 e 10 |
+| Funciona no terminal, não no cron | Caminho relativo | Enc. 14, passo 3 |
+
+</Secao>
+
+<Secao sobretitulo="Trabalho em equipe" titulo="Todo mundo precisa entender tudo">
+
+<Intro>Na apresentação, qualquer integrante pode ser questionado sobre qualquer parte — e a participação equilibrada é critério avaliado.</Intro>
+
+<Exemplos titulo="Como a equipe se divide">
+  <Exemplo tipo="fraca" rotulo="Padrão de risco">
+
+  "Fulano faz os scripts porque manja mais, a gente ajuda no README." Resultado: uma pessoa
+  sobrecarregada, o resto sem conseguir defender o trabalho.
+
+  </Exemplo>
+  <Exemplo tipo="forte" rotulo="Padrão que funciona">
+
+  Cada um escreve um script, mas todos leem e testam os três. Ao fim de cada encontro, quem
+  escreveu explica seu script para os demais — em 5 minutos.
+
+  </Exemplo>
+</Exemplos>
+
+</Secao>
+
+<Checklist encontro={15} titulo="Checklist do encontro">
+  <Item id="manual">Subimos o serviço manualmente, com volume e limite de memória</Item>
+  <Item id="deploy">O `deploy.sh` sobe o serviço com sucesso</Item>
+  <Item id="idempotente">O `deploy.sh` roda duas vezes seguidas sem erro</Item>
+  <Item id="backup">Começamos o `backup.sh`</Item>
+  <Item id="todos-entendem">Todos da equipe entendem o que cada script faz até aqui</Item>
+  <Item id="combinado">Combinamos o que cada um traz pronto no próximo encontro</Item>
+</Checklist>

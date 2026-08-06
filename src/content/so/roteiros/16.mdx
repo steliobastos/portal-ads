@@ -1,0 +1,109 @@
+<Abertura sobretitulo="Semana de projeto · finalização e ensaio" titulo="Fechar o toolkit e ensaiar a apresentação">
+
+Último encontro de trabalho antes da entrega. Hoje o objetivo muda: não é mais construir, é
+**fechar** — e ensaiar a apresentação com cronômetro de verdade, para que nada apareça pela
+primeira vez no dia que vale nota.
+
+</Abertura>
+
+<Partes>
+  <Parte rotulo="Primeira parte">finalização</Parte>
+  <Parte rotulo="Segunda parte">ensaio cronometrado</Parte>
+</Partes>
+
+<Aviso titulo="⚠️ Último encontro de trabalho">
+
+O que não fechar hoje precisa ser concluído fora de aula. Se sua equipe está atrasada, priorize
+ter os **três scripts funcionando de forma mínima** antes de refinar qualquer um deles — toolkit
+incompleto perde mais nota do que toolkit simples.
+
+</Aviso>
+
+<Secao sobretitulo="Parte 1 · Finalização" titulo="Checklist de entrega — confira item por item">
+
+<Intro>Percorra esta lista com a equipe reunida. Cada item não marcado é ponto perdido identificável.</Intro>
+
+<Checklist encontro={16} titulo="">
+  <Item id="deploy">`deploy.sh` sobe o serviço e roda duas vezes seguidas sem erro</Item>
+  <Item id="memoria-volume">Container configurado com `--memory` e volume</Item>
+  <Item id="backup">`backup.sh` gera arquivo com data no nome, em destino separado</Item>
+  <Item id="restauracao">**Testamos restaurar de verdade** — não só planejamos</Item>
+  <Item id="monitor">`monitor.sh` coleta 3 métricas e compara com limites configuráveis</Item>
+  <Item id="log-saida">Os três scripts têm função de log e código de saída correto</Item>
+  <Item id="cron">Ao menos um script está agendado no cron, com caminho absoluto</Item>
+  <Item id="aspas">Todas as variáveis estão entre aspas nos testes e comandos</Item>
+  <Item id="readme">`README.md` cobre todos os itens da seção 5 do enunciado</Item>
+  <Item id="readme-limites">O `README` explica **por que** escolhemos cada limite de monitoramento</Item>
+  <Item id="readme-conceitos">O `README` conecta o projeto a pelo menos 3 conceitos da disciplina</Item>
+  <Item id="outra-maquina">Testamos o toolkit na máquina de mais de um integrante</Item>
+</Checklist>
+
+</Secao>
+
+<Secao sobretitulo="Armadilhas de última hora" titulo="O que mais custa nota nesta etapa">
+
+<Cartoes>
+  <Cartao rotulo="Mais comum" titulo="README de última hora">
+
+  Vale nota e é o item mais negligenciado. Escrevam hoje, não na véspera — e incluam as limitações
+  conhecidas.
+
+  </Cartao>
+  <Cartao rotulo="Mais arriscado" titulo="Restauração nunca testada">
+
+  Vai ser pedida na demonstração. Se nunca testaram, vai falhar ao vivo — teste agora.
+
+  </Cartao>
+  <Cartao rotulo="Mais frustrante" titulo="Só funciona numa máquina">
+
+  Caminhos fixos do usuário que escreveu. Testem na máquina de outro integrante hoje.
+
+  </Cartao>
+  <Cartao rotulo="Mais evitável" titulo="Limites sem justificativa">
+
+  Números escolhidos ao acaso. O `README` precisa explicar o raciocínio por trás de cada um.
+
+  </Cartao>
+</Cartoes>
+
+</Secao>
+
+<Secao sobretitulo="Parte 2 · Ensaio" titulo="Ensaio cronometrado — como funciona">
+
+<Intro>Mesma lógica do ensaio de container do Encontro 7, agora para a apresentação inteira. Duas equipes se apresentam uma para a outra.</Intro>
+
+<Lista>
+  <Ponto marca="1">Apresentem o toolkit em **10 minutos cronometrados** — com cronômetro de verdade rodando.</Ponto>
+  <Ponto marca="2">Incluam a **demonstração ao vivo**: subir o serviço, rodar o monitor, restaurar um backup.</Ponto>
+  <Ponto marca="3">A equipe ouvinte anota: o que ficou claro, o que ficou confuso, e se o tempo estourou.</Ponto>
+  <Ponto marca="4">Troquem e repitam. Depois, cada equipe ajusta o que o feedback apontou.</Ponto>
+</Lista>
+
+<Destaque>
+
+**Prepare um plano B.** Se a demonstração depende de algo dar certo na hora, combinem agora o que
+fazer se falhar: um print de evidência, um segundo terminal já preparado, ou uma explicação
+pronta. Improvisar sob pressão raramente termina bem.
+
+</Destaque>
+
+</Secao>
+
+<Secao sobretitulo="Divisão da fala" titulo="Todos apresentam, todos respondem">
+
+<Intro>Participação equilibrada é critério avaliado, e qualquer integrante pode ser questionado sobre qualquer parte do trabalho.</Intro>
+
+<Painel titulo="Sugestão de divisão para 10 minutos">
+
+| Tempo | O que cabe nele |
+|---|---|
+| ~1 min | Contexto: qual serviço operamos e por que escolhemos ele |
+| ~2 min | Deploy: demonstração ao vivo |
+| ~2 min | Backup + **restauração demonstrada** |
+| ~2 min | Monitoramento: métricas, limites e justificativa |
+| ~2 min | Conceitos da disciplina aplicados + limitações conhecidas |
+| ~1 min | Fechamento e o que faríamos com mais tempo |
+
+</Painel>
+
+</Secao>

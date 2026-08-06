@@ -27,12 +27,14 @@ function buscar(slug: string, numero: string) {
   return conteudo && encontro ? { conteudo, encontro } : null;
 }
 
+const rotuloDe = (numero: number) => (numero === 0 ? "Semana 0" : `Encontro ${numero}`);
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { disciplina, numero } = await params;
   const achado = buscar(disciplina, numero);
   if (!achado) return {};
   return {
-    title: `Roteiro de laboratório · Encontro ${achado.encontro.numero}`,
+    title: `Roteiro de laboratório · ${rotuloDe(achado.encontro.numero)}`,
     description: achado.encontro.resumo,
   };
 }
@@ -46,7 +48,7 @@ export default async function PaginaRoteiro({ params }: Props) {
   if (!Roteiro) notFound();
 
   const { conteudo, encontro } = achado;
-  const rotulo = encontro.numero === 0 ? "Semana 0" : `Encontro ${encontro.numero}`;
+  const rotulo = rotuloDe(encontro.numero);
 
   return (
     <div className="max-w-4xl">
