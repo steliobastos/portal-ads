@@ -39,3 +39,17 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# ---------------------------------------------------------------------------
+# Material interno do professor — NÃO versionar.
+#
+# Este repositório é público de propósito (serve de exemplo didático em
+# Programação Web). Os arquivos abaixo contêm planejamento pedagógico,
+# rubricas em rascunho e roteiros de condução: publicá-los exporia critérios
+# de nota antes de estarem fechados.
+#
+# Para publicar algum deles no futuro, basta remover a linha correspondente.
+# ---------------------------------------------------------------------------
+/CLAUDE.md
+/AGENT.md
+/curso/
