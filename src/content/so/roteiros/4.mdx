@@ -1,0 +1,333 @@
+<Abertura duracao="~55 min" titulo="De usuário de imagens prontas a autor da sua própria">
+
+Hoje você usa o Docker de verdade: baixa uma imagem pronta do Docker Hub, sobe um container a partir dela, e depois escreve seu próprio `Dockerfile` e constrói sua primeira imagem do zero.
+
+</Abertura>
+
+<Partes>
+  <Parte rotulo="Parte 1">Imagens prontas</Parte>
+  <Parte rotulo="Parte 2">Sua primeira imagem</Parte>
+</Partes>
+
+<Divisor>Parte 1 · Imagens prontas</Divisor>
+
+<Passo numero={1} de={8} titulo="Confirmando que o Docker está de pé">
+
+<Intro>Antes de qualquer coisa, vamos confirmar que o Docker instalado na Semana 0 continua funcionando.</Intro>
+
+<Comando passo={1} cmd="docker --version e docker ps">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    `docker --version` confirma que o Docker está instalado. `docker ps` lista containers rodando agora (deve vir vazio).
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    Confirma o ambiente antes de você depender dele nos próximos passos — barato de checar, caro de descobrir travado no meio da prática.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`$ docker --version
+Docker version 26.1.0, build 8cbe042
+$ docker ps
+CONTAINER ID   IMAGE   COMMAND   CREATED   STATUS   PORTS   NAMES`}</Terminal>
+
+  <Esperar>
+    a tabela do `docker ps` vem só com cabeçalho, sem linhas — normal, significa que nenhum container está rodando agora.
+  </Esperar>
+
+  <Dica titulo='Comando não encontrado ou "permission denied"'>
+
+  Confirme a instalação da Semana 0. Se der "permission denied", tente `sudo docker ps` — seu usuário pode não estar no grupo `docker` ainda.
+
+  </Dica>
+
+</Comando>
+
+</Passo>
+
+<Passo numero={2} de={8} titulo="Baixando uma imagem sem rodar nada">
+
+<Intro>`docker pull` só baixa a imagem do Docker Hub pro seu computador — não sobe container nenhum ainda.</Intro>
+
+<Comando passo={2} cmd="docker pull alpine">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    Baixa a imagem `alpine` (um Linux mínimo, ~5 MB) do registro público Docker Hub.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    Separar "baixar" de "rodar" deixa claro que imagem e container são coisas diferentes — a confusão mais comum de quem está começando.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`$ docker pull alpine
+latest: Pulling from library/alpine
+Digest: sha256:a8560b36e8b8210634f77d9f7f9efd7ffa4…
+Status: Downloaded newer image for alpine:latest`}</Terminal>
+
+  <Esperar>
+    algumas linhas de download e a mensagem final "Downloaded newer image". Se você já tiver baixado essa imagem antes (no Encontro 3), pode aparecer "Image is up to date" em vez disso — tudo bem, significa que já está lá.
+  </Esperar>
+
+</Comando>
+
+</Passo>
+
+<Passo numero={3} de={8} titulo="Vendo o que já está baixado">
+
+<Intro>Toda imagem baixada ou construída fica guardada localmente até você apagar.</Intro>
+
+<Comando passo={3} cmd="docker images">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    Lista todas as imagens que existem no seu computador agora — baixadas ou construídas por você.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    É o "estoque" de receitas prontas pra usar. Antes de rodar um `docker run`, vale saber o que já existe.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`$ docker images
+REPOSITORY   TAG       IMAGE ID       CREATED       SIZE
+alpine       latest    b0c9d4f2abcd   3 weeks ago   7.8MB`}</Terminal>
+
+  <Esperar>
+    pelo menos a linha do `alpine`. O tamanho (coluna SIZE) costuma ser minúsculo comparado a uma VM inteira — vale reparar nisso.
+  </Esperar>
+
+</Comando>
+
+</Passo>
+
+<Passo numero={4} de={8} titulo="Subindo seu primeiro container desta imagem">
+
+<Intro>Agora sim: um container de verdade, nascendo da imagem que você acabou de baixar.</Intro>
+
+<Comando passo={4} cmd='docker run alpine echo "primeiro container"'>
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    `docker run` cria e inicia um container a partir da imagem `alpine`, executando o comando `echo` dentro dele.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    É a diferença entre imagem (a receita, parada) e container (a receita em execução, viva por alguns instantes).
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`$ docker run alpine echo "primeiro container"
+primeiro container`}</Terminal>
+
+  <Esperar>
+    a palavra que você mandou o `echo` imprimir, e o comando volta pro seu prompt normal — o container fez o trabalho dele e encerrou.
+  </Esperar>
+
+</Comando>
+
+</Passo>
+
+<Passo numero={5} de={8} titulo='O container que "sumiu" ainda existe (parado)'>
+
+<Intro>Um container que terminou não desaparece — ele fica registrado como parado, até você removê-lo.</Intro>
+
+<Comando passo={5} cmd="docker ps -a">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    A flag `-a` ("all") mostra todos os containers, incluindo os que já terminaram — não só os que estão rodando agora.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    Explica por que `docker ps` (sem `-a`) pode vir vazio mesmo depois de você ter acabado de rodar um container.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`$ docker ps -a
+CONTAINER ID   IMAGE     COMMAND                  STATUS                     NAMES
+7f3a1c9e2b04   alpine    "echo 'primeiro cont…"   Exited (0) 10 seconds ago  festive_hopper`}</Terminal>
+
+  <Esperar>
+    uma linha com `STATUS` "Exited (0)" — o container rodou, terminou com sucesso (código 0), e continua existindo, só que parado.
+  </Esperar>
+
+  <Dica titulo="Quero apagar esse container parado">
+
+  Use `docker rm <CONTAINER ID>` (os primeiros caracteres já bastam). Não precisa fazer isso agora — é só pra saber que existe.
+
+  </Dica>
+
+</Comando>
+
+<Rascunho encontro={4} numero={1}>
+  qual a diferença entre uma imagem (passo 3) e um container (passo 4/5)? Use suas próprias palavras.
+</Rascunho>
+
+</Passo>
+
+<Divisor>Parte 2 · Sua primeira imagem</Divisor>
+
+<Passo numero={6} de={8} titulo="Escrevendo seu próprio Dockerfile">
+
+<Intro>Chegou a hora de vocês escreverem a receita, não só usarem as prontas. Crie uma pasta nova (ex: `mkdir ~/minha-imagem && cd ~/minha-imagem`) e dois arquivos dentro dela.</Intro>
+
+<Comando passo={6} cmd="Criar ola.sh e Dockerfile">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    Um script de 2 linhas (`ola.sh`) e uma receita de 4 linhas (`Dockerfile`) que empacota esse script numa imagem.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    É o primeiro passo pra construir imagens sob medida — o que separa "usar Docker" de "usar Docker de verdade no trabalho".
+
+    </Caixa>
+  </Explica>
+
+  <Arquivo nome="ola.sh">{`#!/bin/sh
+echo "Ola do meu primeiro container!"`}</Arquivo>
+
+  <Arquivo nome="Dockerfile">{`FROM alpine:3.20         # imagem-base
+COPY ola.sh /ola.sh        # copia seu script pra dentro da imagem
+RUN chmod +x /ola.sh       # dá permissão de execução (acontece 1x, na construção)
+CMD ["/ola.sh"]            # roda toda vez que um container nascer daqui`}</Arquivo>
+
+  <Esperar>
+    você pode criar os arquivos com `nano ola.sh` e `nano Dockerfile` (ou o editor de sua preferência) e colar o conteúdo acima exatamente. Os dois arquivos precisam estar na mesma pasta.
+  </Esperar>
+
+  <Dica titulo="Diferença entre RUN e CMD ainda não ficou clara">
+
+  `RUN` acontece **uma vez**, no momento em que a imagem é construída (`docker build`) — como cozinhar um prato antes de guardar na geladeira. `CMD` acontece **toda vez** que um container novo nasce dessa imagem (`docker run`) — como esquentar e servir o prato guardado.
+
+  </Dica>
+
+</Comando>
+
+</Passo>
+
+<Passo numero={7} de={8} titulo="Construindo sua imagem">
+
+<Intro>Com os dois arquivos prontos na mesma pasta, é hora de transformar a receita numa imagem de verdade.</Intro>
+
+<Comando passo={7} cmd="docker build -t meu-ola .">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    `docker build` lê o `Dockerfile` da pasta atual (o `.` no final) e monta a imagem, executando cada instrução na ordem. `-t meu-ola` dá um nome (tag) pra ela.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    É o momento em que sua receita escrita vira um artefato de verdade, guardado e reutilizável — igual às imagens prontas que vocês baixaram na Parte 1.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`$ docker build -t meu-ola .
+[+] Building 1.2s (8/8) FINISHED
+ => [1/3] FROM docker.io/library/alpine:3.20
+ => [2/3] COPY ola.sh /ola.sh
+ => [3/3] RUN chmod +x /ola.sh
+Successfully tagged meu-ola:latest`}</Terminal>
+
+  <Esperar>
+    uma lista curta de passos ([1/3], [2/3]...) e a mensagem final "Successfully tagged". Rode `docker images` de novo depois — agora `meu-ola` deve aparecer na lista, ao lado do `alpine`.
+  </Esperar>
+
+  <Dica titulo="Erro dizendo que não encontrou o Dockerfile">
+
+  Confirme que você está dentro da pasta certa (`pwd` pra checar) e que o arquivo se chama exatamente `Dockerfile`, sem extensão, com D maiúsculo.
+
+  </Dica>
+
+</Comando>
+
+</Passo>
+
+<Passo numero={8} de={8} titulo="Rodando um container da sua própria imagem">
+
+<Intro>O momento da verdade: um container nascendo de uma imagem que você mesmo escreveu.</Intro>
+
+<Comando passo={8} cmd="docker run meu-ola">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    Sobe um container a partir da imagem `meu-ola` — sem precisar dizer o que rodar, porque o `CMD` do Dockerfile já define isso.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    Fecha o ciclo completo: escrever a receita → construir a imagem → rodar o container, exatamente como qualquer imagem do Docker Hub que vocês já usaram.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`$ docker run meu-ola
+Ola do meu primeiro container!`}</Terminal>
+
+  <Esperar>
+    a mensagem do seu `ola.sh`, impressa por um container criado a partir de uma imagem 100% escrita por vocês.
+  </Esperar>
+
+</Comando>
+
+<Rascunho encontro={4} numero={2}>
+  o que aconteceu quando você rodou docker build? Conecte com a diferença entre RUN e CMD no Dockerfile.
+</Rascunho>
+
+<Rascunho encontro={4} numero={3}>
+  livre: algo que te surpreendeu ou uma dúvida que sobrou de hoje
+</Rascunho>
+
+</Passo>
+
+<Exemplos>
+  <Exemplo tipo="fraca">
+
+  "Consegui construir a imagem e rodar o container."
+
+  </Exemplo>
+  <Exemplo tipo="forte">
+
+  "O RUN chmod só apareceu nos logs do docker build, uma vez — mas quando rodei docker run três vezes, o CMD (o echo) executou nas três, provando que RUN é construção e CMD é execução."
+
+  </Exemplo>
+</Exemplos>
+
+<Teoria>
+
+Os passos 1–5 são a distinção Imagem × Container do slide 7 (Laureano p. 70–77 dá o pano de fundo de virtualização que motivou tudo isso). Os passos 6–8 são o Dockerfile do slide 9 — o mesmo "receita por escrito, construída uma vez, rodada muitas vezes" que sustenta como o mercado empacota software hoje.
+
+</Teoria>
+
+<Checklist encontro={4}>
+  <Item id="item-1">Confirmei o Docker funcionando com `docker --version` e `docker ps`</Item>
+  <Item id="item-2">Rodei `docker pull alpine` e vi a imagem em `docker images`</Item>
+  <Item id="item-3">Subi um container com `docker run alpine echo ...` e o vi parado em `docker ps -a`</Item>
+  <Item id="item-4">Escrevi meu próprio `Dockerfile` e construí com `docker build`</Item>
+  <Item id="item-5">Rodei um container da minha própria imagem com `docker run meu-ola`</Item>
+  <Item id="item-6">Preenchi as 3 observações acima (vou colar no quiz semanal)</Item>
+</Checklist>

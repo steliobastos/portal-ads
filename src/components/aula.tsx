@@ -71,6 +71,32 @@ export function Passo({
 }
 
 /**
+ * Seção que não é passo numerado — "Registro no portfólio", "Antes de
+ * encerrar". Mesmo desenho do `Passo`, com rótulo próprio no lugar da contagem.
+ */
+export function Secao({
+  sobretitulo,
+  titulo,
+  children,
+}: {
+  sobretitulo?: string;
+  titulo: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className="mb-14">
+      {sobretitulo && (
+        <p className="font-mono text-xs tracking-[0.06em] text-ink-faint uppercase">
+          {sobretitulo}
+        </p>
+      )}
+      <h2 className="mt-2 text-2xl">{titulo}</h2>
+      {children}
+    </section>
+  );
+}
+
+/**
  * Frase de contexto logo abaixo do título de um passo.
  *
  * `div`, e não `p`: quando o texto é escrito em linhas próprias dentro da tag,
@@ -125,11 +151,19 @@ export function Caixa({ titulo, children }: { titulo: string; children: ReactNod
 }
 
 /**
- * Terminal simulado. Mantém a sub-paleta escura mesmo com a página clara — é o
- * contraste que faz o aluno reconhecer "isto é a tela do terminal", e vale a
- * exceção à paleta.
+ * Terminal simulado — uma sessão inteira, não um comando só.
+ *
+ * O conteúdo é o texto da sessão como o aluno o veria na tela; as linhas que
+ * começam com `$ ` são desenhadas como comando digitado, e o resto como saída.
+ * Isso cobre igualmente o terminal de um comando e o de vários, que aparecem em
+ * boa parte dos roteiros — e mantém o MDX legível, sem marcar linha por linha.
+ *
+ * Mantém a sub-paleta escura mesmo com a página clara: é o contraste que faz o
+ * aluno reconhecer "isto é a tela do terminal", e vale a exceção.
  */
-export function Terminal({ comando, children }: { comando?: string; children?: ReactNode }) {
+export function Terminal({ children }: { children: string }) {
+  const linhas = String(children).replace(/\n$/, "").split("\n");
+
   return (
     <div className="mb-4 overflow-hidden rounded-lg border border-term-line bg-term">
       <div className="flex gap-1.5 px-3 py-2" aria-hidden>
@@ -138,14 +172,36 @@ export function Terminal({ comando, children }: { comando?: string; children?: R
         <span className="size-2 rounded-full bg-term-line" />
       </div>
       <pre className="overflow-x-auto px-4 pb-4 font-mono text-[13px] leading-relaxed whitespace-pre-wrap">
-        {comando && (
-          <>
-            <span className="text-term-prompt">$</span>{" "}
-            <span className="text-[#cfd6e0]">{comando}</span>
-            {children ? "\n" : ""}
-          </>
-        )}
-        {children && <span className="text-term-dim">{children}</span>}
+        {linhas.map((linha, i) => {
+          const comando = linha.startsWith("$ ");
+          return (
+            <span key={i}>
+              {comando ? (
+                <>
+                  <span className="text-term-prompt">$</span>
+                  <span className="text-[#cfd6e0]">{linha.slice(1)}</span>
+                </>
+              ) : (
+                <span className="text-term-dim">{linha}</span>
+              )}
+              {i < linhas.length - 1 ? "\n" : ""}
+            </span>
+          );
+        })}
+      </pre>
+    </div>
+  );
+}
+
+/** Conteúdo de um arquivo que o aluno vai criar — Dockerfile, script, config. */
+export function Arquivo({ nome, children }: { nome: string; children: string }) {
+  return (
+    <div className="mb-4 overflow-hidden rounded-lg border border-line">
+      <p className="border-b border-line bg-panel px-3.5 py-2 font-mono text-xs text-ink-dim">
+        {nome}
+      </p>
+      <pre className="overflow-x-auto bg-card px-4 py-3.5 font-mono text-[13px] leading-relaxed whitespace-pre-wrap text-ink">
+        {String(children).replace(/\n$/, "")}
       </pre>
     </div>
   );
@@ -230,6 +286,22 @@ export function Teoria({ children }: { children: ReactNode }) {
       </p>
       <div className="text-sm text-ink-dim [&_p]:m-0">{children}</div>
     </aside>
+  );
+}
+
+/**
+ * Destaque informativo, em teal.
+ *
+ * Distinto do `Aviso`, que é vermelho: este chama atenção sem alarmar. Usado,
+ * por exemplo, quando o próprio roteiro é a leitura obrigatória da semana —
+ * caso dos encontros de shell script, que nenhum dos livros-base cobre.
+ */
+export function Destaque({ titulo, children }: { titulo: string; children: ReactNode }) {
+  return (
+    <div className="mb-8 rounded-xl border border-primary-dim bg-primary-soft p-5">
+      <p className="mb-1.5 font-mono text-[11px] tracking-wide text-primary uppercase">{titulo}</p>
+      <div className="text-sm text-ink-dim [&_p]:mt-0 [&_p:last-child]:mb-0">{children}</div>
+    </div>
   );
 }
 

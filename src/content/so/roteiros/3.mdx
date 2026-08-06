@@ -1,0 +1,274 @@
+<Abertura duracao="~70 min" titulo="Chamadas de sistema e contêiner x máquina virtual">
+
+Hoje você vê, na tela, as chamadas de sistema que um programa faz por baixo dos panos — e compara na prática o que muda entre rodar algo numa máquina virtual e num contêiner Docker.
+
+</Abertura>
+
+<Partes>
+  <Parte rotulo="Parte 1">strace — chamadas de sistema em ação</Parte>
+  <Parte rotulo="Parte 2">Contêiner x máquina virtual</Parte>
+</Partes>
+
+<Divisor>Parte 1 · strace</Divisor>
+
+<Passo numero={1} de={6} titulo="Confirmando que o strace está disponível">
+
+<Intro>O `strace` "escuta" cada chamada de sistema que um programa faz e imprime na tela — é a ferramenta que transforma a teoria de hoje em algo visível.</Intro>
+
+<Comando passo={1} cmd="strace -V">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    Pergunta ao sistema qual versão do `strace` está instalada, sem rodar nada de verdade ainda.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    Confirma que a ferramenta existe antes de você depender dela nos próximos passos.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`$ strace -V
+strace -- version 6.6`}</Terminal>
+
+  <Esperar>
+    um número de versão na tela. Se aparecer "comando não encontrado", vá direto pra dica abaixo.
+  </Esperar>
+
+  <Dica titulo="Comando não encontrado">
+
+  Instale com `sudo apt update && sudo apt install strace`. Precisa de internet na VM — se estiver sem rede, avise o professor.
+
+  </Dica>
+
+</Comando>
+
+</Passo>
+
+<Passo numero={2} de={6} titulo="Sua primeira chamada de sistema visível">
+
+<Intro>Vamos rodar um comando simples com `strace` na frente — ele intercepta e imprime cada syscall antes de deixar o comando original seguir.</Intro>
+
+<Comando passo={2} cmd="strace ls">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    `strace` executa o comando que vem depois (aqui, `ls`) e imprime, linha a linha, cada chamada de sistema feita.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    É a prova de que mesmo um comando "simples" como listar arquivos depende de várias idas ao núcleo.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`$ strace ls
+execve("/usr/bin/ls", ["ls"], 0x7ffd...) = 0
+openat(AT_FDCWD, "/etc/ld.so.cache", O_RDONLY) = 3
+openat(AT_FDCWD, ".", O_RDONLY|O_DIRECTORY) = 3
+getdents64(3, /* 7 entries */, 32768)  = 208
+write(1, "arquivo1.txt  pasta\\\\n", 21)  = 21
+arquivo1.txt  pasta
+close(3)                               = 0
+exit_group(0)                          = ?`}</Terminal>
+
+  <Esperar>
+    várias linhas técnicas *antes* da saída normal do `ls` aparecer no meio. Procure as chamadas destacadas: `execve` (inicia o programa), `openat` (abre algo), `getdents64` (lê o conteúdo de um diretório) e `write` (escreve o resultado na tela).
+  </Esperar>
+
+  <Dica titulo="Muita informação na tela, difícil de ler">
+
+  Normal — `strace` imprime tudo por padrão. No próximo passo você vai usar uma versão resumida.
+
+  </Dica>
+
+</Comando>
+
+</Passo>
+
+<Passo numero={3} de={6} titulo="O resumo por tipo de chamada">
+
+<Intro>Em vez de ler linha por linha, dá pra pedir só a contagem: quantas vezes cada chamada de sistema apareceu.</Intro>
+
+<Comando passo={3} cmd="strace -c cat Roteiro-Aluno_Encontro-03.html">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    A flag `-c` troca o log linha a linha por uma tabela-resumo: chamada, quantas vezes, tempo gasto.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    É assim que, na vida real, alguém investiga qual chamada de sistema está consumindo mais tempo num programa lento.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`$ strace -c cat Roteiro-Aluno_Encontro-03.html > /dev/null
+% time     seconds  usecs/call     calls    syscall
+------ ----------- ----------- --------- ----------------
+ 41.02    0.000089           8        11 read
+ 28.35    0.000062          15         4 mmap
+ 12.10    0.000026          26         1 openat
+  ...
+------ ----------- ----------- --------- ----------------
+100.00    0.000217                    23 total`}</Terminal>
+
+  <Esperar>
+    o arquivo pode não existir ainda no seu diretório — troque pelo nome de qualquer arquivo de texto que você tenha à mão. O importante é ver a coluna `calls` (quantas vezes) e `syscall` (qual chamada).
+  </Esperar>
+
+</Comando>
+
+</Passo>
+
+<Passo numero={4} de={6} titulo="Comparando dois programas diferentes">
+
+<Intro>Programas diferentes usam conjuntos diferentes de chamadas de sistema — isso revela o que cada um realmente faz por dentro.</Intro>
+
+<Comando passo={4} cmd="strace -c date">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    Repita o resumo do passo anterior, mas agora com o comando `date` (que só imprime a data/hora atual).
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    `date` não lê diretório nenhum — então `getdents64` não deve aparecer. Já `clock_gettime` deve aparecer, e não aparecia no `ls`.
+
+    </Caixa>
+  </Explica>
+
+  <Esperar>
+    uma lista de chamadas diferente do `ls`. Anote pelo menos uma chamada que aparece num programa e não no outro.
+  </Esperar>
+
+  <Dica titulo="Não sei qual chamada procurar">
+
+  Não precisa decorar nomes. Compare visualmente as duas tabelas de `strace -c` lado a lado e aponte qualquer linha que só existe em uma delas.
+
+  </Dica>
+
+</Comando>
+
+<Rascunho encontro={3} numero={1}>
+  o que você percebeu comparando as chamadas de `ls`/`cat` com as de `date`?
+</Rascunho>
+
+</Passo>
+
+<Divisor>Parte 2 · Contêiner x Máquina Virtual</Divisor>
+
+<Passo numero={5} de={6} titulo="Cronometrando um contêiner">
+
+<Intro>Agora saímos das chamadas individuais e vamos comparar duas formas de isolar um programa: o contêiner Docker (que vocês só ouviram falar até agora) e a máquina virtual (que vocês já usam desde a Semana 0).</Intro>
+
+<Comando passo={5} cmd='time docker run --rm alpine echo "ola do container"'>
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    `docker run` sobe um contêiner baseado na imagem `alpine` (um Linux minúsculo), roda o `echo` e encerra. `--rm` descarta o contêiner ao final. `time` na frente cronometra tudo.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    É a mesma ideia da máquina virtual — isolar um ambiente — só que sem carregar um núcleo novo. O tempo total mostra essa diferença na prática.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`$ time docker run --rm alpine echo "ola do container"
+ola do container
+real    0m0.412s
+user    0m0.031s
+sys     0m0.028s`}</Terminal>
+
+  <Esperar>
+    a linha `real` costuma ficar abaixo de 1 segundo (depois da primeira vez — a primeira execução baixa a imagem `alpine` da internet, o que demora mais). Rode de novo pra ver o tempo "aquecido".
+  </Esperar>
+
+  <Dica titulo='Comando docker não encontrado ou "permission denied"'>
+
+  Confirme que o Docker foi instalado na Semana 0 com `docker --version`. Se der "permission denied", tente `sudo docker run ...` — significa que seu usuário ainda não está no grupo `docker`.
+
+  </Dica>
+
+</Comando>
+
+</Passo>
+
+<Passo numero={6} de={6} titulo="Comparando com a sua máquina virtual">
+
+<Intro>Agora o contraste: cronometrar (ainda que de forma aproximada) o tempo que a própria VM que vocês criaram na Semana 0 leva pra ficar pronta pra uso.</Intro>
+
+<Comando passo={6} cmd="Desligue e ligue a VM, cronometrando com o celular">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    Desligue a VM do zero (não suspender — desligar) e cronometre do clique em "Iniciar" até a tela de login do Ubuntu aparecer.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    É a comparação mais honesta possível entre "ligar um núcleo inteiro do zero" (VM) e "emprestar um pedaço do núcleo que já está rodando" (contêiner).
+
+    </Caixa>
+  </Explica>
+
+  <Esperar>
+    a VM deve levar pelo menos alguns segundos a dezenas de segundos — ordens de grandeza mais lenta que o contêiner do passo anterior. Essa diferença é o ponto central da comparação.
+  </Esperar>
+
+  <Dica titulo="Não quero desligar a VM de verdade agora">
+
+  Alternativa: compare a memória RAM reservada. Rode `docker stats --no-stream` num contêiner rodando e compare com os 4096 MB fixos que a VM reserva o tempo todo, ligada ou não fazendo nada.
+
+  </Dica>
+
+</Comando>
+
+<Rascunho encontro={3} numero={2}>
+  o que mudou entre o tempo/recurso do contêiner e o da máquina virtual?
+</Rascunho>
+
+<Rascunho encontro={3} numero={3}>
+  livre: algo que te surpreendeu ou uma dúvida que sobrou de hoje
+</Rascunho>
+
+</Passo>
+
+<Exemplos>
+  <Exemplo tipo="fraca">
+
+  "O container foi mais rápido que a VM."
+
+  </Exemplo>
+  <Exemplo tipo="forte">
+
+  "O container levou 0,4s pra rodar, a VM mais de 20s pra logar — bate com a teoria de que a VM precisa dar boot num núcleo inteiro, enquanto o container só usa namespaces do núcleo que já estava de pé."
+
+  </Exemplo>
+</Exemplos>
+
+<Teoria>
+
+Os passos 1–4 são a Chamada de Sistema em ação (Laureano p. 16–17; Tanenbaum p. 37–40). Os passos 5–6 são a distinção Máquina Virtual x Container do slide 8 — o mesmo "menos coisa isolada = mais rápido, mais coisa isolada = mais seguro" que vimos nas 4 arquiteturas do jigsaw.
+
+</Teoria>
+
+<Checklist encontro={3}>
+  <Item id="item-1">Rodei `strace ls` e identifiquei pelo menos 3 chamadas de sistema diferentes</Item>
+  <Item id="item-2">Rodei `strace -c` em dois programas diferentes e comparei os resumos</Item>
+  <Item id="item-3">Cronometrei um contêiner com `time docker run`</Item>
+  <Item id="item-4">Comparei o tempo/recurso do contêiner com o da minha máquina virtual</Item>
+  <Item id="item-5">Preenchi as 3 observações acima (vou colar no quiz semanal)</Item>
+</Checklist>

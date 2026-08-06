@@ -1,0 +1,302 @@
+<Abertura duracao="~51 min" titulo="Backup que funciona, restauração que prova — e sua equipe definida">
+
+Hoje você constrói um script de backup completo, **testa restaurar de verdade**, agenda a execução automática, e fecha a aula com equipe formada e serviço escolhido para o projeto final.
+
+</Abertura>
+
+<Partes>
+  <Parte rotulo="Passos 1–4">Backup, restauração e cron</Parte>
+  <Parte rotulo="Passo 5">Projeto final: equipe e planejamento</Parte>
+</Partes>
+
+<Destaque titulo="🚀 Hoje começa o projeto final">
+
+O que você construir neste roteiro pode ser aproveitado **diretamente** no toolkit do projeto — o `backup.sh` do passo 1 já é um dos três scripts obrigatórios da entrega.
+
+Leia o **Enunciado do Projeto Integrador — Etapa 2** ainda esta semana. É leitura obrigatória.
+
+</Destaque>
+
+<Passo numero={1} de={5} titulo="Um script de backup de verdade">
+
+<Intro>Backup útil tem quatro características: identifica a data, compacta, grava em local separado, e registra o que fez.</Intro>
+
+<Comando passo={1} cmd="nano ~/backup.sh">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    `tar -czf` empacota e compacta um diretório inteiro num arquivo só. O nome inclui a data via `$(date +%F)`, técnica do Encontro 13.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    Sem data no nome, cada backup sobrescreve o anterior — e você fica com uma cópia só, provavelmente já corrompida junto com o original.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`#!/bin/bash
+
+ORIGEM=~/dados_importantes
+DESTINO=~/backups
+LOG=~/backup.log
+DATA=$(date +%F_%H-%M)
+
+log() {
+  echo "[$(date +'%F %T')] $1" | tee -a "$LOG"
+}
+
+mkdir -p "$DESTINO"
+
+if [ ! -d "$ORIGEM" ]; then
+  log "ERRO: origem $ORIGEM não existe"
+  exit 1
+fi
+
+ARQUIVO="$DESTINO/backup_\${DATA}.tar.gz"
+tar -czf "$ARQUIVO" -C "$(dirname "$ORIGEM")" "$(basename "$ORIGEM")"
+
+if [ $? -eq 0 ]; then
+  TAMANHO=$(du -h "$ARQUIVO" | cut -f1)
+  log "OK: backup criado em $ARQUIVO ($TAMANHO)"
+  exit 0
+else
+  log "ERRO: falha ao criar o backup"
+  exit 1
+fi`}</Terminal>
+
+  <Esperar>
+    antes de rodar, crie a origem com `mkdir -p ~/dados_importantes && echo "conteudo valioso" > ~/dados_importantes/arquivo1.txt`. Depois `chmod +x ~/backup.sh` e execute. Confira o resultado com `ls -lh ~/backups`.
+  </Esperar>
+
+  <Dica titulo='O que faz o if [ ! -d "$ORIGEM" ]?'>
+
+  O `!` nega o teste: "se o diretório **não** existir". É uma verificação defensiva — sem ela, o script tentaria compactar algo inexistente e criaria um backup vazio, dando a falsa impressão de que funcionou. Verificar antes de agir é o requisito nº 6 do enunciado do projeto.
+
+  </Dica>
+
+  <Dica titulo="Por que o -C e o dirname/basename no tar?">
+
+  Sem isso, o `tar` guardaria o caminho completo (`home/aluno/dados_importantes/...`) dentro do pacote, e a restauração recriaria toda essa árvore. Com `-C`, ele entra no diretório-pai antes de empacotar, guardando só `dados_importantes/` — bem mais fácil de restaurar em qualquer lugar.
+
+  </Dica>
+
+</Comando>
+
+</Passo>
+
+<Passo numero={2} de={5} titulo="A prova real: restaurar">
+
+<Intro>Este é o passo mais importante do roteiro. Backup que nunca foi restaurado não é backup — e a única forma de saber é testando.</Intro>
+
+<Comando passo={2} cmd="Apague o original e recupere do backup">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    Simula o desastre: o dado original some, e você precisa recuperá-lo apenas com o que guardou.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    É o único teste que responde "eu tenho backup?". Sem ele, você tem um arquivo compactado de utilidade desconhecida.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`$ cat ~/dados_importantes/arquivo1.txt
+conteudo valioso
+$ rm -rf ~/dados_importantes
+$ ls ~/dados_importantes
+ls: não foi possível acessar: Arquivo ou diretório inexistente
+$ tar -xzf ~/backups/backup_*.tar.gz -C ~/
+$ cat ~/dados_importantes/arquivo1.txt
+conteudo valioso`}</Terminal>
+
+  <Esperar>
+    o conteúdo volta exatamente como estava. Se não voltar, seu backup tem um problema — e é **muito** melhor descobrir isso agora, num diretório de teste, do que em produção.
+  </Esperar>
+
+  <Dica titulo="Estou com medo de apagar algo importante">
+
+  Você está apagando apenas `~/dados_importantes`, criado por você no passo 1 exatamente para este teste. Nenhum arquivo pessoal seu está envolvido. Confirme o caminho antes de rodar o `rm -rf` — e note que essa checagem é exatamente o hábito que o Encontro 12 ensinou.
+
+  </Dica>
+
+</Comando>
+
+<Rascunho encontro={14} numero={1}>
+  por que testar a restauração é considerado parte essencial do backup, e não um passo opcional? O que seu teste revelou?
+</Rascunho>
+
+</Passo>
+
+<Passo numero={3} de={5} titulo="Fazendo rodar sozinho">
+
+<Intro>Um backup que depende de você lembrar não é confiável. O cron executa nos horários que você definir.</Intro>
+
+<Comando passo={3} cmd="crontab -e">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    Abre seu arquivo de agendamentos. Cada linha tem cinco campos de tempo (minuto, hora, dia do mês, mês, dia da semana) seguidos do comando.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    É o que transforma um script em automação de verdade — ele passa a rodar mesmo com você desconectado.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`# para o teste de hoje: a cada 2 minutos
+*/2 * * * * /home/SEU_USUARIO/backup.sh
+
+# em produção seria algo como: todo dia às 3h
+# 0 3 * * * /home/SEU_USUARIO/backup.sh`}</Terminal>
+
+  <Esperar>
+    use `*/2` hoje para não esperar até de madrugada. **Troque `SEU_USUARIO` pelo seu nome de usuário real** — descubra com `whoami`. Salve e confirme com `crontab -l`.
+  </Esperar>
+
+  <Dica titulo="Por que caminho absoluto e não ~/backup.sh?">
+
+  O cron roda num ambiente reduzido, sem as variáveis do seu shell interativo — o `~` pode não ser expandido como você espera. **Sempre use caminhos absolutos no cron.** Esse é o erro nº 1 de quem começa a agendar tarefas: "funciona no terminal mas não no cron", e a causa é quase sempre caminho relativo.
+
+  </Dica>
+
+</Comando>
+
+</Passo>
+
+<Passo numero={4} de={5} titulo="Confirmando que executou">
+
+<Intro>Aguarde alguns minutos e verifique se o cron realmente rodou o script — sem olhar, você só tem a expectativa de que rodou.</Intro>
+
+<Comando passo={4} cmd="tail -f ~/backup.log">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    `tail -f` acompanha o arquivo ao vivo, mostrando novas linhas conforme são gravadas (comando do Encontro 12).
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    É a diferença entre "acho que está rodando" e "sei que rodou às 14h22". Automação sem log é automação sem evidência.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`$ tail -f ~/backup.log
+[2026-11-13 14:20:01] OK: backup criado em /home/aluno/backups/backup_2026-11-13_14-20.tar.gz (4,0K)
+[2026-11-13 14:22:01] OK: backup criado em /home/aluno/backups/backup_2026-11-13_14-22.tar.gz (4,0K)`}</Terminal>
+
+  <Esperar>
+    uma nova linha a cada 2 minutos, sem você fazer nada. Saia com `Ctrl+C`. Confira também `ls -lh ~/backups` — vários arquivos, um por execução, cada um com sua data no nome.
+  </Esperar>
+
+  <Dica titulo="O log não recebeu nenhuma linha nova">
+
+  Verifique nesta ordem: (1) o caminho no crontab está absoluto e correto? (2) o script tem `chmod +x`? (3) o serviço cron está ativo (`systemctl status cron`)? (4) rodou o script manualmente e funcionou? Se funciona manualmente mas não pelo cron, é quase certo que seja caminho relativo em algum ponto do script.
+
+  </Dica>
+
+  <Esperar>
+    **Importante ao terminar:** remova o agendamento de teste com `crontab -e` (apague a linha), senão seu disco vai acumular backups a cada 2 minutos indefinidamente.
+  </Esperar>
+
+</Comando>
+
+<Rascunho encontro={14} numero={2}>
+  por que o cron exige caminho absoluto? O que aconteceria se você usasse ~/backup.sh no agendamento?
+</Rascunho>
+
+</Passo>
+
+<Divisor>Projeto final · equipe e planejamento</Divisor>
+
+<Passo numero={5} de={5} titulo="Definindo a equipe e o serviço">
+
+<Intro>Reserve os últimos minutos da aula para isto. Sair hoje com equipe formada e serviço escolhido é o que garante três encontros úteis de trabalho.</Intro>
+
+<Comando passo={5} cmd="Combinem em equipe e registrem">
+
+  <Explica>
+    <Caixa titulo="O que decidir hoje">
+
+    Composição da equipe, qual serviço será operado, e quem fica responsável por cada um dos três scripts.
+
+    </Caixa>
+    <Caixa titulo="Por que agora">
+
+    Restam só três encontros até a entrega. Equipe indefinida hoje significa uma semana perdida.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`# Registrem em um arquivo, para trazer no próximo encontro:
+
+EQUIPE: __________________________________
+SERVIÇO ESCOLHIDO: _______________________
+  (sugestão segura: nginx servindo páginas estáticas)
+
+RESPONSÁVEIS:
+  deploy.sh   → _________________________
+  backup.sh   → _________________________
+  monitor.sh  → _________________________
+  README      → _________________________
+
+O QUE VAMOS GUARDAR EM BACKUP: ___________
+O QUE VAMOS MONITORAR (3 métricas): ______`}</Terminal>
+
+  <Esperar>
+    **Recomendação forte:** escolham um serviço **simples**. O mérito do trabalho está na qualidade do toolkit, não na complexidade do serviço — isso está explícito na seção 2 do enunciado. Um `nginx` com três páginas e um toolkit sólido vale mais do que algo sofisticado e inacabado.
+  </Esperar>
+
+  <Dica titulo="Não sabemos que serviço escolher">
+
+  Vão de `nginx` servindo páginas HTML estáticas. É rápido de subir, tem dado óbvio para backup (as páginas e a configuração), e estado claro para monitorar (o container está no ar? responde?). Vocês já sabem tudo que precisam para isso desde o Encontro 4.
+
+  </Dica>
+
+</Comando>
+
+<Rascunho encontro={14} numero={3}>
+  qual serviço sua equipe escolheu operar, e por quê? O que vocês pretendem guardar em backup e monitorar?
+</Rascunho>
+
+</Passo>
+
+<Exemplos>
+  <Exemplo tipo="fraca">
+
+  "Testei restaurar e funcionou."
+
+  </Exemplo>
+  <Exemplo tipo="forte">
+
+  "Apaguei `~/dados_importantes` por completo e restaurei só a partir do `.tar.gz` — o conteúdo voltou idêntico. O teste importa porque, sem ele, eu teria um arquivo compactado de utilidade desconhecida: poderia estar vazio, com caminho errado ou corrompido, e eu só descobriria no momento em que precisasse de verdade. Na primeira tentativa o `tar` recriou a árvore `home/aluno/` inteira dentro do destino, o que só percebi porque testei — foi por isso que passei a usar o `-C`."
+
+  </Exemplo>
+</Exemplos>
+
+<Teoria>
+
+O script do passo 1 aplica variáveis, função de log, condicional e código de saída do Encontro 13, além do `du` do Encontro 11 para medir o tamanho. A verificação `if [ ! -d ... ]` é a prática defensiva discutida no slide 7 sobre riscos de automação — a mesma razão pela qual o Laureano (p. 62–69) trata permissões com cuidado. O passo 3 introduz o cron, e o passo 5 dá início ao projeto descrito no **Enunciado do Projeto Integrador — Etapa 2**, leitura obrigatória desta semana.
+
+</Teoria>
+
+<Checklist encontro={14}>
+  <Item id="item-1">Escrevi o `backup.sh` com log, data no nome e verificação de origem</Item>
+  <Item id="item-2">**Testei restaurar** apagando o original e recuperando do backup</Item>
+  <Item id="item-3">Agendei o script no cron com caminho absoluto</Item>
+  <Item id="item-4">Confirmei no log que o cron executou sozinho</Item>
+  <Item id="item-5">Removi o agendamento de teste do crontab</Item>
+  <Item id="item-6">Minha equipe está formada e o serviço escolhido</Item>
+  <Item id="item-7">Dividimos as responsabilidades dos três scripts</Item>
+  <Item id="item-8">Li o Enunciado do Projeto Integrador — Etapa 2</Item>
+  <Item id="item-9">Preenchi as 3 observações acima (vou colar no quiz semanal)</Item>
+</Checklist>

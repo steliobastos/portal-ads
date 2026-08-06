@@ -1,0 +1,287 @@
+<Abertura duracao="~90 min" titulo="Hardware e tipos de SO — mão na massa">
+
+Siga na ordem, leia o "por que importa" antes de rodar cada comando, e use as dicas colapsáveis se travar.
+
+</Abertura>
+
+<Partes>
+  <Parte rotulo="DURAÇÃO">**~90 min**</Parte>
+  <Parte rotulo="PRÉ-REQUISITO">**VM Ubuntu ligada (Semana 0)**</Parte>
+  <Parte rotulo="ENTREGA">**Quiz_Encontro-02.html**</Parte>
+</Partes>
+
+<Passo numero={1} de={5} titulo="Conhecendo sua CPU">
+
+<Intro>Antes de qualquer coisa, vamos descobrir com que processador sua VM está trabalhando.</Intro>
+
+<Comando passo={1} cmd="lscpu">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    Um comando que resume tudo sobre o processador: modelo, quantos núcleos, arquitetura, velocidade.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    É a primeira pergunta que você faz ao diagnosticar performance: "quantos núcleos essa máquina tem de verdade?"
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`$ lscpu
+Architecture:            x86_64
+CPU(s):                  2
+Model name:              Intel(R) Core(TM) i7 ...
+CPU MHz:                 2600.000`}</Terminal>
+
+  <Esperar>
+    na sua VM, "CPU(s)" provavelmente mostra 2 — foi o que configuramos na Semana 0. Isso não é o processador físico do seu notebook inteiro, é o que o VirtualBox reservou pra VM.
+  </Esperar>
+
+  <Dica titulo="Travou? Comando não encontrado">
+
+  Alguns Ubuntus mínimos não trazem `lscpu` por padrão. Instale com: `sudo apt install util-linux`
+
+  </Dica>
+
+</Comando>
+
+</Passo>
+
+<Passo numero={2} de={5} titulo="Quanta memória você tem — e quanta sobra">
+
+<Intro>Agora vamos olhar para a RAM: total, em uso e livre.</Intro>
+
+<Comando passo={2} cmd="free -h">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    Mostra memória RAM total, usada, livre e a memória *swap* (área do disco usada como RAM de emergência).
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    Quando um sistema "trava" ou fica lento, a primeira suspeita costuma ser: acabou a memória disponível.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`$ free -h
+              total        used        free      shared
+Mem:          3.8Gi       612Mi       2.4Gi        12Mi
+Swap:            0B          0B          0B`}</Terminal>
+
+  <Esperar>
+    o `-h` significa "human-readable" — sem ele, os números vêm em bytes crus, ilegíveis. O total deve bater com os 4096 MB (~3.8-4 GiB) que configuramos na criação da VM.
+  </Esperar>
+
+  <Dica titulo='Por que "total" não é exatamente 4096 MB?'>
+
+  Uma parte da RAM é reservada pelo próprio kernel e pelo firmware antes mesmo do Linux terminar de inicializar. É normal ver um número um pouco menor que o configurado no VirtualBox.
+
+  </Dica>
+
+</Comando>
+
+</Passo>
+
+<Passo numero={3} de={5} titulo="A mesma informação, direto da fonte">
+
+<Intro>`lscpu` e `free -h` são versões "traduzidas". Agora vamos ver de onde elas tiram esses dados: o `/proc`.</Intro>
+
+<Comando passo={3} cmd="cat /proc/cpuinfo">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    O arquivo virtual que o kernel expõe com os dados crus de cada núcleo de CPU — a fonte que o `lscpu` lê e organiza.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    É a prova de que "hardware" e "o que o SO te mostra" são a mesma coisa, só que em duas roupagens diferentes.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`$ cat /proc/cpuinfo
+processor       : 0
+vendor_id       : GenuineIntel
+model name      : Intel(R) Core(TM) i7 ...
+cpu MHz         : 2600.000
+...
+processor       : 1
+vendor_id       : GenuineIntel
+...`}</Terminal>
+
+  <Esperar>
+    um bloco de texto bem mais longo e cru que o `lscpu` — repetido uma vez para cada núcleo (0, 1, ...). Conte quantos blocos "processor" aparecem: deve bater com o "CPU(s)" do passo 1.
+  </Esperar>
+
+</Comando>
+
+<Comando passo={4} cmd="cat /proc/meminfo">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    A versão crua do `free -h` — dezenas de linhas com cada detalhe da memória, em kilobytes.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    Mostra que "memória livre" não é uma única linha simples — tem várias categorias (livre, em cache, em buffers).
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`$ cat /proc/meminfo | head -5
+MemTotal:        3980112 kB
+MemFree:         2540332 kB
+MemAvailable:    3120004 kB
+Buffers:           88420 kB
+Cached:           612340 kB`}</Terminal>
+
+  <Esperar>
+    usamos `| head -5` pra ver só as 5 primeiras linhas — o arquivo completo tem mais de 40. Compare o "MemTotal" aqui (em kB) com o "total" do `free -h` (em GiB) — são o mesmo número, unidades diferentes.
+  </Esperar>
+
+  <Dica titulo='O que é esse "|" no meio do comando?'>
+
+  É o **pipe** — ele pega a saída de um comando e "encana" para dentro do próximo. Aqui, a saída inteira de `cat /proc/meminfo` vira a entrada de `head -5`, que mostra só as 5 primeiras linhas. Vamos usar bastante pipe ao longo do curso.
+
+  </Dica>
+
+</Comando>
+
+<Teoria>
+
+no slide 5 da aula vimos que o `/proc` é um sistema de arquivos *virtual* — nada aqui existe fisicamente no disco. Repare que você não criou nenhum desses arquivos: o kernel os gera na hora em que você pede pra ler.
+
+</Teoria>
+
+</Passo>
+
+<Passo numero={4} de={5} titulo="E o disco, quanto espaço sobra?">
+
+<Intro>Vamos fechar o trio CPU/memória/disco olhando para o armazenamento.</Intro>
+
+<Comando passo={5} cmd="df -h">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    *Disk Free* — mostra cada partição/disco montado no sistema, com espaço total, usado e livre.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    Disco cheio é uma das causas mais comuns (e mais bobas) de sistemas travando em produção.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`$ df -h
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sda2        25G  6.1G   18G  26% /
+tmpfs           1.9G     0  1.9G   0% /dev/shm`}</Terminal>
+
+  <Esperar>
+    a linha com `/` na coluna "Mounted on" é o seu disco principal — os 25 GB que configuramos na criação da VM. O "Use%" ainda deve estar baixo, já que a VM é nova.
+  </Esperar>
+
+  <Dica titulo='O que é essa linha "tmpfs"?'>
+
+  É um sistema de arquivos temporário que vive **na memória RAM**, não no disco — por isso é tão rápido e por isso some quando a máquina desliga. Não se preocupe com ele agora, é só curiosidade.
+
+  </Dica>
+
+</Comando>
+
+</Passo>
+
+<Passo numero={5} de={5} titulo="O arquivo que muda sozinho">
+
+<Intro>Este é o passo mais importante do roteiro — a prova ao vivo de que o `/proc` não guarda arquivos de verdade.</Intro>
+
+<Comando passo={6} cmd="cat /proc/uptime (rode duas vezes)">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    Mostra há quantos segundos a máquina está ligada (primeiro número) e há quantos segundos ela está ociosa (segundo número).
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    É o exemplo mais claro de que o conteúdo do `/proc` é gerado *no instante da leitura* — não fica salvo em lugar nenhum.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`$ cat /proc/uptime
+3841.92 3714.05
+$ cat /proc/uptime
+3846.17 3717.83`}</Terminal>
+
+  <Esperar>
+    os dois números vão ser **diferentes** entre a primeira e a segunda leitura — mesmo que você rode os comandos com poucos segundos de diferença. Isso é o comportamento esperado, não um erro.
+  </Esperar>
+
+  <Dica titulo="Quero comparar com um arquivo de verdade">
+
+  Tente o mesmo teste com um arquivo comum: `echo "teste" > ~/arquivo.txt && cat ~/arquivo.txt && cat ~/arquivo.txt` Repare que, dessa vez, as duas leituras são idênticas — porque esse arquivo existe de verdade no disco.
+
+  </Dica>
+
+</Comando>
+
+</Passo>
+
+<Secao sobretitulo="REGISTRO NO PORTFÓLIO" titulo="Suas 3 observações">
+
+<Intro>Escreva no [Quiz_Encontro-02.html](#) — não aqui. Este espaço é só para você rascunhar antes. Cada observação precisa ter no mínimo 40 caracteres e **conectar o comando ao conceito**, não apenas descrever o que apareceu na tela.</Intro>
+
+<Rascunho encontro={2} numero={1}>
+  **CPU.** Compare a saída de `lscpu` com `cat /proc/cpuinfo`. O que muda entre as duas formas de ver a mesma informação?
+</Rascunho>
+
+<Rascunho encontro={2} numero={2}>
+  **Memória.** O que os campos "MemFree" e "MemAvailable" do `/proc/meminfo` sugerem sobre como o Linux gerencia memória livre?
+</Rascunho>
+
+<Rascunho encontro={2} numero={3}>
+  **/proc como janela virtual.** Por que `/proc/uptime` muda de valor a cada leitura, mesmo sem você "editar" nada? Conecte com a ideia de sistema de arquivos virtual vista na aula.
+</Rascunho>
+
+<Exemplos>
+  <Exemplo tipo="fraca">
+
+  "O comando mostrou os números da memória e tinha várias linhas com informações."
+
+  </Exemplo>
+  <Exemplo tipo="forte">
+
+  "MemFree mostra só a memória totalmente ociosa, enquanto MemAvailable soma a isso o que está em cache/buffer e pode ser liberado na hora se um programa precisar — por isso MemAvailable é sempre maior."
+
+  </Exemplo>
+</Exemplos>
+
+</Secao>
+
+<Secao sobretitulo="CHECKLIST FINAL" titulo="Antes de encerrar">
+
+<Checklist encontro={2}>
+  <Item id="item-1">Rodei `lscpu` e identifiquei quantos núcleos minha VM tem</Item>
+  <Item id="item-2">Rodei `free -h` e comparei com a memória configurada na VM</Item>
+  <Item id="item-3">Comparei `lscpu`/`free -h` com `/proc/cpuinfo`/`/proc/meminfo`</Item>
+  <Item id="item-4">Rodei `df -h` e localizei minha partição principal</Item>
+  <Item id="item-5">Rodei `cat /proc/uptime` duas vezes e confirmei que os números mudam</Item>
+  <Item id="item-6">Escrevi minhas 3 observações no `Quiz_Encontro-02.html`</Item>
+</Checklist>
+
+</Secao>
+
+Terminou tudo? Feche este roteiro e abra o **Quiz_Encontro-02.html** para registrar suas observações e responder o quiz de leitura.

@@ -1,0 +1,298 @@
+<Abertura duracao="~48 min" titulo="Medindo page faults, swap — e dimensionando um container">
+
+Hoje você mede quantas vezes o sistema teve que buscar páginas no disco, aprende a ler as colunas de swap que denunciam thrashing, e fecha descobrindo empiricamente o menor limite de memória em que um container ainda funciona — em vez de chutar um número.
+
+</Abertura>
+
+<Partes>
+  <Parte rotulo="Passos 1–4">Page faults, vmstat e swap</Parte>
+  <Parte rotulo="Passos 5–7">Reforço Docker: dimensionar o limite</Parte>
+</Partes>
+
+<Passo numero={1} de={7} titulo="Contando page faults de um comando">
+
+<Intro>Vamos rodar um comando que percorre muitos arquivos e medir quantas vezes o sistema precisou buscar páginas.</Intro>
+
+<Comando passo={1} cmd='/usr/bin/time -v ls -R /usr 2>&1 | grep -i "page faults"'>
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    `/usr/bin/time -v` (caminho completo, não o `time` embutido do shell) mostra estatísticas detalhadas do comando, incluindo page faults.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    Separa page faults **minor** (resolvidos na RAM, baratos) de **major** (exigiram disco, caros) — a distinção que importa no diagnóstico.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`$ /usr/bin/time -v ls -R /usr 2>&1 | grep -i "page faults"
+Major (requiring I/O) page faults: 3
+Minor (reclaiming a frame) page faults: 4821`}</Terminal>
+
+  <Esperar>
+    muitos *minor* e pouquíssimos *major*. Isso é o padrão saudável — a maioria das páginas já estava disponível na RAM, sem precisar tocar o disco.
+  </Esperar>
+
+  <Dica titulo='Deu "comando não encontrado" ou não mostrou page faults'>
+
+  Use o caminho completo `/usr/bin/time` — o `time` sozinho chama a versão embutida do shell, que não tem a opção `-v`. Se o pacote não existir, instale com `sudo apt install time`.
+
+  </Dica>
+
+</Comando>
+
+<Rascunho encontro={10} numero={1}>
+  quantos page faults minor e major seu comando gerou? Por que a diferença entre os dois números é tão grande?
+</Rascunho>
+
+</Passo>
+
+<Passo numero={2} de={7} titulo="Os contadores globais do kernel">
+
+<Intro>O sistema inteiro mantém contadores acumulados de page fault desde o boot — em `/proc`, como sempre.</Intro>
+
+<Comando passo={2} cmd='grep -E "^pgfault|^pgmajfault" /proc/vmstat'>
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    `pgfault` é o total de page faults desde o boot; `pgmajfault` é só a parcela que exigiu leitura de disco.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    É a fonte que ferramentas de monitoramento consultam pra montar gráficos de page fault ao longo do tempo.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`$ grep -E "^pgfault|^pgmajfault" /proc/vmstat
+pgfault 2841096
+pgmajfault 4127`}</Terminal>
+
+  <Esperar>
+    números grandes (acumulados desde que a VM ligou) e, de novo, `pgmajfault` muito menor que `pgfault`. Rode duas vezes com alguns segundos de intervalo e veja os valores subirem.
+  </Esperar>
+
+</Comando>
+
+</Passo>
+
+<Passo numero={3} de={7} titulo="As colunas que denunciam thrashing">
+
+<Intro>O `vmstat` é a ferramenta clássica pra ver troca de páginas acontecendo em tempo real.</Intro>
+
+<Comando passo={3} cmd="vmstat 1 5">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    Mostra 5 amostras, uma por segundo. As colunas `si` (swap in) e `so` (swap out) indicam páginas movendo entre RAM e disco.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    `si`/`so` altos e constantes é a assinatura de thrashing — o diagnóstico que o slide de hoje ensinou a reconhecer.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`$ vmstat 1 5
+procs -------memory------- ---swap--
+ r  b     free   buff  cache   si   so
+ 1  0   438292  83104 1912440    0    0
+ 0  0   438160  83104 1912440    0    0`}</Terminal>
+
+  <Esperar>
+    `si` e `so` zerados. Isso é **o resultado correto** numa VM ociosa — o valor do exercício é saber onde olhar quando *não* estiverem zerados.
+  </Esperar>
+
+  <Dica titulo="Zerado não significa que o comando falhou?">
+
+  Não — significa que sua VM está saudável, sem pressão de memória. Um sistema em thrashing mostraria centenas ou milhares nessas colunas, continuamente. O objetivo aqui é reconhecer o padrão normal pra depois identificar o anormal.
+
+  </Dica>
+
+</Comando>
+
+</Passo>
+
+<Passo numero={4} de={7} titulo="O estado do swap">
+
+<Intro>Confirme se sua VM tem área de swap configurada e quanto dela está em uso.</Intro>
+
+<Comando passo={4} cmd="swapon --show && free -h | grep -i swap">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    `swapon --show` lista as áreas de swap ativas; o `free` filtrado mostra total e uso.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    Swap alocado com pouca troca é normal e saudável; o alarme é a *taxa de troca* do passo 3, não o total alocado.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`$ swapon --show && free -h | grep -i swap
+NAME      TYPE  SIZE  USED  PRIO
+/swapfile file  2.0G    0B   -2
+Swap:     2.0Gi   0B  2.0Gi`}</Terminal>
+
+  <Esperar>
+    uma área de swap listada, com uso próximo de zero. Se `swapon --show` não retornar nada, sua VM está sem swap — anote isso, é uma configuração possível e vale discutir suas implicações.
+  </Esperar>
+
+</Comando>
+
+</Passo>
+
+<Divisor>Reforço Docker · dimensionando o limite</Divisor>
+
+<Passo numero={5} de={7} titulo="Descobrindo o limite mínimo viável">
+
+<Intro>Em vez de chutar um valor pro `--memory`, vamos descobrir empiricamente qual é o menor limite em que o container ainda funciona.</Intro>
+
+<Comando passo={5} cmd="Rode a mesma carga com limites decrescentes">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    O mesmo container, executado quatro vezes, com `--memory` cada vez menor: 256m → 128m → 64m → 32m.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    É assim que se dimensiona um serviço de verdade: medindo, não adivinhando. Limite alto demais desperdiça; baixo demais derruba em produção.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`$ for M in 256m 128m 64m 32m; do
+    echo "--- testando $M ---"
+    docker run --rm --memory=$M alpine sh -c "head -c 40m /dev/zero | wc -c" \\
+      && echo "OK em $M" || echo "FALHOU em $M"
+  done
+--- testando 256m ---
+41943040
+OK em 256m
+--- testando 64m ---
+41943040
+OK em 64m
+--- testando 32m ---
+FALHOU em 32m`}</Terminal>
+
+  <Esperar>
+    sucesso nos limites maiores e falha em algum ponto conforme aperta. **Anote o menor valor que ainda funcionou** — esse é o limite mínimo viável para essa carga.
+  </Esperar>
+
+  <Dica titulo="Funcionou em todos os valores, até 32m">
+
+  Sua carga é leve demais pra pressionar o limite. Aumente o consumo: troque `head -c 40m` por `head -c 100m` e rode de novo.
+
+  </Dica>
+
+</Comando>
+
+<Rascunho encontro={10} numero={2}>
+  qual foi o menor limite de memória em que o container ainda funcionou? Por que não seria prudente usar exatamente esse valor em produção?
+</Rascunho>
+
+</Passo>
+
+<Passo numero={6} de={7} titulo="Consumo contra o limite, ao vivo">
+
+<Intro>Suba um container duradouro com o limite que você encontrou e observe o consumo em relação ao teto.</Intro>
+
+<Comando passo={6} cmd="docker run -d --name dimensionado --memory=128m alpine sleep 300 depois docker stats --no-stream">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    O mesmo `docker stats` do Encontro 6 — mas agora a coluna de memória mostra consumo **contra o limite definido**, não contra a RAM total da máquina.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    É esse percentual que ferramentas de monitoramento usam pra alertar antes de um serviço ser morto por OOM.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`$ docker stats --no-stream
+NAME           CPU %   MEM USAGE / LIMIT   MEM %
+dimensionado   0.00%   1.1MiB / 128MiB      0.86%`}</Terminal>
+
+  <Esperar>
+    o limite (128MiB) aparecendo no lugar da RAM total da VM. Compare com o Encontro 6, onde o container sem limite mostrava a memória inteira da máquina como teto.
+  </Esperar>
+
+</Comando>
+
+</Passo>
+
+<Passo numero={7} de={7} titulo="Limpando">
+
+<Intro>Encerre e remova o container antes de fechar.</Intro>
+
+<Comando passo={7} cmd="docker stop dimensionado && docker rm dimensionado">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    Encerra e remove. Os containers do passo 5 usaram `--rm`, então já se removeram sozinhos.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    Boa prática: não deixar containers de teste ocupando recursos após a aula.
+
+    </Caixa>
+  </Explica>
+
+  <Esperar>
+    o nome impresso duas vezes. Confirme com `docker ps -a` que não sobrou nada dos testes de hoje.
+  </Esperar>
+
+</Comando>
+
+<Rascunho encontro={10} numero={3}>
+  livre: algo que te surpreendeu ou uma dúvida que sobrou de hoje
+</Rascunho>
+
+</Passo>
+
+<Exemplos>
+  <Exemplo tipo="fraca">
+
+  "O container funcionou com 64m e falhou com 32m."
+
+  </Exemplo>
+  <Exemplo tipo="forte">
+
+  "O menor limite viável foi 64m — abaixo disso o container foi morto por OOM. Mas usar exatamente 64m em produção seria arriscado: qualquer variação de carga, atualização de dependência ou pico de requisições ultrapassaria o teto e derrubaria o serviço. O sensato é deixar uma folga sobre o mínimo medido, justamente porque o valor foi obtido numa carga controlada e previsível, diferente do mundo real."
+
+  </Exemplo>
+</Exemplos>
+
+<Teoria>
+
+Os passos 1–2 medem os page faults do slide 4 (Tanenbaum p. 134–136) — a distinção minor/major é exatamente a diferença entre resolver na RAM e ter que ir ao disco. O passo 3 é o instrumento pra reconhecer o thrashing do slide 5. Os passos 5–6 são o dimensionamento consciente dos slides 8–9, usando o mesmo mecanismo de cgroups que sustenta o `--memory`.
+
+</Teoria>
+
+<Checklist encontro={10}>
+  <Item id="item-1">Medi page faults minor e major de um comando</Item>
+  <Item id="item-2">Conferi os contadores globais em `/proc/vmstat`</Item>
+  <Item id="item-3">Rodei `vmstat` e identifiquei as colunas `si`/`so`</Item>
+  <Item id="item-4">Verifiquei o estado do swap da minha VM</Item>
+  <Item id="item-5">Descobri o menor limite de memória viável pro container</Item>
+  <Item id="item-6">Observei o consumo contra o limite no `docker stats`</Item>
+  <Item id="item-7">Limpei os containers de teste</Item>
+  <Item id="item-8">Preenchi as 3 observações acima (vou colar no quiz semanal)</Item>
+</Checklist>

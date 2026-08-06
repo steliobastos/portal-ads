@@ -95,6 +95,17 @@ git add -A && git commit -m "Publica material do Encontro N"
 
 Se o arquivo não existe em disco, ele simplesmente não aparece no site.
 
+### Roteiros em MDX
+
+Os roteiros migrados vivem em `src/content/so/roteiros/<numero>.mdx` e usam os componentes de
+`src/components/aula.tsx` (`<Passo>`, `<Comando>`, `<Terminal>`, `<Dica>`, `<Checklist>`…). A rota
+`/so/encontros/<n>/roteiro` só existe se o `.mdx` existir; enquanto não existir, a página do
+encontro continua oferecendo o HTML avulso. Os dois nunca aparecem juntos.
+
+`scripts/converter-roteiro.mjs` fez a conversão inicial a partir do HTML. Ele **relata** todo bloco
+que não reconhece em vez de descartá-lo em silêncio — omissão em material didático é pior que erro
+visível, porque ninguém nota que um passo sumiu.
+
 ### Por que o material recebe um botão injetado
 
 Os HTMLs de material foram escritos antes do portal: são documentos avulsos, com CSS próprio e
@@ -140,8 +151,11 @@ O endereço absoluto alimenta o `metadataBase` (prévia do link em WhatsApp e Cl
 
 - [x] **Fase 1** — esqueleto, identidade visual, conteúdo dos 17 encontros, material servido,
       favicon, prévia de compartilhamento, `sitemap.xml`/`robots.txt` e deploy na Vercel
-- [ ] **Fase 2** — migrar os HTMLs para MDX, com componentes React reaproveitáveis
-      (`<Terminal>`, `<Leitura>`, `<Checklist>`, `<DicaColapsavel>`)
+- [ ] **Fase 2** — migrar os HTMLs para MDX, com componentes React reaproveitáveis.
+      **12 de 18 roteiros migrados** (todos os do padrão dominante). Faltam Semana 0 e
+      Encontro 1, de vocabulário anterior à padronização, e os quatro guias de projeto
+      (Encontros 8, 15, 16 e 17). Os slides seguem como HTML avulso por decisão: são
+      apresentação, não documento
 - [ ] **Fase 3** — quiz nativo com Supabase: aluno envia por rota server-side, vê só o próprio
       resultado; painel do professor autenticado, com exportação para planilha
 - [ ] **Fase 4** — testes (Vitest + Playwright) e CI no GitHub Actions

@@ -1,0 +1,237 @@
+<Abertura duracao="~54 min" titulo="Vendo a condição de corrida acontecer — e ensaiando o container da N2">
+
+Hoje você roda um script simples que expõe o bug de concorrência na prática (o mesmo resultado variando a cada execução), identifica a região crítica no próprio código, e fecha com a sua equipe ensaiando o ciclo completo do container que será defendido na N2.
+
+</Abertura>
+
+<Partes>
+  <Parte rotulo="Passos 1–3">Condição de corrida na prática</Parte>
+  <Parte rotulo="Passos 4–5">Ensaio Docker da N2 (em equipe)</Parte>
+</Partes>
+
+<Aviso titulo="⏭️ Preparando o próximo marco — N2">
+
+A **N2 da 1ª etapa** acontece no Encontro 8: relatório "Raio-X" em dupla/trio, defesa de 5–6 minutos, e o container do projeto rodando ao vivo durante a apresentação.
+
+Os passos 4 e 5 de hoje são justamente o ensaio desse momento — quanto mais suave ficar aqui, menos risco no dia que vale nota.
+
+</Aviso>
+
+<Passo numero={1} de={5} titulo="Criando o script que expõe a corrida">
+
+<Intro>Vamos escrever um script pequeno que incrementa um "saldo" compartilhado, sem nenhuma proteção — o cenário perfeito pra condição de corrida aparecer.</Intro>
+
+<Comando passo={1} cmd="nano contador_concorrente.sh">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    Um script que sobe dois processos em segundo plano, cada um incrementando 500 vezes o mesmo arquivo `saldo.txt` — sem nenhuma trava entre leitura e escrita.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    É a mesma lógica do Caixa A e Caixa B do slide de hoje, só que rodável de verdade na sua VM.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`#!/bin/bash
+echo 0 > saldo.txt
+
+incrementa() {
+  for i in $(seq 1 500); do
+    valor=$(cat saldo.txt)
+    valor=$((valor + 1))
+    echo $valor > saldo.txt
+  done
+}
+
+incrementa &
+incrementa &
+wait
+
+echo "Resultado esperado: 1000 | Resultado obtido: $(cat saldo.txt)"`}</Terminal>
+
+  <Esperar>
+    cole esse conteúdo no `nano`, salve (`Ctrl+O`, Enter, `Ctrl+X`) e rode `chmod +x contador_concorrente.sh` antes do próximo passo. As linhas em destaque são a região crítica — guarde isso pro passo 3.
+  </Esperar>
+
+  <Dica titulo="Não tenho o nano instalado, e agora?">
+
+  Use `cat > contador_concorrente.sh`, cole o conteúdo, e finalize com `Ctrl+D`. Depois rode `chmod +x contador_concorrente.sh` normalmente.
+
+  </Dica>
+
+</Comando>
+
+</Passo>
+
+<Passo numero={2} de={5} titulo="Rodando várias vezes e comparando resultados">
+
+<Intro>Se o script fosse "seguro" contra concorrência, o resultado seria sempre 1000. Vamos ver se é isso que acontece.</Intro>
+
+<Comando passo={2} cmd="./contador_concorrente.sh (repita 4–5 vezes)">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    Cada execução sobe os dois "incrementadores" concorrentes de novo, do zero.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    Rodar só uma vez pode até dar 1000 por sorte — repetir é o que revela a inconsistência.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`$ ./contador_concorrente.sh
+Resultado esperado: 1000 | Resultado obtido: 742
+$ ./contador_concorrente.sh
+Resultado esperado: 1000 | Resultado obtido: 1000
+$ ./contador_concorrente.sh
+Resultado esperado: 1000 | Resultado obtido: 861`}</Terminal>
+
+  <Esperar>
+    resultados diferentes a cada execução, quase sempre abaixo de 1000 — algumas atualizações foram "perdidas" porque os dois processos leram o mesmo valor antigo de `saldo.txt` antes de qualquer um gravar de volta.
+  </Esperar>
+
+  <Dica titulo="Meu resultado deu sempre 1000, não vejo o bug">
+
+  Acontece em máquinas muito rápidas — os dois processos raramente se cruzam no tempo certo. Tente aumentar o `seq 1 500` pra `seq 1 3000` no script e rode de novo.
+
+  </Dica>
+
+</Comando>
+
+<Rascunho encontro={7} numero={1}>
+  quais resultados você obteve nas suas execuções? Por que o número final varia mesmo rodando exatamente o mesmo script?
+</Rascunho>
+
+</Passo>
+
+<Passo numero={3} de={5} titulo="Encontrando a região crítica no próprio código">
+
+<Intro>Sem rodar nada novo — releia o script do passo 1 e aponte exatamente onde mora o perigo.</Intro>
+
+<Comando passo={3} cmd="Releitura do script — sem comando novo">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    As três linhas destacadas em vermelho no passo 1: ler o saldo, calcular o novo valor, gravar de volta.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    É exatamente a região crítica do slide de hoje — o trecho que precisaria de exclusão mútua pra ficar seguro.
+
+    </Caixa>
+  </Explica>
+
+  <Esperar>
+    perceba que, entre o `cat saldo.txt` e o `echo $valor > saldo.txt`, o outro processo tem tempo de sobra pra ler o mesmo valor "desatualizado" — é exatamente a brecha da condição de corrida.
+  </Esperar>
+
+</Comando>
+
+<Rascunho encontro={7} numero={2}>
+  se você tivesse que corrigir o script pra sempre dar 1000, o que impediria os dois processos de ler o saldo ao mesmo tempo?
+</Rascunho>
+
+</Passo>
+
+<Divisor>Ensaio Docker · N2 (em equipe)</Divisor>
+
+<Passo numero={4} de={5} titulo="Primeiro ensaio: build → run → demonstração → stop">
+
+<Intro>Reúna-se com sua dupla/trio da N2. Usando o Dockerfile do projeto de vocês, cronometre o ciclo completo do zero.</Intro>
+
+<Comando passo={4} cmd="docker build -t equipe-n2 . → docker run -d --name n2demo equipe-n2 → demonstração → docker stop n2demo && docker rm n2demo">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    O mesmo ciclo que vocês vão executar ao vivo durante a defesa da N2 — construir a imagem, subir o container, mostrar funcionando, e encerrar.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    Erros de ambiente (porta ocupada, dependência esquecida, Dockerfile desatualizado) aparecem agora — não durante a apresentação que vale nota.
+
+    </Caixa>
+  </Explica>
+
+  <Esperar>
+    anote o tempo total do ciclo e qualquer erro encontrado. É normal a primeira tentativa não sair perfeita — é exatamente pra isso que o ensaio existe.
+  </Esperar>
+
+  <Dica titulo="Nosso projeto ainda não tem um Dockerfile pronto">
+
+  Use este momento pra montar ao menos um Dockerfile mínimo (como o do Encontro 4) rodando alguma parte do projeto — mesmo incompleto, já revela problemas de ambiente cedo.
+
+  </Dica>
+
+</Comando>
+
+</Passo>
+
+<Passo numero={5} de={5} titulo="Segundo ensaio: mais rápido e sem erros">
+
+<Intro>Repitam o ciclo do passo 4 uma segunda vez, tentando corrigir qualquer problema encontrado e reduzir o tempo total.</Intro>
+
+<Comando passo={5} cmd="Repetir o ciclo completo do passo 4">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    A mesma sequência — build, run, demonstração, stop/rm — cronometrada de novo.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    A defesa real tem um timebox curto (5–6 minutos) — chegar treinado reduz a chance de travar durante a nota.
+
+    </Caixa>
+  </Explica>
+
+  <Esperar>
+    o segundo ciclo deve ser mais rápido e sem os erros da primeira tentativa. Se algo ainda travar, anote — é informação valiosa pra resolver antes do Encontro 8.
+  </Esperar>
+
+</Comando>
+
+<Rascunho encontro={7} numero={3}>
+  livre: como foi o ensaio do container da sua equipe? Algo travou, ou uma dúvida que sobrou de hoje
+</Rascunho>
+
+</Passo>
+
+<Exemplos>
+  <Exemplo tipo="fraca">
+
+  "O resultado do script deu diferente toda vez."
+
+  </Exemplo>
+  <Exemplo tipo="forte">
+
+  "Rodei 4 vezes e obtive 742, 1000, 861 e 903. A variação acontece porque, entre o momento em que um processo lê o saldo e grava o novo valor, o outro processo pode ler exatamente o mesmo valor antigo — perdendo o incremento de quem gravou primeiro. É a região crítica do script sem nenhuma proteção de exclusão mútua."
+
+  </Exemplo>
+</Exemplos>
+
+<Teoria>
+
+Os passos 1–3 são condição de corrida e região crítica dos slides 3–5 (Tanenbaum p. 82–84) — o mesmo bug do exemplo dos dois caixas de banco, agora rodando de verdade. Os passos 4–5 são o gancho Docker do slide 10 — o ensaio que prepara a defesa da N2 no Encontro 8.
+
+</Teoria>
+
+<Checklist encontro={7}>
+  <Item id="item-1">Criei e testei o `contador_concorrente.sh`</Item>
+  <Item id="item-2">Rodei o script pelo menos 4 vezes e vi resultados diferentes</Item>
+  <Item id="item-3">Identifiquei as linhas exatas da região crítica no script</Item>
+  <Item id="item-4">Fiz o primeiro ensaio completo do container da N2 com minha equipe</Item>
+  <Item id="item-5">Repeti o ensaio, mais rápido e sem os erros da primeira vez</Item>
+  <Item id="item-6">Preenchi as 3 observações acima (vou colar no quiz semanal)</Item>
+</Checklist>

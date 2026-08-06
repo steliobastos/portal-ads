@@ -1,0 +1,294 @@
+<Abertura duracao="~48 min" titulo="Lendo a memória de verdade — e provocando um OOM">
+
+Hoje você aprende a ler os números certos da memória (o campo que importa não é o que a maioria olha), localiza os maiores consumidores do sistema, e fecha provocando de propósito a morte de um container por falta de memória.
+
+</Abertura>
+
+<Partes>
+  <Parte rotulo="Passos 1–4">Diagnóstico de memória</Parte>
+  <Parte rotulo="Passos 5–7">Reforço Docker: limite e OOM</Parte>
+</Partes>
+
+<Passo numero={1} de={7} titulo="A visão geral da memória">
+
+<Intro>O primeiro comando que qualquer pessoa roda pra saber como está a memória de uma máquina.</Intro>
+
+<Comando passo={1} cmd="free -h">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    Mostra memória total, usada, livre, em cache e disponível. O `-h` converte pra unidades legíveis (Gi, Mi) em vez de bytes.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    É a primeira resposta pra "a máquina está sem memória?" — desde que você olhe a coluna certa.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`$ free -h
+              total    used    free   shared  buff/cache   available
+Mem:          3.8Gi   1.2Gi   0.4Gi    12Mi       2.2Gi       2.3Gi
+Swap:         2.0Gi      0B   2.0Gi`}</Terminal>
+
+  <Esperar>
+    repare que `free` (livre) parece baixo, mas `available` (disponível) está alto. Isso é **normal e desejável** — o Linux usa memória ociosa como cache de disco e devolve assim que alguém precisar.
+  </Esperar>
+
+  <Dica titulo="Então qual coluna eu devo olhar?">
+
+  **available**. É quanto realmente dá pra alocar agora sem recorrer a swap. A coluna `used` sozinha engana, e `free` quase sempre parece assustadoramente baixa num sistema saudável.
+
+  </Dica>
+
+</Comando>
+
+<Rascunho encontro={9} numero={1}>
+  na sua VM, qual a diferença entre os valores de "free" e "available"? Por que essa diferença existe?
+</Rascunho>
+
+</Passo>
+
+<Passo numero={2} de={7} titulo="A versão crua, direto do kernel">
+
+<Intro>Como sempre desde o Encontro 2 — o comando bonito é só um leitor organizado de um arquivo em `/proc`.</Intro>
+
+<Comando passo={2} cmd="head -8 /proc/meminfo">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    O arquivo que o `free` lê por baixo dos panos. Tem dezenas de campos; as primeiras linhas já trazem o essencial.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    Confirma que não há mágica: `MemAvailable` aqui é exatamente a coluna `available` do passo anterior.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`$ head -8 /proc/meminfo
+MemTotal:        3986432 kB
+MemFree:          438292 kB
+MemAvailable:    2405118 kB
+Buffers:           83104 kB
+Cached:          1912440 kB`}</Terminal>
+
+  <Esperar>
+    os valores em kB. Divida por 1024 duas vezes pra chegar em GB e conferir que bate com o `free -h` do passo 1.
+  </Esperar>
+
+</Comando>
+
+</Passo>
+
+<Passo numero={3} de={7} titulo="Quem está consumindo mais">
+
+<Intro>Saber que a memória está apertada é metade do diagnóstico. A outra metade é descobrir quem é o responsável.</Intro>
+
+<Comando passo={3} cmd="ps aux --sort=-%mem | head -6">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    `--sort=-%mem` ordena a lista por percentual de memória, do maior pro menor. O `head -6` pega o cabeçalho + os 5 maiores.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    É exatamente assim que se identifica o candidato a vazamento numa máquina de produção.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`$ ps aux --sort=-%mem | head -6
+USER    PID  %CPU %MEM    RSS  COMMAND
+aluno  2417   0.3  4.2  167MB  firefox
+root    891   0.0  1.1   44MB  snapd
+aluno  1930   0.0  0.3   12MB  bash`}</Terminal>
+
+  <Esperar>
+    a coluna `RSS` (Resident Set Size) é a memória física realmente ocupada por aquele processo — é o número mais honesto pra comparar consumo entre processos. **Anote o PID do maior**, você vai usá-lo no próximo passo.
+  </Esperar>
+
+</Comando>
+
+</Passo>
+
+<Passo numero={4} de={7} titulo="A memória de um processo específico">
+
+<Intro>Use o PID que você anotou no passo 3 para ver os detalhes de memória daquele processo.</Intro>
+
+<Comando passo={4} cmd="grep Vm /proc/<PID>/status">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    Filtra os campos de memória virtual daquele processo. Troque `<PID>` pelo número que você anotou.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    `VmRSS` é a memória física de verdade; `VmSize` é o espaço de endereçamento reservado — quase sempre bem maior, e isso é normal.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`$ grep Vm /proc/2417/status
+VmSize:  2841096 kB
+VmRSS:    167284 kB
+VmData:   712408 kB
+VmStk:       132 kB`}</Terminal>
+
+  <Esperar>
+    `VmSize` muito maior que `VmRSS`. Isso é o espaço de endereçamento do slide 3 em ação — o processo "reservou" muito mais do que realmente está usando na RAM.
+  </Esperar>
+
+  <Dica titulo='Deu "Arquivo ou diretório inexistente"'>
+
+  O processo pode ter terminado entre o passo 3 e o 4. Rode o `ps aux --sort=-%mem | head -6` de novo e use um PID atualizado.
+
+  </Dica>
+
+</Comando>
+
+</Passo>
+
+<Divisor>Reforço Docker · limite de memória e OOM</Divisor>
+
+<Passo numero={5} de={7} titulo="Um container com limite apertado">
+
+<Intro>Agora vamos criar um container com um teto baixo de memória de propósito, e fazê-lo tentar ultrapassar esse teto.</Intro>
+
+<Comando passo={5} cmd='docker run -d --name memtest --memory=64m alpine sh -c "cat /dev/zero | head -c 500m | tail"'>
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    `--memory=64m` limita o container a 64 MB. O comando interno tenta acumular 500 MB na memória — muito acima do teto.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    Reproduz, de forma controlada e segura, exatamente o cenário que derruba serviços em produção.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`$ docker run -d --name memtest --memory=64m alpine sh -c "cat /dev/zero | head -c 500m | tail"
+b7e2a90c4f13d8a5...`}</Terminal>
+
+  <Aviso titulo="Importante">
+
+  **⚠️ Importante:** mantenha o `--memory=64m`. É o limite que garante que o estrago fique contido dentro do container — sem ele, esse mesmo comando pode travar sua VM inteira.
+
+  </Aviso>
+
+</Comando>
+
+</Passo>
+
+<Passo numero={6} de={7} titulo="Confirmando a morte por OOM">
+
+<Intro>Aguarde alguns segundos e verifique o que aconteceu com o container.</Intro>
+
+<Comando passo={6} cmd="docker ps -a --filter name=memtest">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    `-a` mostra também containers já encerrados — necessário aqui, porque o nosso deve ter morrido.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    O código de saída **137** é a assinatura de morte por OOM — reconhecê-lo é competência direta de sustentação.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`$ docker ps -a --filter name=memtest
+NAME      IMAGE    STATUS
+memtest   alpine   Exited (137) 4 seconds ago`}</Terminal>
+
+  <Esperar>
+    `Exited (137)`. Confirme ainda mais a fundo com `docker inspect memtest --format '{{.State.OOMKilled}}'` — deve retornar `true`.
+  </Esperar>
+
+  <Dica titulo="Meu container terminou com código 0, sem OOM">
+
+  O comando interno pode ter terminado antes de acumular memória suficiente. Aumente o valor: troque `head -c 500m` por `head -c 900m` e repita o passo 5 (lembre de remover o container antigo primeiro com `docker rm memtest`).
+
+  </Dica>
+
+</Comando>
+
+<Rascunho encontro={9} numero={2}>
+  o que aconteceu com o container memtest e por quê? O que o código de saída 137 indica?
+</Rascunho>
+
+</Passo>
+
+<Passo numero={7} de={7} titulo="Limpando">
+
+<Intro>Remova o container de teste antes de encerrar.</Intro>
+
+<Comando passo={7} cmd="docker rm memtest">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    Remove o registro do container já encerrado (não precisa de `docker stop` — ele já morreu sozinho).
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    Containers encerrados continuam ocupando espaço em disco até serem removidos.
+
+    </Caixa>
+  </Explica>
+
+  <Esperar>
+    o nome `memtest` impresso de volta, confirmando a remoção.
+  </Esperar>
+
+</Comando>
+
+<Rascunho encontro={9} numero={3}>
+  livre: algo que te surpreendeu ou uma dúvida que sobrou de hoje
+</Rascunho>
+
+</Passo>
+
+<Exemplos>
+  <Exemplo tipo="fraca">
+
+  "O container morreu porque ficou sem memória."
+
+  </Exemplo>
+  <Exemplo tipo="forte">
+
+  "O container saiu com código 137 e `OOMKilled: true`. Ele tentou acumular 500 MB, mas o `--memory=64m` impôs um teto de 64 MB; ao ultrapassá-lo, o kernel matou o processo imediatamente, sem chance de salvar estado. O importante é que o estrago ficou contido: a VM continuou funcionando normalmente, porque o limite isolou o problema naquele container."
+
+  </Exemplo>
+</Exemplos>
+
+<Teoria>
+
+Os passos 1–2 são a leitura correta de memória do slide 4, apoiada no Laureano (p. 94–98). O passo 4 mostra o espaço de endereçamento do slide 3 na prática — `VmSize` muito maior que `VmRSS` é exatamente a "ilusão" descrita pelo Tanenbaum (p. 128–131). Os passos 5–6 são o OOM Killer do slide 7 e o gancho Docker do slide 10, provocados de propósito.
+
+</Teoria>
+
+<Checklist encontro={9}>
+  <Item id="item-1">Rodei `free -h` e identifiquei a diferença entre `free` e `available`</Item>
+  <Item id="item-2">Conferi que o `/proc/meminfo` bate com o `free`</Item>
+  <Item id="item-3">Listei os 5 maiores consumidores de memória e anotei um PID</Item>
+  <Item id="item-4">Comparei `VmSize` com `VmRSS` de um processo</Item>
+  <Item id="item-5">Subi um container com `--memory=64m` e provoquei o OOM</Item>
+  <Item id="item-6">Confirmei o `Exited (137)` / `OOMKilled: true`</Item>
+  <Item id="item-7">Removi o container de teste</Item>
+  <Item id="item-8">Preenchi as 3 observações acima (vou colar no quiz semanal)</Item>
+</Checklist>

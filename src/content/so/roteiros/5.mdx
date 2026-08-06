@@ -30,7 +30,8 @@ nova luz, e fecha com o reforço Docker: o mesmo processo visto de dentro e de f
     </Caixa>
   </Explica>
 
-  <Terminal comando="ps aux">{`USER   PID  %CPU %MEM STAT  COMMAND
+  <Terminal>{`$ ps aux
+USER   PID  %CPU %MEM STAT  COMMAND
 root     1   0.0  0.1  Ss    /sbin/init
 root   842   0.2  0.4  Ss    systemd-journald
 aluno 1930   0.0  0.3  Ss    bash
@@ -71,7 +72,8 @@ aluno 2044   0.0  0.1  R+    ps aux`}</Terminal>
     </Caixa>
   </Explica>
 
-  <Terminal comando="ps aux | grep bash">{`aluno 1930   0.0  0.3  Ss    bash
+  <Terminal>{`$ ps aux | grep bash
+aluno 1930   0.0  0.3  Ss    bash
 aluno 2051   0.0  0.0  S+    grep bash`}</Terminal>
 
   <Esperar>
@@ -108,7 +110,8 @@ aluno 2051   0.0  0.0  S+    grep bash`}</Terminal>
     </Caixa>
   </Explica>
 
-  <Terminal comando="cat /proc/$$/status | head -5">{`Name:   bash
+  <Terminal>{`$ cat /proc/$$/status | head -5
+Name:   bash
 State:  S (sleeping)
 Tgid:   1930
 Pid:    1930
@@ -190,7 +193,8 @@ PPid:   1721`}</Terminal>
     </Caixa>
   </Explica>
 
-  <Terminal comando="docker run -d --name meuproc alpine sleep 300">{`8f2c91a7e6b04d3e...`}</Terminal>
+  <Terminal>{`$ docker run -d --name meuproc alpine sleep 300
+8f2c91a7e6b04d3e...`}</Terminal>
 
   <Esperar>
     um código longo (o ID do container) impresso na tela, e o comando volta pro seu prompt
@@ -222,7 +226,8 @@ PPid:   1721`}</Terminal>
     </Caixa>
   </Explica>
 
-  <Terminal comando="ps aux | grep sleep">{`root  48213  0.0  0.0  Ss    sleep 300`}</Terminal>
+  <Terminal>{`$ ps aux | grep sleep
+root  48213  0.0  0.0  Ss    sleep 300`}</Terminal>
 
   <Esperar>
     um PID qualquer (nesse exemplo, 48213) — provavelmente um número alto, parecido com qualquer
@@ -253,7 +258,8 @@ PPid:   1721`}</Terminal>
     </Caixa>
   </Explica>
 
-  <Terminal comando="docker exec meuproc ps aux">{`PID   USER     COMMAND
+  <Terminal>{`$ docker exec meuproc ps aux
+PID   USER     COMMAND
     1 root     sleep 300`}</Terminal>
 
   <Esperar>

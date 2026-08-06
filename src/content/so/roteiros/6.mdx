@@ -1,0 +1,270 @@
+<Abertura duracao="~41 min" titulo="CPU-bound × I/O-bound na prática — e o consumo de um container ao vivo">
+
+Hoje você provoca, de propósito, um processo CPU-bound e um I/O-bound pra ver a diferença no `top`, separa stdout de stderr, encadeia processos com pipes, e fecha com o reforço Docker: acompanhar o consumo de um container em tempo real.
+
+</Abertura>
+
+<Partes>
+  <Parte rotulo="Passos 1–4">CPU-bound, I/O-bound, stderr e pipes</Parte>
+  <Parte rotulo="Passos 5–6">Reforço Docker: docker stats</Parte>
+</Partes>
+
+<Aviso titulo="📋 Hoje também é dia de entrega — N1 da 1ª etapa">
+
+Além da prática de hoje, é dia de **entrega parcial do relatório de diagnóstico** (o que você já investigou do SO real desde o Encontro 1) junto com o **portfólio** acumulado até aqui.
+
+- Confira com o professor o formato e o prazo exato de envio combinados em sala.
+- O portfólio inclui as observações e quizzes dos Encontros 1 a 6 — revise se todos foram enviados.
+- As observações e o quiz de **hoje** (Encontro 6) também compõem essa entrega — não pare a prática antes de preenchê-los.
+
+</Aviso>
+
+<Passo numero={1} de={6} titulo="Provocando um processo CPU-bound">
+
+<Intro>Vamos criar, de propósito, um processo que só calcula sem parar — sem nunca esperar por disco ou rede.</Intro>
+
+<Comando passo={1} cmd="yes > /dev/null & depois top">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    `yes` imprime "y" infinitamente. O `> /dev/null` descarta a saída (senão lotaria a tela), e o `&` manda rodar em segundo plano.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    É o exemplo mais simples de processo CPU-bound: nunca bloqueia esperando E/S, só usa CPU sem parar.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`$ yes > /dev/null &
+[1] 5231
+$ top
+%Cpu(s): 99.7 us
+  PID  USER  %CPU  %MEM COMMAND
+ 5231  aluno 99.3   0.0  yes`}</Terminal>
+
+  <Esperar>
+    no `top`, o processo `yes` deve aparecer perto de 100% de CPU (de um núcleo), sozinho no topo da lista. Aperte `q` pra sair do `top` — o `yes` continua rodando em segundo plano.
+  </Esperar>
+
+  <Dica titulo="Como eu paro o yes depois?">
+
+  Rode `kill %1` (usa o número de "job" que apareceu entre colchetes) ou descubra o PID com `ps aux | grep yes` e rode `kill <PID>`. Não esqueça — ele fica consumindo CPU até você matá-lo ou fechar o terminal.
+
+  </Dica>
+
+</Comando>
+
+</Passo>
+
+<Passo numero={2} de={6} titulo="Provocando um processo I/O-bound">
+
+<Intro>Agora um processo que mexe bastante com disco, mas usa pouca CPU — a espera é do disco, não do processador.</Intro>
+
+<Comando passo={2} cmd="dd if=/dev/zero of=arquivo_grande bs=1M count=1000; sync">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    `dd` copia 1000 blocos de 1 MB cheios de zeros pra um arquivo novo — cria ~1 GB de dado gravado em disco. `sync` garante que tudo foi realmente escrito.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    Processo claramente I/O-bound: o gargalo é a velocidade do disco, não da CPU — por isso o consumo de CPU fica baixo mesmo "trabalhando".
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`$ dd if=/dev/zero of=arquivo_grande bs=1M count=1000; sync
+1000+0 registros de entrada
+1000+0 registros de saída
+1048576000 bytes (1,0 GB) copiados`}</Terminal>
+
+  <Esperar>
+    se você rodar `top` em outro terminal enquanto o `dd` executa, o processo aparece consumindo bem menos CPU que o `yes` do passo 1 — mesmo movendo 1 GB de dado.
+  </Esperar>
+
+  <Dica titulo="Não deu tempo de ver o dd rodando no top">
+
+  Normal em discos rápidos (SSD) — o `dd` pode terminar rápido demais. Aumente `count=1000` pra `count=3000` e tente de novo, observando o `top` em paralelo.
+
+  </Dica>
+
+</Comando>
+
+<Rascunho encontro={6} numero={1}>
+  compare o que você viu no top entre o yes (passo 1) e o dd (passo 2). Qual consumiu mais CPU, e por quê?
+</Rascunho>
+
+</Passo>
+
+<Passo numero={3} de={6} titulo="Separando saída normal de erro">
+
+<Intro>Vamos provocar um erro de propósito e confirmar que stdout e stderr são, de fato, dois canais separados.</Intro>
+
+<Comando passo={3} cmd="ls arquivo_inexistente 2> erro.txt; cat erro.txt">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    `2>` redireciona só o canal 2 (stderr) pro arquivo `erro.txt`. A mensagem de erro do `ls` vai pro arquivo, não pra tela.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    Prova, na prática, que stdout (1) e stderr (2) são canais independentes — por isso dá pra guardar só os erros de um comando sem perder a saída normal.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`$ ls arquivo_inexistente 2> erro.txt; cat erro.txt
+ls: não é possível acessar 'arquivo_inexistente': Arquivo ou diretório inexistente`}</Terminal>
+
+  <Esperar>
+    nada aparece na tela quando você roda o `ls` (o erro foi direto pro arquivo) — só o `cat erro.txt` seguinte mostra a mensagem.
+  </Esperar>
+
+</Comando>
+
+</Passo>
+
+<Passo numero={4} de={6} titulo="Encadeando processos com pipes">
+
+<Intro>Vamos contar quantos processos existem, e depois filtrar antes de contar — dois pipelines curtos.</Intro>
+
+<Comando passo={4} cmd="ps aux | wc -l e ps aux | grep bash | wc -l">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    `wc -l` conta linhas. O primeiro pipe conta todos os processos; o segundo filtra só os que têm "bash" antes de contar.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    Mostra um pipeline de três processos encadeados de uma vez — exatamente o que o slide de hoje explicou por dentro.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`$ ps aux | wc -l
+87
+$ ps aux | grep bash | wc -l
+2`}</Terminal>
+
+  <Esperar>
+    o primeiro número deve ser bem maior que o segundo. O "2" do segundo comando inclui o seu terminal bash **e** o próprio processo `grep bash` que acabou de rodar (o mesmo efeito visto no Encontro 5).
+  </Esperar>
+
+</Comando>
+
+</Passo>
+
+<Divisor>Reforço Docker · docker stats</Divisor>
+
+<Passo numero={5} de={6} titulo="Vendo o consumo de um container ao vivo">
+
+<Intro>Depois de tanto observar processos comuns, vamos ver o mesmo tipo de informação, só que organizada por container.</Intro>
+
+<Comando passo={5} cmd="docker run -d --name statsdemo alpine sleep 300 depois docker stats --no-stream">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    Sobe um container ocioso (só `sleep`), e `docker stats --no-stream` tira uma "fotografia" única do consumo de todos os containers rodando.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    É o `top`/`ps` do mundo Docker — mas organizado por container, não por processo do sistema inteiro.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`$ docker run -d --name statsdemo alpine sleep 300
+a13f0e9c7d21...
+$ docker stats --no-stream
+NAME       CPU %   MEM USAGE / LIMIT   NET I/O
+statsdemo  0.00%   1.2MiB / 3.8GiB    906B / 0B`}</Terminal>
+
+  <Esperar>
+    o `statsdemo` deve aparecer com CPU próxima de 0% — ele só está dormindo (`sleep`), sem nenhum trabalho de verdade pra fazer.
+  </Esperar>
+
+  <Dica titulo='Quero comparar com um container "ocupado"'>
+
+  Se sobrar tempo, tente `docker run -d --name cpudemo alpine sh -c "yes > /dev/null"` e rode `docker stats --no-stream` de novo — agora deve aparecer um container consumindo bem mais CPU, do mesmo jeito que o `yes` do passo 1.
+
+  </Dica>
+
+</Comando>
+
+<Rascunho encontro={6} numero={2}>
+  o que o docker stats mostrou sobre o statsdemo? Compare com o que você esperava de um processo I/O-bound quase parado.
+</Rascunho>
+
+</Passo>
+
+<Passo numero={6} de={6} titulo="Encerrando e limpando">
+
+<Intro>Antes de fechar, pare e remova o container criado neste roteiro (e o processo yes do passo 1, se ainda estiver rodando).</Intro>
+
+<Comando passo={6} cmd="docker stop statsdemo && docker rm statsdemo">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    `docker stop` encerra o container, `docker rm` remove o registro dele. Confira também se o `yes` do passo 1 já foi encerrado.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    Boa prática básica: não deixar processos ou containers de teste "esquecidos" consumindo recursos depois da aula.
+
+    </Caixa>
+  </Explica>
+
+  <Esperar>
+    o nome `statsdemo` impresso duas vezes, confirmando parada e remoção. Rode `ps aux | grep yes` pra garantir que nenhum `yes` ficou pra trás.
+  </Esperar>
+
+</Comando>
+
+<Rascunho encontro={6} numero={3}>
+  livre: algo que te surpreendeu ou uma dúvida que sobrou de hoje
+</Rascunho>
+
+</Passo>
+
+<Exemplos>
+  <Exemplo tipo="fraca">
+
+  "O yes usou mais CPU que o dd."
+
+  </Exemplo>
+  <Exemplo tipo="forte">
+
+  "O yes ficou perto de 100% de CPU porque é puramente CPU-bound — só calcula e imprime, sem nunca parar pra esperar nada. Já o dd, mesmo movendo 1 GB pro disco, ficou com CPU baixa, porque o gargalo real era a velocidade de escrita do disco, não o processamento."
+
+  </Exemplo>
+</Exemplos>
+
+<Teoria>
+
+Os passos 1–2 são CPU-bound × I/O-bound do slide 3 (Laureano p. 106–108) e o porquê do escalonador do slide 4/6 (Tanenbaum p. 103–107). Os passos 3–4 são E/S padrão e pipes dos slides 7–9 (Laureano p. 120–126). O passo 5 é o gancho Docker do slide 10 — a mesma lógica do `top`, agora por container.
+
+</Teoria>
+
+<Checklist encontro={6}>
+  <Item id="item-1">Rodei o `yes` em segundo plano e vi ~100% de CPU no `top`</Item>
+  <Item id="item-2">Rodei o `dd` e comparei o consumo de CPU com o `yes`</Item>
+  <Item id="item-3">Separei stdout de stderr com `2>`</Item>
+  <Item id="item-4">Rodei os dois pipelines com `ps aux | wc -l` e `| grep | wc -l`</Item>
+  <Item id="item-5">Subi um container e observei o consumo com `docker stats --no-stream`</Item>
+  <Item id="item-6">Parei e removi o container, e matei qualquer `yes` esquecido</Item>
+  <Item id="item-7">Preenchi as 3 observações acima (vou colar no quiz semanal)</Item>
+  <Item id="item-8">Conferi a entrega de N1 (relatório parcial + portfólio) com o professor</Item>
+</Checklist>

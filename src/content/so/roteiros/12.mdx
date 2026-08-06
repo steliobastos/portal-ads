@@ -1,0 +1,288 @@
+<Abertura duracao="~28 min" titulo="Coringas, busca e manipulação em lote">
+
+Hoje você monta uma estrutura de teste, aprende a técnica de segurança que evita apagar o que não devia, manipula dezenas de arquivos com um comando só, e termina usando os mesmos comandos dentro de um container.
+
+</Abertura>
+
+<Partes>
+  <Parte rotulo="Passos 1–5">Coringas, busca e redirecionamento</Parte>
+  <Parte rotulo="Passo 6">Reforço Docker: shell no container</Parte>
+</Partes>
+
+<Destaque titulo="⏱️ Prática mais curta hoje">
+
+Como a primeira parte da aula foi a **N1 da 2ª etapa**, sobra menos tempo de laboratório. Se não conseguir concluir todos os passos em aula, termine fora dela — este roteiro é suficiente pra você seguir sozinho, e as observações podem ser preenchidas depois.
+
+</Destaque>
+
+<Passo numero={1} de={6} titulo="Montando uma estrutura de teste">
+
+<Intro>Antes de manipular arquivos em lote, precisamos de arquivos para manipular — criados de forma controlada, para não haver risco.</Intro>
+
+<Comando passo={1} cmd="mkdir -p ~/lab12/logs && cd ~/lab12 && touch relatorio{1..5}.txt sistema{1..3}.log notas.md">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    `mkdir -p` cria o diretório e os pais que faltarem. O `{1..5}` é expansão de chaves: o shell gera `relatorio1.txt` até `relatorio5.txt` automaticamente.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    Já é um coringa em ação — nove arquivos criados com um comando só, em vez de nove `touch` separados.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`$ mkdir -p ~/lab12/logs && cd ~/lab12 && touch relatorio{1..5}.txt sistema{1..3}.log notas.md
+$ ls
+logs  notas.md  relatorio1.txt  relatorio2.txt  relatorio3.txt
+relatorio4.txt  relatorio5.txt  sistema1.log  sistema2.log  sistema3.log`}</Terminal>
+
+  <Esperar>
+    nove arquivos e um diretório `logs` vazio. Trabalhe sempre dentro de `~/lab12` nos próximos passos — assim nenhum comando de hoje toca seus arquivos pessoais.
+  </Esperar>
+
+</Comando>
+
+</Passo>
+
+<Passo numero={2} de={6} titulo="A técnica de segurança: veja antes de agir">
+
+<Intro>Este é o passo mais importante do roteiro. No shell não existe lixeira — o que você apaga, some. A defesa é sempre testar o padrão antes de usá-lo num comando destrutivo.</Intro>
+
+<Comando passo={2} cmd="echo *.log e ls *.txt">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    Quem expande o coringa é o **shell**, antes do comando rodar. Então `echo` mostra exatamente a lista que qualquer outro comando receberia.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    É a diferença entre apagar o que você quis e apagar o que você não percebeu que casava com o padrão.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`$ echo *.log
+sistema1.log sistema2.log sistema3.log
+$ ls *.txt
+relatorio1.txt  relatorio2.txt  relatorio3.txt  relatorio4.txt  relatorio5.txt
+$ echo relatorio[12].txt
+relatorio1.txt relatorio2.txt`}</Terminal>
+
+  <Esperar>
+    a lista expandida. Experimente também `echo *`, `echo relatorio?.txt` e `echo *.{txt,md}` pra ver como cada coringa se comporta.
+  </Esperar>
+
+  <Dica titulo="Por que o echo mostra a lista se eu não digitei os nomes?">
+
+  Porque o `echo` nunca viu o coringa. O shell substituiu `*.log` pela lista de arquivos correspondentes **antes** de chamar o `echo` — que apenas imprimiu o que recebeu. É exatamente isso que acontece com `rm`, `cp` e todos os outros. Por isso testar com `echo` é seguro e confiável.
+
+  </Dica>
+
+</Comando>
+
+<Rascunho encontro={12} numero={1}>
+  por que testar um coringa com echo ou ls antes de usá-lo num rm é uma boa prática? Quem expande o coringa: o shell ou o comando?
+</Rascunho>
+
+</Passo>
+
+<Passo numero={3} de={6} titulo="Manipulando em lote">
+
+<Intro>Agora sim — depois de confirmar o padrão no passo 2, use-o para valer.</Intro>
+
+<Comando passo={3} cmd="mv *.log logs/ && ls logs/">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    Move todos os arquivos `.log` de uma vez para o subdiretório `logs/`. O mesmo `mv` também renomeia, quando o destino é um nome de arquivo.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    É a resposta da pergunta do slide: organizar dezenas ou centenas de arquivos num comando, não num por um.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`$ mv *.log logs/ && ls logs/
+sistema1.log  sistema2.log  sistema3.log
+$ cp -r logs/ logs_backup/
+$ ls
+logs  logs_backup  notas.md  relatorio1.txt ...`}</Terminal>
+
+  <Esperar>
+    os três `.log` agora dentro de `logs/` e uma cópia completa em `logs_backup/`. Sem o `-r` no `cp`, copiar um diretório dá erro — teste e veja a mensagem.
+  </Esperar>
+
+</Comando>
+
+</Passo>
+
+<Passo numero={4} de={6} titulo="Procurar arquivos e procurar conteúdo">
+
+<Intro>Duas buscas diferentes: uma pelo nome do arquivo, outra pelo que está escrito dentro dele.</Intro>
+
+<Comando passo={4} cmd='find ~/lab12 -name "*.log" e grep -rn "ERRO" ~/lab12'>
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    `find` percorre a árvore de diretórios procurando **pelo nome**. `grep -rn` procura **dentro** dos arquivos, mostrando arquivo e número da linha.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    "Onde está esse arquivo?" e "onde aparece essa mensagem de erro?" são duas perguntas distintas, com ferramentas distintas.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`$ echo "[ERRO] falha ao conectar" > logs/sistema1.log
+$ find ~/lab12 -name "*.log"
+/home/aluno/lab12/logs/sistema1.log
+/home/aluno/lab12/logs/sistema2.log
+/home/aluno/lab12/logs_backup/sistema1.log
+$ grep -rn "ERRO" ~/lab12
+/home/aluno/lab12/logs/sistema1.log:1:[ERRO] falha ao conectar`}</Terminal>
+
+  <Esperar>
+    o `find` lista caminhos de arquivos; o `grep -rn` mostra **arquivo:linha:conteúdo**. Repare que o `find` encontrou também a cópia em `logs_backup/`, mas o `grep` só achou a mensagem onde ela realmente foi escrita.
+  </Esperar>
+
+  <Dica titulo="Meu grep não encontrou nada">
+
+  Confirme que você rodou o `echo "[ERRO] ..." > logs/sistema1.log` antes — os arquivos criados com `touch` no passo 1 estão vazios. O `grep` diferencia maiúsculas de minúsculas por padrão; use `grep -rni` para ignorar essa diferença.
+
+  </Dica>
+
+</Comando>
+
+</Passo>
+
+<Passo numero={5} de={6} titulo="Substituir ou acrescentar: a diferença que importa">
+
+<Intro>Os dois operadores de redirecionamento parecem quase iguais — e confundi-los é a causa clássica de "meu script apagou o log inteiro".</Intro>
+
+<Comando passo={5} cmd="> versus >>">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    `>` **substitui** todo o conteúdo do arquivo. `>>` **acrescenta** ao final, preservando o que já existia.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    Todo script que grava log usa `>>`. Usar `>` por engano descarta silenciosamente todo o histórico anterior.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`$ echo "primeira linha" > relatorio.txt
+$ echo "segunda linha" >> relatorio.txt
+$ cat relatorio.txt
+primeira linha
+segunda linha
+$ echo "apaguei tudo" > relatorio.txt
+$ cat relatorio.txt
+apaguei tudo`}</Terminal>
+
+  <Esperar>
+    as duas primeiras linhas convivendo, e depois **desaparecendo** quando o `>` é usado. Rode você mesmo e veja o conteúdo sumir — é uma lição que se aprende melhor vendo.
+  </Esperar>
+
+</Comando>
+
+<Rascunho encontro={12} numero={2}>
+  qual a diferença prática entre \> e \>\>? Descreva uma situação real em que usar o errado causaria um problema sério.
+</Rascunho>
+
+</Passo>
+
+<Divisor>Reforço Docker · shell dentro do container</Divisor>
+
+<Passo numero={6} de={6} titulo="Os mesmos comandos, do lado de dentro">
+
+<Intro>Vocês já usaram `docker exec` no Encontro 5. Agora dá pra usar de forma interativa — abrindo um shell dentro do container e trabalhando lá.</Intro>
+
+<Comando passo={6} cmd="docker run -d --name shelldemo alpine sleep 600 depois docker exec -it shelldemo sh">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    `-it` significa interativo + terminal: em vez de rodar um comando e sair, você fica **dentro** do container, com um shell próprio.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    É exatamente assim que se diagnostica um container quebrado em produção — entrando nele e usando os comandos básicos.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`$ docker exec -it shelldemo sh
+$ pwd
+/
+$ ls /
+bin  dev  etc  home  proc  root  tmp  usr  var
+$ mkdir -p /teste && touch /teste/arq{1..3}.txt && ls /teste
+arq1.txt  arq2.txt  arq3.txt
+$ exit`}</Terminal>
+
+  <Esperar>
+    o prompt muda para `/ #` — você está dentro do container. Os coringas funcionam igual. Note que a árvore de arquivos é **outra**: você não vê seu `~/lab12` ali, porque é um sistema de arquivos isolado. Digite `exit` para voltar.
+  </Esperar>
+
+  <Dica titulo='Por que "sh" e não "bash"?'>
+
+  A imagem `alpine` é mínima e não inclui o `bash` — só o `sh`, mais básico. É um bom lembrete de por que dominar os comandos essenciais importa: em imagens enxutas você não tem as ferramentas confortáveis à disposição, e não dá pra instalar nada no meio de um incidente.
+
+  </Dica>
+
+  <Esperar>
+    **Limpeza:** ao sair, rode `docker stop shelldemo && docker rm shelldemo`.
+  </Esperar>
+
+</Comando>
+
+<Rascunho encontro={12} numero={3}>
+  livre: o que você notou ao usar os comandos dentro do container em vez do host? Ou uma dúvida que sobrou de hoje
+</Rascunho>
+
+</Passo>
+
+<Exemplos>
+  <Exemplo tipo="fraca">
+
+  "É melhor testar com echo antes de apagar."
+
+  </Exemplo>
+  <Exemplo tipo="forte">
+
+  "Quem expande o coringa é o shell, não o comando — quando rodei `echo *.log`, o echo recebeu a lista já pronta e nunca viu o asterisco. Como `rm` funciona exatamente do mesmo jeito, testar o padrão com `echo` ou `ls` antes mostra precisamente o que seria apagado. Sem lixeira no shell, essa checagem é a única defesa contra apagar um arquivo que casava com o padrão sem eu perceber."
+
+  </Exemplo>
+</Exemplos>
+
+<Teoria>
+
+Os passos 1–5 são os comandos básicos e de manipulação de arquivos do Laureano (p. 33–38 e 43–53). O passo 2 demonstra o papel do shell como interpretador descrito pelo Tanenbaum (p. 32–33): a expansão de coringas acontece **no shell**, antes de qualquer chamada de sistema — as mesmas chamadas que vocês rastrearam com `strace` no Encontro 3. O passo 5 retoma o redirecionamento de fluxos do Encontro 6, e o passo 6 é o gancho Docker do slide 10.
+
+</Teoria>
+
+<Checklist encontro={12}>
+  <Item id="item-1">Criei a estrutura de teste em `~/lab12`</Item>
+  <Item id="item-2">Testei coringas com `echo` antes de usá-los</Item>
+  <Item id="item-3">Movi e copiei arquivos em lote com coringa</Item>
+  <Item id="item-4">Usei `find` por nome e `grep -rn` por conteúdo</Item>
+  <Item id="item-5">Comprovei a diferença entre `>` e `>>`</Item>
+  <Item id="item-6">Entrei num container com `docker exec -it` e usei os comandos lá dentro</Item>
+  <Item id="item-7">Limpei o container de teste</Item>
+  <Item id="item-8">Preenchi as 3 observações acima (vou colar no quiz semanal)</Item>
+</Checklist>

@@ -1,0 +1,373 @@
+<Abertura duracao="~49 min" titulo="Construindo um script de monitoramento, peça por peça">
+
+Hoje você não escreve vários scripts soltos — escreve **um só**, que cresce a cada passo. No fim, ele verifica o disco, decide se há problema, registra em log e avisa. É o mesmo tipo de ferramenta que roda de madrugada em servidores reais.
+
+</Abertura>
+
+<Partes>
+  <Parte rotulo="Passos 1–6">Do primeiro script ao monitor completo</Parte>
+  <Parte rotulo="Passo 7">Reforço Docker: script que controla container</Parte>
+</Partes>
+
+<Destaque titulo="📖 Este roteiro é a leitura obrigatória da semana">
+
+Nenhum dos dois livros-base da disciplina cobre shell script. Por isso, nesta semana, **este documento substitui o capítulo de livro** — e o quiz cobra o conteúdo dele.
+
+Leia as explicações, não só os comandos. Os blocos "o que é" e "por que importa" são o conteúdo teórico da semana.
+
+</Destaque>
+
+<Passo numero={1} de={7} titulo="O primeiro script que roda">
+
+<Intro>Um script é um arquivo de texto com comandos. Três coisas o tornam executável: o shebang, o conteúdo e a permissão.</Intro>
+
+<Comando passo={1} cmd="nano ~/monitor.sh">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    A primeira linha, `#!/bin/bash`, é o **shebang**: diz ao sistema qual programa deve interpretar este arquivo. Sem ela, o SO não sabe que é um script bash.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    É o que transforma um arquivo de texto qualquer num programa executável. Nenhuma compilação é necessária — o shell já é o interpretador.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`#!/bin/bash
+
+echo "Monitor de sistema"
+echo "Executado por: $USER"`}</Terminal>
+
+  <Esperar>
+    salve com `Ctrl+O`, Enter, `Ctrl+X`. Depois rode `chmod +x ~/monitor.sh` e execute com `~/monitor.sh`. O `$USER` é uma variável que o próprio sistema já define com seu nome de usuário.
+  </Esperar>
+
+  <Dica titulo='Deu "Permission denied"'>
+
+  Faltou o `chmod +x ~/monitor.sh`. Esse é o erro mais comum de quem começa: o arquivo existe e o conteúdo está certo, mas sem a permissão de execução o sistema se recusa a rodá-lo. Confira com `ls -l ~/monitor.sh` — devem aparecer `x` nas permissões.
+
+  </Dica>
+
+</Comando>
+
+</Passo>
+
+<Passo numero={2} de={7} titulo="Variáveis e a captura da saída de um comando">
+
+<Intro>Este é o conceito mais importante do encontro: um script pode guardar o **resultado** de um comando numa variável e decidir o que fazer com ele.</Intro>
+
+<Comando passo={2} cmd="Acrescente ao monitor.sh">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    `VAR="valor"` atribui — **sem espaços em volta do `=`**. `$(comando)` executa o comando e devolve a saída dele, que pode ser guardada numa variável.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    É o que permite o script *reagir ao estado real da máquina*, em vez de executar sempre a mesma coisa cegamente.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`#!/bin/bash
+
+LIMITE=80
+DATA=$(date +%F)
+USO=$(df / | tail -1 | awk '{print $5}' | tr -d '%')
+
+echo "Data: $DATA"
+echo "Uso do disco: \${USO}%"
+echo "Limite configurado: \${LIMITE}%"`}</Terminal>
+
+  <Esperar>
+    o script imprime a data de hoje e o percentual real de uso do seu disco. A linha do `USO` é um pipeline do Encontro 6: pega a saída do `df`, fica com a última linha, extrai a 5ª coluna e remove o símbolo `%` — sobrando só o número.
+  </Esperar>
+
+  <Dica titulo="Por que as chaves em ${USO}%?">
+
+  As chaves delimitam onde o nome da variável termina. Sem elas, `$USO%` ainda funcionaria neste caso, mas `$USOpercent` faria o shell procurar uma variável chamada `USOpercent`, que não existe. Usar `${}` sempre que houver texto colado é um bom hábito.
+
+  </Dica>
+
+  <Dica titulo='Erro: "LIMITE: command not found"'>
+
+  Você deixou espaço em volta do `=`. Em bash, `LIMITE = 80` é interpretado como "execute o comando `LIMITE` com os argumentos `=` e `80`". Escreva sempre `LIMITE=80`, sem espaço algum.
+
+  </Dica>
+
+</Comando>
+
+<Rascunho encontro={13} numero={1}>
+  o que a construção $(...) faz, e por que ela é essencial para um script de monitoramento? Use a linha do USO como exemplo.
+</Rascunho>
+
+</Passo>
+
+<Passo numero={3} de={7} titulo="Fazendo o script decidir">
+
+<Intro>Com o valor capturado, o script pode comparar e agir de formas diferentes conforme o resultado.</Intro>
+
+<Comando passo={3} cmd="Acrescente a condicional">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    `if [ condição ]; then ... else ... fi`. Os **espaços dentro dos colchetes são obrigatórios**, e `-gt` significa "maior que" para números.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    Sem condicional, um monitor não monitora — ele apenas imprime. É o `if` que transforma dado em decisão.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`if [ "$USO" -gt "$LIMITE" ]; then
+  echo "ALERTA: disco em \${USO}%, acima do limite de \${LIMITE}%"
+else
+  echo "OK: disco em \${USO}%, dentro do limite"
+fi`}</Terminal>
+
+  <Esperar>
+    provavelmente a mensagem "OK". Para testar o outro caminho, baixe temporariamente o limite (`LIMITE=10`) e rode de novo — o script deve passar a alertar. Depois volte para 80.
+  </Esperar>
+
+  <Dica titulo='Por que as aspas em "$USO" e "$LIMITE"?'>
+
+  Se por algum motivo a variável estiver vazia, sem aspas a linha vira `if [ -gt 80 ]` — erro de sintaxe que quebra o script. Com aspas, vira `if [ "" -gt "80" ]`, que falha de forma controlada. **Sempre use aspas em volta de variáveis dentro de testes** — é a regra que evita mais bugs em shell script.
+
+  </Dica>
+
+  <Dica titulo='Erro: "[: missing ]" ou similar'>
+
+  Faltou espaço dentro dos colchetes. `[$USO -gt $LIMITE]` está errado; o certo é `[ "$USO" -gt "$LIMITE" ]`, com espaço depois do `[` e antes do `]`. O `[` é, na verdade, um comando — e comandos precisam ser separados dos argumentos por espaço.
+
+  </Dica>
+
+</Comando>
+
+</Passo>
+
+<Passo numero={4} de={7} titulo="Repetindo para vários itens">
+
+<Intro>O laço `for` aplica uma sequência inteira de comandos a cada item de uma lista — indo além do que o coringa do Encontro 12 permitia.</Intro>
+
+<Comando passo={4} cmd="Acrescente o laço">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    `for VAR in lista; do ... done`. A cada volta, `VAR` assume o valor do item seguinte da lista.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    O coringa aplica *um* comando a muitos arquivos. O `for` aplica uma *sequência de decisões* a cada um — inclusive com `if` dentro.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`echo "--- Verificando pontos de montagem ---"
+for PONTO in / /home /tmp; do
+  if [ -d "$PONTO" ]; then
+    ESPACO=$(df -h "$PONTO" | tail -1 | awk '{print $4}')
+    echo "$PONTO tem $ESPACO livres"
+  else
+    echo "$PONTO não existe nesta máquina"
+  fi
+done`}</Terminal>
+
+  <Esperar>
+    uma linha por ponto de montagem. O teste `-d` verifica se o diretório existe — assim o script não quebra numa máquina onde `/home` não seja partição separada. Esse tipo de defesa é o que diferencia script frágil de script confiável.
+  </Esperar>
+
+</Comando>
+
+</Passo>
+
+<Passo numero={5} de={7} titulo="Uma função para registrar log">
+
+<Intro>Quando o mesmo trecho se repete em vários pontos, ele vira função — e passa a ter um só lugar para ser corrigido.</Intro>
+
+<Comando passo={5} cmd="Adicione a função log() no topo (logo após o shebang)">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    `nome() { ... }` define a função. Dentro dela, `$1` é o primeiro argumento recebido na chamada.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    Se amanhã o formato do log mudar, você altera um lugar só — em vez de caçar todos os `echo` espalhados pelo script.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`#!/bin/bash
+
+ARQUIVO_LOG=~/monitor.log
+
+log() {
+  echo "[$(date +'%F %T')] $1" | tee -a "$ARQUIVO_LOG"
+}
+
+# ... resto do script ...
+log "Verificação iniciada"`}</Terminal>
+
+  <Esperar>
+    a mensagem aparece na tela **e** é gravada no arquivo. O `tee -a` faz as duas coisas ao mesmo tempo (o `-a` é de "append", equivalente ao `>>` do Encontro 12). Confira com `cat ~/monitor.log`.
+  </Esperar>
+
+  <Dica titulo="Por que a função precisa vir antes de ser chamada?">
+
+  O bash lê o script de cima para baixo. Se você chamar `log` numa linha anterior à definição da função, ele ainda não sabe que ela existe e dá "command not found". Por isso funções ficam sempre no topo, logo após o shebang.
+
+  </Dica>
+
+</Comando>
+
+<Rascunho encontro={13} numero={2}>
+  qual a vantagem de usar uma função log() em vez de repetir echo em vários pontos do script?
+</Rascunho>
+
+</Passo>
+
+<Passo numero={6} de={7} titulo="O script completo">
+
+<Intro>Junte tudo. Este é o resultado final — um monitor de disco funcional, com log e código de saída.</Intro>
+
+<Comando passo={6} cmd="Versão final do monitor.sh">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    Todas as peças anteriores integradas, mais o `exit` com código apropriado ao final.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    O `exit 1` sinaliza erro a quem chamou o script — é assim que uma ferramenta de agendamento ou um pipeline sabe que algo deu errado.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`#!/bin/bash
+
+ARQUIVO_LOG=~/monitor.log
+LIMITE=80
+
+log() {
+  echo "[$(date +'%F %T')] $1" | tee -a "$ARQUIVO_LOG"
+}
+
+log "Verificação iniciada"
+
+USO=$(df / | tail -1 | awk '{print $5}' | tr -d '%')
+
+if [ "$USO" -gt "$LIMITE" ]; then
+  log "ALERTA: disco em \${USO}%, acima do limite"
+  exit 1
+else
+  log "OK: disco em \${USO}%"
+  exit 0
+fi`}</Terminal>
+
+  <Esperar>
+    depois de rodar, verifique o código de saída com `echo $?` — deve ser `0` se estiver OK. Teste também `./monitor.sh && echo "tudo certo"`: a segunda parte só executa se o script sair com 0, exatamente como o `&&` que vocês usam desde o Encontro 5.
+  </Esperar>
+
+</Comando>
+
+</Passo>
+
+<Divisor>Reforço Docker · script que controla container</Divisor>
+
+<Passo numero={7} de={7} titulo="Um script que garante o container no ar">
+
+<Intro>Última peça: um script que verifica se o container está rodando e, se não estiver, o sobe. É o embrião do toolkit do projeto final.</Intro>
+
+<Comando passo={7} cmd="nano ~/garante_container.sh">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    `docker ps -q -f name=...` devolve o ID do container se ele estiver rodando, ou **nada** se não estiver. O teste `-z` verifica se a variável ficou vazia.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    É a lógica básica de qualquer ferramenta de orquestração: verificar o estado desejado e agir só quando ele não for o real.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`#!/bin/bash
+
+NOME=meuservico
+RODANDO=$(docker ps -q -f name="$NOME")
+
+if [ -z "$RODANDO" ]; then
+  echo "Container $NOME não está no ar. Subindo..."
+  docker run -d --name "$NOME" alpine sleep 600
+else
+  echo "Container $NOME já está rodando (ID: $RODANDO)"
+fi`}</Terminal>
+
+  <Esperar>
+    na primeira execução, o script sobe o container. **Rode uma segunda vez** — agora ele deve detectar que já está no ar e não fazer nada. Essa propriedade (rodar várias vezes sem causar estrago) é justamente o que se espera de um script de automação.
+  </Esperar>
+
+  <Dica titulo="Segunda execução deu erro de nome já em uso">
+
+  Significa que o container existe mas está **parado** — o `docker ps -q` só lista os que estão rodando. Remova com `docker rm $NOME` e rode de novo. Um script de produção trataria esse caso também, verificando com `docker ps -aq`; fica como desafio.
+
+  </Dica>
+
+  <Esperar>
+    **Limpeza:** `docker stop meuservico && docker rm meuservico`.
+  </Esperar>
+
+</Comando>
+
+<Rascunho encontro={13} numero={3}>
+  o que aconteceu ao rodar o garante_container.sh duas vezes seguidas? Por que essa propriedade é desejável num script de automação?
+</Rascunho>
+
+</Passo>
+
+<Exemplos>
+  <Exemplo tipo="fraca">
+
+  "O $(...) executa um comando e guarda o resultado."
+
+  </Exemplo>
+  <Exemplo tipo="forte">
+
+  "O `$(...)` executa o comando e substitui a expressão pela saída dele. Na linha `USO=$(df / | tail -1 | awk '{print $5}' | tr -d '%')`, todo o pipeline roda primeiro e só o número final (ex.: 36) é guardado em `USO`. Sem isso, o script só conseguiria imprimir a saída do `df` na tela; com isso, ele consegue **comparar** esse valor com o limite e decidir se alerta. É o que separa um script que informa de um que monitora."
+
+  </Exemplo>
+</Exemplos>
+
+<Teoria>
+
+Como nenhum dos livros-base cobre shell script, este roteiro é a leitura obrigatória da semana. Ainda assim, tudo aqui se apoia no que já foi visto: os pipelines dos passos 2 e 4 são o encadeamento do Encontro 6; o `tee -a` do passo 5 faz o mesmo que o `>>` do Encontro 12; o código de saída do passo 6 é o que sempre esteve por trás do `&&` usado desde o Encontro 5; e o passo 7 antecipa o toolkit do projeto final. Para aprofundar, a bibliografia complementar do PUD (Negus & Bresnahan; Mendonça & Araújo) cobre shell script em profundidade.
+
+</Teoria>
+
+<Checklist encontro={13}>
+  <Item id="item-1">Criei meu primeiro script com shebang e `chmod +x`</Item>
+  <Item id="item-2">Usei variáveis e capturei a saída de um comando com `$(...)`</Item>
+  <Item id="item-3">Fiz o script decidir com `if` e testei os dois caminhos</Item>
+  <Item id="item-4">Percorri uma lista com `for`, com `if` dentro</Item>
+  <Item id="item-5">Criei a função `log()` e confirmei a gravação no arquivo</Item>
+  <Item id="item-6">Montei o script completo e verifiquei o código de saída com `echo $?`</Item>
+  <Item id="item-7">Escrevi um script que verifica e sobe um container, e rodei duas vezes</Item>
+  <Item id="item-8">Li as explicações deste roteiro por inteiro (é a leitura da semana)</Item>
+  <Item id="item-9">Preenchi as 3 observações acima (vou colar no quiz semanal)</Item>
+</Checklist>
