@@ -23,5 +23,5 @@ export const PORTAL = {
   professor: "José Stelio Sampaio Bastos Neto",
   chamada:
     "O guia do aluno das disciplinas do curso: cronograma, material de cada encontro, mapa de leituras e critérios de avaliação — tudo num lugar só.",
-  repositorio: "https://github.com/",
+  repositorio: "https://github.com/steliobastos/portal-ads",
 } as const;

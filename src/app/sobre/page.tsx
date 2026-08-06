@@ -99,6 +99,21 @@ export default function PaginaSobre() {
             correção. Esses ficam fora até estarem fechados — publicar critério de nota em rascunho
             confunde mais do que ajuda.
           </p>
+
+          <p>
+            <a
+              href={PORTAL.repositorio}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-xl border border-line bg-card px-4 py-2.5 text-sm font-medium text-ink transition-colors hover:border-primary-dim hover:text-primary"
+            >
+              Ver o código no GitHub
+              <span aria-hidden className="font-mono text-xs text-ink-faint">
+                ↗
+              </span>
+              <span className="sr-only">(abre em nova aba)</span>
+            </a>
+          </p>
         </div>
       </section>
     </main>

@@ -1,5 +1,7 @@
 # Portal de Disciplinas — IFCE Campus Horizonte
 
+**No ar:** <https://portal-ads-henna.vercel.app>
+
 Guia do aluno das disciplinas do curso de Tecnologia em Análise e Desenvolvimento de Sistemas.
 Começa servindo **Sistemas Operacionais (ADS23)**; a arquitetura é multi-disciplina desde o
 primeiro commit.
@@ -119,16 +121,11 @@ O site é estático (SSG, com revalidação de 1 h nas páginas que destacam o p
 ao ar pela Vercel: cada `git push` na `main` publica em produção; cada branch ganha uma URL de
 preview.
 
-Primeira publicação:
+Publicado em 06/08/2026. Repositório: <https://github.com/steliobastos/portal-ads> ·
+produção: <https://portal-ads-henna.vercel.app>.
 
-```bash
-# 1. crie o repositório público no GitHub e ligue este clone a ele
-git remote add origin https://github.com/<usuario>/portal-ads.git
-git push -u origin main
-
-# 2. em vercel.com → Add New Project → importe o repositório
-#    Framework: Next.js · Build: npm run build · sem variável obrigatória
-```
+Publicar uma mudança é dar `git push` na `main` — a Vercel constrói e coloca no ar em cerca de um
+minuto. Branches ganham URL de preview automaticamente.
 
 ### Variáveis de ambiente
 

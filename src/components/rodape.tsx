@@ -13,6 +13,16 @@ export function Rodape() {
             {PORTAL.instituicao} — {PORTAL.campus}
           </p>
           <p className="mt-1 text-sm text-ink-dim">Prof. {PORTAL.professor}</p>
+
+          <a
+            href={PORTAL.repositorio}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 inline-block font-mono text-xs text-ink-faint hover:text-primary"
+          >
+            código-fonte no GitHub ↗
+            <span className="sr-only"> (abre em nova aba)</span>
+          </a>
         </div>
 
         <nav aria-label="Seções do portal">
