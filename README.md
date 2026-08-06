@@ -48,7 +48,11 @@ npm run material:indexar  # regenera o índice dos arquivos de material
 ```
 src/
   app/
+    layout.tsx                      fontes, paleta e metadados de compartilhamento
     page.tsx                        capa do portal (lista de disciplinas)
+    icon.svg                        favicon do portal
+    opengraph-image.tsx             prévia do link (gerada no build, 1200×630)
+    robots.ts · sitemap.ts          derivados da camada de conteúdo
     [disciplina]/
       layout.tsx                    cabeçalho, navegação e rodapé da disciplina
       page.tsx                      visão geral: próximo encontro, ementa, avaliação
@@ -64,6 +68,9 @@ src/
     index.ts                        slug → conteúdo (único ponto que conhece as disciplinas)
     materiais.gerado.ts             ARQUIVO GERADO — índice dos HTMLs em public/
     so/                             conteúdo de Sistemas Operacionais
+  lib/
+    datas.ts                        formatação de datas em pt-BR
+    site.ts                         endereço público do site (metadata, sitemap)
 public/material/<disciplina>/<pasta>/   slides, roteiros e quizzes em HTML
 ```
 
@@ -95,9 +102,36 @@ escuros (`#10161f`) por contraste técnico. Tipografia: Space Grotesk (títulos)
 Os tokens ficam em `@theme`, no `globals.css` — trocar a paleta de uma disciplina futura é mexer
 num arquivo só.
 
+## Publicação
+
+O site é estático (SSG, com revalidação de 1 h nas páginas que destacam o próximo encontro) e vai
+ao ar pela Vercel: cada `git push` na `main` publica em produção; cada branch ganha uma URL de
+preview.
+
+Primeira publicação:
+
+```bash
+# 1. crie o repositório público no GitHub e ligue este clone a ele
+git remote add origin https://github.com/<usuario>/portal-ads.git
+git push -u origin main
+
+# 2. em vercel.com → Add New Project → importe o repositório
+#    Framework: Next.js · Build: npm run build · sem variável obrigatória
+```
+
+### Variáveis de ambiente
+
+| Variável | Onde | Para quê |
+|---|---|---|
+| `NEXT_PUBLIC_SITE_URL` | opcional | Endereço absoluto do site. Só é necessária quando houver **domínio próprio** — na Vercel, `src/lib/site.ts` já usa `VERCEL_PROJECT_PRODUCTION_URL` automaticamente. Em desenvolvimento, o padrão é `http://localhost:3000`. |
+
+O endereço absoluto alimenta o `metadataBase` (prévia do link em WhatsApp e Classroom), o
+`sitemap.xml` e o `robots.txt`.
+
 ## Roadmap
 
-- [x] **Fase 1** — esqueleto, identidade visual, conteúdo dos 17 encontros e material servido
+- [x] **Fase 1** — esqueleto, identidade visual, conteúdo dos 17 encontros, material servido,
+      favicon, prévia de compartilhamento, `sitemap.xml`/`robots.txt` e deploy na Vercel
 - [ ] **Fase 2** — migrar os HTMLs para MDX, com componentes React reaproveitáveis
       (`<Terminal>`, `<Leitura>`, `<Checklist>`, `<DicaColapsavel>`)
 - [ ] **Fase 3** — quiz nativo com Supabase: aluno envia por rota server-side, vê só o próprio

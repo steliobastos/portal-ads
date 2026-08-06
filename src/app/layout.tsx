@@ -1,5 +1,6 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Mono, IBM_Plex_Sans, Space_Grotesk } from "next/font/google";
+import { URL_SITE } from "@/lib/site";
 import "./globals.css";
 
 const display = Space_Grotesk({
@@ -23,13 +24,43 @@ const mono = IBM_Plex_Mono({
   display: "swap",
 });
 
+const TITULO = "Portal de Disciplinas — IFCE Campus Horizonte";
+const DESCRICAO =
+  "Guia do aluno das disciplinas do professor José Stelio Sampaio Bastos Neto — Tecnólogo em Análise e Desenvolvimento de Sistemas, IFCE Campus Horizonte.";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(URL_SITE),
   title: {
-    default: "Portal de Disciplinas — IFCE Campus Horizonte",
+    default: TITULO,
     template: "%s · Portal de Disciplinas",
   },
-  description:
-    "Guia do aluno das disciplinas do professor José Stelio Sampaio Bastos Neto — Tecnólogo em Análise e Desenvolvimento de Sistemas, IFCE Campus Horizonte.",
+  description: DESCRICAO,
+  applicationName: "Portal de Disciplinas",
+  authors: [{ name: "José Stelio Sampaio Bastos Neto" }],
+  keywords: [
+    "IFCE",
+    "Campus Horizonte",
+    "Análise e Desenvolvimento de Sistemas",
+    "Sistemas Operacionais",
+    "Linux",
+    "Docker",
+  ],
+  // O link do portal circula por WhatsApp e Classroom: sem estes campos, a
+  // prévia da mensagem sai sem título nem imagem.
+  openGraph: {
+    type: "website",
+    locale: "pt_BR",
+    url: URL_SITE,
+    siteName: "Portal de Disciplinas",
+    title: TITULO,
+    description: DESCRICAO,
+  },
+  twitter: { card: "summary_large_image", title: TITULO, description: DESCRICAO },
+  robots: { index: true, follow: true },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#1b878f",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
