@@ -33,6 +33,16 @@ npm run lint              # ESLint
 npm run material:indexar  # regenera o índice dos arquivos de material
 ```
 
+> **Não rode `npm run build` com o `npm run dev` aberto.** Os dois escrevem no mesmo
+> diretório `.next`, e o build sobrescreve os chunks que o servidor de desenvolvimento já
+> tinha carregado. O sintoma é um erro do tipo `Cannot find module './331.js'` vindo do
+> `webpack-runtime`. A correção é parar o servidor, apagar `.next` e subir de novo:
+>
+> ```bash
+> rm -rf .next    # PowerShell: Remove-Item .next -Recurse -Force
+> npm run dev
+> ```
+
 ## Estrutura
 
 ```
