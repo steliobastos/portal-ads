@@ -51,6 +51,11 @@ export function ListaMateriais({
         const r = ROTULOS[a.tipo];
         return (
           <li key={a.href}>
+            {/*
+             * Navega na mesma aba: o material é um HTML avulso, mas
+             * `npm run material:voltar` injeta nele um botão de volta para o
+             * encontro — então o aluno não fica sem saída.
+             */}
             <a
               href={a.href}
               className="group flex h-full items-start gap-3 rounded-xl border border-line bg-card p-4 transition-colors hover:border-primary-dim"

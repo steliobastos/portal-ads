@@ -19,6 +19,11 @@
   --color-primary-dim: #8fc7ca;
   --color-primary-soft: rgba(27, 135, 143, 0.09);
 
+  /* barra de navegação — a primária escurecida, para o menu se destacar do
+     fundo creme e ficar reconhecível como "a barra do portal" em qualquer página */
+  --color-nav: #0e4a50;
+  --color-nav-line: #17636a;
+
   --color-secondary: #399b3f;
   --color-secondary-dim: #a8d4ab;
   --color-secondary-soft: rgba(57, 155, 63, 0.08);

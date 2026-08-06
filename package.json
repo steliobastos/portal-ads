@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "material:indexar": "node scripts/indexar-materiais.mjs"
+    "material:indexar": "node scripts/indexar-materiais.mjs",
+    "material:voltar": "node scripts/injetar-volta-ao-portal.mjs",
+    "material:preparar": "npm run material:voltar && npm run material:indexar"
   },
   "dependencies": {
     "react": "19.1.0",

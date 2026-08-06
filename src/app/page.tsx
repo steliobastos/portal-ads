@@ -1,10 +1,16 @@
 import Link from "next/link";
+import { Cabecalho } from "@/components/navegacao";
 import { BotaoLink, Cartao, Selo } from "@/components/ui";
-import { DISCIPLINAS } from "@/content";
+import { DISCIPLINAS, DISCIPLINAS_ATIVAS } from "@/content";
 
 export default function Home() {
   return (
     <div className="flex min-h-screen flex-col">
+      {/* Na capa o menu lista as disciplinas — é o que existe para navegar aqui. */}
+      <Cabecalho
+        itens={DISCIPLINAS_ATIVAS.map((d) => ({ href: `/${d.slug}`, rotulo: d.nome }))}
+      />
+
       <main className="mx-auto w-full max-w-5xl flex-1 px-5 py-16 sm:py-24">
         <p className="font-mono text-xs tracking-[0.14em] text-primary uppercase">
           IFCE · Campus Horizonte

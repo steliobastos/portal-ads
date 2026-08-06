@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Cabecalho } from "@/components/navegacao";
 import { conteudoDa, slugsPublicados } from "@/content";
 
 export function generateStaticParams() {
@@ -29,28 +29,9 @@ export default async function LayoutDisciplina({
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-30 border-b border-line bg-bg/95 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-5 py-3">
-          <Link href="/" className="font-mono text-[12.5px] tracking-wide text-ink-dim">
-            <b className="text-primary">IFCE</b> · Portal de Disciplinas
-          </Link>
-
-          <nav aria-label="Seções da disciplina" className="ml-auto">
-            <ul className="flex flex-wrap items-center gap-x-1 gap-y-1 text-sm">
-              {SECOES.map((s) => (
-                <li key={s.href}>
-                  <Link
-                    href={`/${slug}${s.href}`}
-                    className="rounded-lg px-2.5 py-1.5 text-ink-dim transition-colors hover:bg-primary-soft hover:text-primary"
-                  >
-                    {s.rotulo}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
-        </div>
-      </header>
+      <Cabecalho
+        itens={SECOES.map((s) => ({ href: `/${slug}${s.href}`, rotulo: s.rotulo }))}
+      />
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-5 py-10 sm:py-14">{children}</main>
 

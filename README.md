@@ -30,6 +30,8 @@ Outros comandos:
 npm run build             # build de produção
 npm run typecheck         # tsc --noEmit
 npm run lint              # ESLint
+npm run material:preparar # prepara o material publicado (as duas tarefas abaixo)
+npm run material:voltar   # injeta o botão "voltar ao portal" nos HTMLs de material
 npm run material:indexar  # regenera o índice dos arquivos de material
 ```
 
@@ -85,11 +87,20 @@ Publicar material novo:
 
 ```bash
 # 1. copie os HTMLs para public/material/so/aulaN/
-npm run material:indexar
+npm run material:preparar
 git add -A && git commit -m "Publica material do Encontro N"
 ```
 
 Se o arquivo não existe em disco, ele simplesmente não aparece no site.
+
+### Por que o material recebe um botão injetado
+
+Os HTMLs de material foram escritos antes do portal: são documentos avulsos, com CSS próprio e
+nenhuma navegação. Aberto a partir de um encontro, o aluno entrava no material e ficava sem
+caminho de volta. `scripts/injetar-volta-ao-portal.mjs` insere em cada um deles um botão fixo
+"← Voltar ao Encontro N", entre marcadores `<!-- portal:voltar:… -->` — rodar de novo substitui o
+bloco em vez de duplicar. É uma medida de transição: na fase 2 o material passa a ser MDX
+renderizado dentro do portal, e o botão deixa de ser necessário.
 
 ## Identidade visual
 
