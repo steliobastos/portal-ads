@@ -31,7 +31,9 @@ export default async function PaginaDisciplina({ params }: Props) {
   const hoje = new Date();
   const referencia = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
   const proximo = encontros.find((e) => paraData(e.data) >= referencia) ?? null;
-  const concluidos = encontros.filter((e) => paraData(e.data) < referencia).length;
+  // A Semana 0 é extracurricular: conta como encontro dado, mas não entra no total de 17.
+  const regulares = encontros.filter((e) => e.numero > 0);
+  const concluidos = regulares.filter((e) => paraData(e.data) < referencia).length;
 
   return (
     <div className="space-y-16">
@@ -108,7 +110,7 @@ export default async function PaginaDisciplina({ params }: Props) {
           </Cartao>
 
           <p className="mt-3 text-sm text-ink-faint">
-            {concluidos} de {encontros.length} encontros já aconteceram.
+            {concluidos} de {regulares.length} encontros já aconteceram.
           </p>
         </section>
       )}
