@@ -70,9 +70,17 @@ export function Passo({
   );
 }
 
-/** Frase de contexto logo abaixo do título de um passo. */
+/**
+ * Frase de contexto logo abaixo do título de um passo.
+ *
+ * `div`, e não `p`: quando o texto é escrito em linhas próprias dentro da tag,
+ * o MDX o trata como bloco e já gera um `<p>`. Um `<p>` dentro de outro é HTML
+ * inválido — o navegador fecha o externo sozinho e a hidratação quebra. Com
+ * `div` por fora, o componente funciona independentemente de como o autor
+ * quebra as linhas.
+ */
 export function Intro({ children }: { children: ReactNode }) {
-  return <p className="mt-2 mb-6 max-w-3xl text-ink-dim">{children}</p>;
+  return <div className="mt-2 mb-6 max-w-3xl text-ink-dim [&_p]:my-0">{children}</div>;
 }
 
 /** Cartão de um comando: o número da etapa, o comando e tudo que o explica. */
@@ -143,12 +151,18 @@ export function Terminal({ comando, children }: { comando?: string; children?: R
   );
 }
 
-/** "O que esperar" — o parágrafo que calibra a expectativa antes de rodar. */
+/**
+ * "O que esperar" — calibra a expectativa antes de o aluno rodar o comando.
+ *
+ * `div` por fora pelo mesmo motivo do `Intro`. O `[&_p]:inline` faz o parágrafo
+ * que o MDX gera continuar na mesma linha do rótulo em negrito, preservando a
+ * aparência de frase única.
+ */
 export function Esperar({ children }: { children: ReactNode }) {
   return (
-    <p className="text-sm text-ink-dim">
+    <div className="text-sm text-ink-dim [&_p]:my-0 [&_p]:inline">
       <b className="text-ink">O que esperar:</b> {children}
-    </p>
+    </div>
   );
 }
 

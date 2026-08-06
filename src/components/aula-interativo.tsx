@@ -59,12 +59,23 @@ export function Rascunho({
 
   return (
     <div className="mt-6 rounded-xl border border-line bg-panel p-4">
-      <label htmlFor={id} className="block text-sm text-ink-dim">
-        <b className="text-ink">Rascunho da observação {numero}</b> — {children}
+      {/*
+       * O enunciado fica fora do `<label>`, ligado por `aria-describedby`: o MDX
+       * gera um `<p>` quando o texto é escrito em linhas próprias, e `<p>`
+       * dentro de `<label>` é HTML inválido. De quebra, o leitor de tela anuncia
+       * um rótulo curto e a pergunta como descrição, em vez de um bloco só.
+       */}
+      <label htmlFor={id} className="block text-sm font-semibold text-ink">
+        Rascunho da observação {numero}
       </label>
+
+      <div id={`${id}-pergunta`} className="mt-1 text-sm text-ink-dim [&_p]:my-0">
+        {children}
+      </div>
 
       <textarea
         id={id}
+        aria-describedby={`${id}-pergunta`}
         value={texto}
         onChange={(e) => setTexto(e.target.value)}
         rows={4}
