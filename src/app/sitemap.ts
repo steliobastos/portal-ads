@@ -4,12 +4,15 @@ import { URL_SITE } from "@/lib/site";
 
 const SECOES = ["encontros", "cronograma", "leituras", "avaliacao"] as const;
 
+/** Rotas do portal que não pertencem a nenhuma disciplina. */
+const GLOBAIS = ["/", "/disciplinas", "/avisos", "/links", "/sobre"];
+
 /**
  * Mapa do site. Deriva das mesmas funções que geram as rotas — disciplina nova
  * ou encontro novo entra aqui sozinho, sem edição manual.
  */
 export default function sitemap(): MetadataRoute.Sitemap {
-  const rotas: string[] = ["/"];
+  const rotas: string[] = [...GLOBAIS];
 
   for (const slug of slugsPublicados()) {
     rotas.push(`/${slug}`);

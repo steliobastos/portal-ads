@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Mono, IBM_Plex_Sans, Space_Grotesk } from "next/font/google";
+import { Cabecalho } from "@/components/navegacao";
+import { Rodape } from "@/components/rodape";
 import { URL_SITE } from "@/lib/site";
 import "./globals.css";
 
@@ -66,7 +68,16 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR" className={`${display.variable} ${corpo.variable} ${mono.variable}`}>
-      <body className="min-h-screen antialiased">{children}</body>
+      {/*
+       * Cabeçalho e rodapé vivem aqui, no layout raiz, e não nos layouts de
+       * seção: assim nenhuma página do portal pode nascer sem navegação — foi
+       * exatamente o que aconteceu com a capa e o 404 antes.
+       */}
+      <body className="flex min-h-screen flex-col antialiased">
+        <Cabecalho />
+        {children}
+        <Rodape />
+      </body>
     </html>
   );
 }

@@ -22,6 +22,15 @@ export function dataCurta(iso: string): string {
   return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
+/** "14" e "ago" — as duas metades do selo de data usado nos cartões da home. */
+export function diaEMes(iso: string): { dia: string; mes: string } {
+  const d = paraData(iso);
+  return {
+    dia: String(d.getDate()).padStart(2, "0"),
+    mes: MESES[d.getMonth()].slice(0, 3),
+  };
+}
+
 /** "14 de agosto de 2026" — formato por extenso. */
 export function dataExtensa(iso: string): string {
   const d = paraData(iso);
