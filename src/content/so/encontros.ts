@@ -12,7 +12,7 @@ export const ENCONTROS: Encontro[] = [
     numero: 0,
     pasta: "aula0",
     titulo: "Onboarding de ambiente",
-    data: "2026-08-04",
+    data: "2026-08-07",
     etapa: 1,
     unidade: "Semana 0",
     resumo:

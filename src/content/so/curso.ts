@@ -87,7 +87,7 @@ export const SEM_AULA = [
 ];
 
 export const ETAPAS = [
-  { numero: 1 as const, periodo: "04/08 a 08/10", conteudo: "Onboarding + Unidades I, II e III" },
+  { numero: 1 as const, periodo: "07/08 a 08/10", conteudo: "Onboarding + Unidades I, II e III" },
   { numero: 2 as const, periodo: "09/10 a 15/12", conteudo: "Unidades IV e VI + projeto integrador" },
 ];
 

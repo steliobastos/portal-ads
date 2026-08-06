@@ -31,7 +31,6 @@ export const AVISOS: Aviso[] = [
       "Todo o material da disciplina passa a ficar aqui: slides, roteiros de laboratório e quizzes, encontro por encontro, junto com o cronograma e o mapa de leituras. O endereço é o mesmo o semestre inteiro — pode salvar.",
     etiqueta: "Portal",
     href: "/so/encontros",
-    fixado: true,
   },
   {
     data: "2026-08-06",
@@ -43,13 +42,16 @@ export const AVISOS: Aviso[] = [
     href: "/so/encontros",
   },
   {
-    data: "2026-08-04",
+    // Sem a data no texto de propósito: ela vive em `so/encontros.ts` e aparece
+    // no cartão do encontro. Repetida aqui, sairia do ar na primeira remarcação.
+    data: "2026-08-06",
     titulo: "Semana 0 — monte o ambiente antes da primeira aula",
     texto:
-      "O roteiro de onboarding cria a máquina virtual com Ubuntu 24.04 e instala o Docker. Quem chegar ao Encontro 1 com o ambiente de pé não perde a aula com instalação.",
+      "O onboarding é o próximo encontro. O roteiro cria a máquina virtual com Ubuntu 24.04 e instala o Docker. Quem chegar ao Encontro 1 com o ambiente de pé não perde a aula com instalação.",
     etiqueta: "Calendário",
     disciplina: "so",
     href: "/so/encontros/0",
+    fixado: true,
   },
 ];
 

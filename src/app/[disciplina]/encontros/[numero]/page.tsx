@@ -74,7 +74,8 @@ export default async function PaginaEncontro({ params }: Props) {
         <div className="flex flex-wrap items-center gap-2">
           <Selo tom="primary">{rotulo}</Selo>
           <Selo>{dataExtensa(encontro.data)}</Selo>
-          <Selo>{encontro.unidade}</Selo>
+          {/* Na Semana 0, unidade e rótulo são a mesma coisa — não repetir. */}
+          {encontro.unidade !== rotulo && <Selo>{encontro.unidade}</Selo>}
           {encontro.marco && (
             <Selo tom="alert">
               {encontro.marco.nota} · {encontro.marco.etapa}ª etapa
