@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roteiro de Laboratório — Encontro 13 · Sistemas Operacionais ADS23</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#fbfaf5;
+    --bg-card:#ffffff;
+    --bg-card-2:#f3f1e8;
+    --line:#e2ddd0;
+    --line-soft:#ece8db;
+    --primary:#1b878f;
+    --primary-dim:#8fc7ca;
+    --primary-soft:rgba(27,135,143,.09);
+    --secondary:#399b3f;
+    --secondary-soft:rgba(57,155,63,.08);
+    --alert:#cd191e;
+    --alert-soft:rgba(205,25,30,.07);
+    --text:#20241f;
+    --text-dim:#5b6058;
+    --text-faint:#8b9088;
+    --font-display:'Space Grotesk',sans-serif;
+    --font-body:'IBM Plex Sans',sans-serif;
+    --font-mono:'IBM Plex Mono',monospace;
+    --term-bg:#10161f;
+    --term-line:#212b3a;
+    --term-dim:#8d96a8;
+    --term-prompt:#7ee787;
+    --term-accent:#5fd9d3;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-body);line-height:1.6;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3,h4{font-family:var(--font-display);font-weight:600;color:var(--text);letter-spacing:-.01em;}
+  code{font-family:var(--font-mono);background:var(--primary-soft);color:var(--primary);padding:1px 6px;border-radius:4px;font-size:.92em;}
+  ::selection{background:var(--primary-soft);color:var(--text);}
+
+  .topbar{
+    position:sticky;top:0;z-index:20;background:rgba(251,250,245,.92);backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);padding:12px 22px;
+    display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  }
+  .topbar .brand{font-family:var(--font-mono);font-size:12.5px;color:var(--text-dim);}
+  .topbar .brand b{color:var(--primary);}
+  .topbar .progress-mini{font-family:var(--font-mono);font-size:12px;color:var(--text-faint);}
+
+  .wrap{max-width:880px;margin:0 auto;padding:36px 22px 80px;}
+
+  .hero{margin-bottom:44px;}
+  .hero .eyebrow{font-family:var(--font-mono);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);margin-bottom:12px;display:flex;align-items:center;gap:10px;}
+  .hero .eyebrow::before{content:'';width:22px;height:1px;background:var(--primary-dim);}
+  .hero h1{font-size:clamp(26px,4vw,38px);margin:0 0 14px;}
+  .hero p{color:var(--text-dim);font-size:16px;max-width:640px;margin:0;}
+  .hero .parts{display:flex;gap:14px;margin-top:22px;flex-wrap:wrap;}
+  .hero .part-chip{background:var(--bg-card);border:1px solid var(--line);border-radius:8px;padding:10px 16px;font-family:var(--font-mono);font-size:12.5px;color:var(--text-dim);}
+  .hero .part-chip b{color:var(--primary);}
+
+  .block{margin-bottom:52px;}
+  .block-num{font-family:var(--font-mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-faint);margin-bottom:8px;}
+  .block h2{font-size:22px;margin-bottom:10px;}
+  .block .intro{color:var(--text-dim);font-size:15px;max-width:680px;margin:0 0 20px;}
+
+  .part-divider{display:flex;align-items:center;gap:16px;margin:56px 0 32px;}
+  .part-divider .line{flex:1;height:1px;background:var(--line);}
+  .part-divider .label{font-family:var(--font-mono);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);white-space:nowrap;}
+
+  .cmd-card{background:var(--bg-card);border:1px solid var(--line);border-radius:12px;padding:20px 22px;margin-bottom:18px;}
+  .cmd-title{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+  .step-badge{width:24px;height:24px;border-radius:50%;background:var(--primary);color:#fff;font-family:var(--font-mono);font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  code.big{font-size:15px;padding:4px 10px;}
+
+  .explain-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+  .explain-box{background:var(--bg-card-2);border:1px solid var(--line-soft);border-radius:8px;padding:12px 14px;}
+  .explain-box .lbl{font-family:var(--font-mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-faint);margin-bottom:5px;}
+  .explain-box p{margin:0;font-size:13.5px;color:var(--text-dim);}
+  @media (max-width:680px){.explain-grid{grid-template-columns:1fr;}}
+
+  .terminal-mini{background:var(--term-bg);border:1px solid var(--term-line);border-radius:8px;overflow:hidden;margin-bottom:12px;}
+  .terminal-mini .bar{background:var(--term-bg);padding:6px 10px;display:flex;gap:5px;}
+  .terminal-mini .bar span{width:8px;height:8px;border-radius:50%;background:var(--term-line);}
+  .terminal-mini .body{padding:14px 16px;font-family:var(--font-mono);font-size:13px;color:var(--term-dim);white-space:pre-wrap;line-height:1.55;}
+  .terminal-mini .prompt{color:var(--term-prompt);}
+  .terminal-mini .out{color:var(--term-dim);}
+  .terminal-mini .hi{color:var(--term-accent);}
+  .terminal-mini .err{color:#e0605f;font-weight:600;}
+
+  details.tip{background:var(--bg-card-2);border:1px solid var(--line-soft);border-radius:8px;margin-top:8px;}
+  details.tip summary{padding:10px 14px;cursor:pointer;font-size:13.5px;color:var(--primary);font-family:var(--font-mono);}
+  details.tip .tip-body{padding:0 14px 14px;font-size:13.5px;color:var(--text-dim);}
+
+  .obs-note{font-size:13.5px;color:var(--text-dim);margin-top:2px;}
+  .obs-note b{color:var(--text);}
+
+  .warn-box{background:var(--alert-soft);border:1px solid var(--alert);border-radius:8px;padding:12px 16px;margin-top:12px;font-size:13.5px;color:var(--text-dim);}
+  .warn-box b{color:var(--alert);}
+
+  .example-pair{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0;}
+  .example-box{border-radius:8px;padding:14px 16px;font-size:13.5px;}
+  .example-box.weak{background:var(--alert-soft);border:1px solid var(--alert);}
+  .example-box.good{background:var(--secondary-soft);border:1px solid var(--secondary);}
+  .example-box .lbl{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;margin-bottom:6px;}
+  .example-box.weak .lbl{color:var(--alert);}
+  .example-box.good .lbl{color:var(--secondary);}
+  .example-box p{margin:0;color:var(--text-dim);font-style:italic;}
+  @media (max-width:680px){.example-pair{grid-template-columns:1fr;}}
+
+  .draft-box{margin-top:14px;}
+  .draft-box label{display:block;font-size:13.5px;color:var(--text-dim);margin-bottom:6px;}
+  .draft-box textarea{width:100%;min-height:90px;background:var(--bg-card-2);border:1px solid var(--line);border-radius:8px;color:var(--text);font-family:var(--font-body);font-size:14px;padding:10px 12px;resize:vertical;}
+  .draft-box textarea:focus{outline:none;border-color:var(--primary-dim);}
+  .char-count{font-family:var(--font-mono);font-size:11.5px;color:var(--text-faint);margin-top:5px;text-align:right;}
+  .char-count.ok{color:var(--secondary);}
+
+  .theory-link{background:var(--primary-soft);border:1px solid var(--primary-dim);border-radius:10px;padding:16px 18px;margin-top:20px;}
+  .theory-link .lbl{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;color:var(--primary);margin-bottom:6px;}
+  .theory-link p{margin:0;font-size:14px;color:var(--text-dim);}
+
+  .checklist{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px;}
+  .checklist li{display:flex;align-items:flex-start;gap:12px;background:var(--bg-card);border:1px solid var(--line);border-radius:8px;padding:12px 16px;font-size:14px;color:var(--text-dim);transition:.2s;}
+  .checklist li.checked{border-color:var(--secondary);background:var(--secondary-soft);color:var(--text);}
+  .checklist input[type=checkbox]{width:18px;height:18px;margin-top:1px;accent-color:var(--secondary);flex-shrink:0;}
+
+  .progress{position:sticky;bottom:0;background:rgba(251,250,245,.95);backdrop-filter:blur(6px);border-top:1px solid var(--line);padding:14px 22px;display:flex;align-items:center;gap:16px;justify-content:center;}
+  .progress #progtext{font-family:var(--font-mono);font-size:12.5px;color:var(--text-dim);white-space:nowrap;}
+  .progress .bar{flex:1;max-width:320px;height:6px;background:var(--line-soft);border-radius:3px;overflow:hidden;}
+  .progress .bar i{display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--primary),var(--secondary));transition:width .3s;}
+
+  footer{text-align:center;padding:30px 20px 90px;font-family:var(--font-mono);font-size:11.5px;color:var(--text-faint);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">Sistemas Operacionais · <b>ADS23</b></div>
+  <div class="progress-mini">Encontro 13 de 17 · Roteiro de Laboratório <b style="color:var(--primary)">· leitura obrigatória</b></div>
+</div>
+
+<div class="wrap">
+
+  <div class="hero">
+    <div class="eyebrow">Mão na massa · ~49 min</div>
+    <h1>Construindo um script de monitoramento, peça por peça</h1>
+    <p>Hoje você não escreve vários scripts soltos — escreve <b>um só</b>, que cresce a cada passo. No fim, ele verifica o disco, decide se há problema, registra em log e avisa. É o mesmo tipo de ferramenta que roda de madrugada em servidores reais.</p>
+    <div class="parts">
+      <div class="part-chip"><b>Passos 1–6</b> · Do primeiro script ao monitor completo</div>
+      <div class="part-chip"><b>Passo 7</b> · Reforço Docker: script que controla container</div>
+    </div>
+  </div>
+
+  <div style="background:var(--primary-soft);border:1px solid var(--primary-dim);border-radius:12px;padding:18px 22px;margin-bottom:44px;">
+    <div style="font-family:var(--font-mono);font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--primary);margin-bottom:8px;">📖 Este roteiro é a leitura obrigatória da semana</div>
+    <p style="margin:0 0 8px;font-size:14.5px;color:var(--text-dim);">Nenhum dos dois livros-base da disciplina cobre shell script. Por isso, nesta semana, <b>este documento substitui o capítulo de livro</b> — e o quiz cobra o conteúdo dele.</p>
+    <p style="margin:0;font-size:14.5px;color:var(--text-dim);">Leia as explicações, não só os comandos. Os blocos "o que é" e "por que importa" são o conteúdo teórico da semana.</p>
+  </div>
+
+  <section class="block">
+    <div class="block-num">PASSO 1 DE 7</div>
+    <h2>O primeiro script que roda</h2>
+    <p class="intro">Um script é um arquivo de texto com comandos. Três coisas o tornam executável: o shebang, o conteúdo e a permissão.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">1</span> <code class="big">nano ~/monitor.sh</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p>A primeira linha, <code>#!/bin/bash</code>, é o <b>shebang</b>: diz ao sistema qual programa deve interpretar este arquivo. Sem ela, o SO não sabe que é um script bash.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>É o que transforma um arquivo de texto qualquer num programa executável. Nenhuma compilação é necessária — o shell já é o interpretador.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="out">#!/bin/bash
+
+echo "Monitor de sistema"
+echo "Executado por: $USER"</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> salve com <code>Ctrl+O</code>, Enter, <code>Ctrl+X</code>. Depois rode <code>chmod +x ~/monitor.sh</code> e execute com <code>~/monitor.sh</code>. O <code>$USER</code> é uma variável que o próprio sistema já define com seu nome de usuário.</p>
+      <details class="tip">
+        <summary>Deu "Permission denied"</summary>
+        <div class="tip-body">
+          Faltou o <code>chmod +x ~/monitor.sh</code>. Esse é o erro mais comum de quem começa: o arquivo existe e o conteúdo está certo, mas sem a permissão de execução o sistema se recusa a rodá-lo. Confira com <code>ls -l ~/monitor.sh</code> — devem aparecer <code>x</code> nas permissões.
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">PASSO 2 DE 7</div>
+    <h2>Variáveis e a captura da saída de um comando</h2>
+    <p class="intro">Este é o conceito mais importante do encontro: um script pode guardar o <b>resultado</b> de um comando numa variável e decidir o que fazer com ele.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">2</span> Acrescente ao <code class="big">monitor.sh</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p><code>VAR="valor"</code> atribui — <b>sem espaços em volta do <code>=</code></b>. <code>$(comando)</code> executa o comando e devolve a saída dele, que pode ser guardada numa variável.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>É o que permite o script <i>reagir ao estado real da máquina</i>, em vez de executar sempre a mesma coisa cegamente.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="out">#!/bin/bash
+
+LIMITE=80
+DATA=$(date +%F)
+USO=$(df / | tail -1 | awk '{print $5}' | tr -d '%')
+
+echo "Data: $DATA"
+echo "Uso do disco: ${USO}%"
+echo "Limite configurado: ${LIMITE}%"</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> o script imprime a data de hoje e o percentual real de uso do seu disco. A linha do <code>USO</code> é um pipeline do Encontro 6: pega a saída do <code>df</code>, fica com a última linha, extrai a 5ª coluna e remove o símbolo <code>%</code> — sobrando só o número.</p>
+      <details class="tip">
+        <summary>Por que as chaves em ${USO}%?</summary>
+        <div class="tip-body">
+          As chaves delimitam onde o nome da variável termina. Sem elas, <code>$USO%</code> ainda funcionaria neste caso, mas <code>$USOpercent</code> faria o shell procurar uma variável chamada <code>USOpercent</code>, que não existe. Usar <code>${}</code> sempre que houver texto colado é um bom hábito.
+        </div>
+      </details>
+      <details class="tip">
+        <summary>Erro: "LIMITE: command not found"</summary>
+        <div class="tip-body">
+          Você deixou espaço em volta do <code>=</code>. Em bash, <code>LIMITE = 80</code> é interpretado como "execute o comando <code>LIMITE</code> com os argumentos <code>=</code> e <code>80</code>". Escreva sempre <code>LIMITE=80</code>, sem espaço algum.
+        </div>
+      </details>
+    </div>
+
+    <div class="draft-box">
+      <label for="obs1">Rascunho da observação 1 — o que a construção $(...) faz, e por que ela é essencial para um script de monitoramento? Use a linha do USO como exemplo.</label>
+      <textarea id="obs1" placeholder="Ex: o $(...) executa o comando e guarda a saída na variável, o que permite..."></textarea>
+      <div class="char-count" data-for="obs1">0 caracteres (mínimo 40)</div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">PASSO 3 DE 7</div>
+    <h2>Fazendo o script decidir</h2>
+    <p class="intro">Com o valor capturado, o script pode comparar e agir de formas diferentes conforme o resultado.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">3</span> Acrescente a condicional</div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p><code>if [ condição ]; then ... else ... fi</code>. Os <b>espaços dentro dos colchetes são obrigatórios</b>, e <code>-gt</code> significa "maior que" para números.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>Sem condicional, um monitor não monitora — ele apenas imprime. É o <code>if</code> que transforma dado em decisão.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="out">if [ "$USO" -gt "$LIMITE" ]; then
+  echo "ALERTA: disco em ${USO}%, acima do limite de ${LIMITE}%"
+else
+  echo "OK: disco em ${USO}%, dentro do limite"
+fi</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> provavelmente a mensagem "OK". Para testar o outro caminho, baixe temporariamente o limite (<code>LIMITE=10</code>) e rode de novo — o script deve passar a alertar. Depois volte para 80.</p>
+      <details class="tip">
+        <summary>Por que as aspas em "$USO" e "$LIMITE"?</summary>
+        <div class="tip-body">
+          Se por algum motivo a variável estiver vazia, sem aspas a linha vira <code>if [ -gt 80 ]</code> — erro de sintaxe que quebra o script. Com aspas, vira <code>if [ "" -gt "80" ]</code>, que falha de forma controlada. <b>Sempre use aspas em volta de variáveis dentro de testes</b> — é a regra que evita mais bugs em shell script.
+        </div>
+      </details>
+      <details class="tip">
+        <summary>Erro: "[: missing ]" ou similar</summary>
+        <div class="tip-body">
+          Faltou espaço dentro dos colchetes. <code>[$USO -gt $LIMITE]</code> está errado; o certo é <code>[ "$USO" -gt "$LIMITE" ]</code>, com espaço depois do <code>[</code> e antes do <code>]</code>. O <code>[</code> é, na verdade, um comando — e comandos precisam ser separados dos argumentos por espaço.
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">PASSO 4 DE 7</div>
+    <h2>Repetindo para vários itens</h2>
+    <p class="intro">O laço <code>for</code> aplica uma sequência inteira de comandos a cada item de uma lista — indo além do que o coringa do Encontro 12 permitia.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">4</span> Acrescente o laço</div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p><code>for VAR in lista; do ... done</code>. A cada volta, <code>VAR</code> assume o valor do item seguinte da lista.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>O coringa aplica <i>um</i> comando a muitos arquivos. O <code>for</code> aplica uma <i>sequência de decisões</i> a cada um — inclusive com <code>if</code> dentro.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="out">echo "--- Verificando pontos de montagem ---"
+for PONTO in / /home /tmp; do
+  if [ -d "$PONTO" ]; then
+    ESPACO=$(df -h "$PONTO" | tail -1 | awk '{print $4}')
+    echo "$PONTO tem $ESPACO livres"
+  else
+    echo "$PONTO não existe nesta máquina"
+  fi
+done</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> uma linha por ponto de montagem. O teste <code>-d</code> verifica se o diretório existe — assim o script não quebra numa máquina onde <code>/home</code> não seja partição separada. Esse tipo de defesa é o que diferencia script frágil de script confiável.</p>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">PASSO 5 DE 7</div>
+    <h2>Uma função para registrar log</h2>
+    <p class="intro">Quando o mesmo trecho se repete em vários pontos, ele vira função — e passa a ter um só lugar para ser corrigido.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">5</span> Adicione a função <code class="big">log()</code> no topo (logo após o shebang)</div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p><code>nome() { ... }</code> define a função. Dentro dela, <code>$1</code> é o primeiro argumento recebido na chamada.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>Se amanhã o formato do log mudar, você altera um lugar só — em vez de caçar todos os <code>echo</code> espalhados pelo script.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="out">#!/bin/bash
+
+ARQUIVO_LOG=~/monitor.log
+
+log() {
+  echo "[$(date +'%F %T')] $1" | tee -a "$ARQUIVO_LOG"
+}
+
+# ... resto do script ...
+log "Verificação iniciada"</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> a mensagem aparece na tela <b>e</b> é gravada no arquivo. O <code>tee -a</code> faz as duas coisas ao mesmo tempo (o <code>-a</code> é de "append", equivalente ao <code>&gt;&gt;</code> do Encontro 12). Confira com <code>cat ~/monitor.log</code>.</p>
+      <details class="tip">
+        <summary>Por que a função precisa vir antes de ser chamada?</summary>
+        <div class="tip-body">
+          O bash lê o script de cima para baixo. Se você chamar <code>log</code> numa linha anterior à definição da função, ele ainda não sabe que ela existe e dá "command not found". Por isso funções ficam sempre no topo, logo após o shebang.
+        </div>
+      </details>
+    </div>
+
+    <div class="draft-box">
+      <label for="obs2">Rascunho da observação 2 — qual a vantagem de usar uma função log() em vez de repetir echo em vários pontos do script?</label>
+      <textarea id="obs2" placeholder="Ex: se o formato mudar, preciso alterar só um lugar, e além disso..."></textarea>
+      <div class="char-count" data-for="obs2">0 caracteres (mínimo 40)</div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">PASSO 6 DE 7</div>
+    <h2>O script completo</h2>
+    <p class="intro">Junte tudo. Este é o resultado final — um monitor de disco funcional, com log e código de saída.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">6</span> Versão final do <code class="big">monitor.sh</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p>Todas as peças anteriores integradas, mais o <code>exit</code> com código apropriado ao final.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>O <code>exit 1</code> sinaliza erro a quem chamou o script — é assim que uma ferramenta de agendamento ou um pipeline sabe que algo deu errado.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="out">#!/bin/bash
+
+ARQUIVO_LOG=~/monitor.log
+LIMITE=80
+
+log() {
+  echo "[$(date +'%F %T')] $1" | tee -a "$ARQUIVO_LOG"
+}
+
+log "Verificação iniciada"
+
+USO=$(df / | tail -1 | awk '{print $5}' | tr -d '%')
+
+if [ "$USO" -gt "$LIMITE" ]; then
+  log "ALERTA: disco em ${USO}%, acima do limite"
+  exit 1
+else
+  log "OK: disco em ${USO}%"
+  exit 0
+fi</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> depois de rodar, verifique o código de saída com <code>echo $?</code> — deve ser <code>0</code> se estiver OK. Teste também <code>./monitor.sh &amp;&amp; echo "tudo certo"</code>: a segunda parte só executa se o script sair com 0, exatamente como o <code>&amp;&amp;</code> que vocês usam desde o Encontro 5.</p>
+    </div>
+  </section>
+
+  <div class="part-divider"><div class="line"></div><div class="label">Reforço Docker · script que controla container</div><div class="line"></div></div>
+
+  <section class="block">
+    <div class="block-num">PASSO 7 DE 7</div>
+    <h2>Um script que garante o container no ar</h2>
+    <p class="intro">Última peça: um script que verifica se o container está rodando e, se não estiver, o sobe. É o embrião do toolkit do projeto final.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">7</span> <code class="big">nano ~/garante_container.sh</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p><code>docker ps -q -f name=...</code> devolve o ID do container se ele estiver rodando, ou <b>nada</b> se não estiver. O teste <code>-z</code> verifica se a variável ficou vazia.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>É a lógica básica de qualquer ferramenta de orquestração: verificar o estado desejado e agir só quando ele não for o real.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="out">#!/bin/bash
+
+NOME=meuservico
+RODANDO=$(docker ps -q -f name="$NOME")
+
+if [ -z "$RODANDO" ]; then
+  echo "Container $NOME não está no ar. Subindo..."
+  docker run -d --name "$NOME" alpine sleep 600
+else
+  echo "Container $NOME já está rodando (ID: $RODANDO)"
+fi</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> na primeira execução, o script sobe o container. <b>Rode uma segunda vez</b> — agora ele deve detectar que já está no ar e não fazer nada. Essa propriedade (rodar várias vezes sem causar estrago) é justamente o que se espera de um script de automação.</p>
+      <details class="tip">
+        <summary>Segunda execução deu erro de nome já em uso</summary>
+        <div class="tip-body">
+          Significa que o container existe mas está <b>parado</b> — o <code>docker ps -q</code> só lista os que estão rodando. Remova com <code>docker rm $NOME</code> e rode de novo. Um script de produção trataria esse caso também, verificando com <code>docker ps -aq</code>; fica como desafio.
+        </div>
+      </details>
+      <p class="obs-note" style="margin-top:12px;"><b>Limpeza:</b> <code>docker stop meuservico &amp;&amp; docker rm meuservico</code>.</p>
+    </div>
+
+    <div class="draft-box">
+      <label for="obs3">Rascunho da observação 3 — o que aconteceu ao rodar o garante_container.sh duas vezes seguidas? Por que essa propriedade é desejável num script de automação?</label>
+      <textarea id="obs3" placeholder="Ex: na primeira vez subiu o container, na segunda apenas informou que já estava rodando, o que é importante porque..."></textarea>
+      <div class="char-count" data-for="obs3">0 caracteres (mínimo 40)</div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2 style="font-size:18px;">Exemplo de observação forte x fraca</h2>
+    <div class="example-pair">
+      <div class="example-box weak">
+        <div class="lbl">Observação fraca</div>
+        <p>"O $(...) executa um comando e guarda o resultado."</p>
+      </div>
+      <div class="example-box good">
+        <div class="lbl">Observação forte</div>
+        <p>"O <code>$(...)</code> executa o comando e substitui a expressão pela saída dele. Na linha <code>USO=$(df / | tail -1 | awk '{print $5}' | tr -d '%')</code>, todo o pipeline roda primeiro e só o número final (ex.: 36) é guardado em <code>USO</code>. Sem isso, o script só conseguiria imprimir a saída do <code>df</code> na tela; com isso, ele consegue <b>comparar</b> esse valor com o limite e decidir se alerta. É o que separa um script que informa de um que monitora."</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="theory-link">
+    <div class="lbl">Conexão com a teoria</div>
+    <p>Como nenhum dos livros-base cobre shell script, este roteiro é a leitura obrigatória da semana. Ainda assim, tudo aqui se apoia no que já foi visto: os pipelines dos passos 2 e 4 são o encadeamento do Encontro 6; o <code>tee -a</code> do passo 5 faz o mesmo que o <code>&gt;&gt;</code> do Encontro 12; o código de saída do passo 6 é o que sempre esteve por trás do <code>&amp;&amp;</code> usado desde o Encontro 5; e o passo 7 antecipa o toolkit do projeto final. Para aprofundar, a bibliografia complementar do PUD (Negus &amp; Bresnahan; Mendonça &amp; Araújo) cobre shell script em profundidade.</p>
+  </div>
+
+  <section class="block" style="margin-top:48px;">
+    <h2 style="font-size:18px;">Checklist final</h2>
+    <ul class="checklist" id="checklist">
+      <li><input type="checkbox"><span>Criei meu primeiro script com shebang e <code>chmod +x</code></span></li>
+      <li><input type="checkbox"><span>Usei variáveis e capturei a saída de um comando com <code>$(...)</code></span></li>
+      <li><input type="checkbox"><span>Fiz o script decidir com <code>if</code> e testei os dois caminhos</span></li>
+      <li><input type="checkbox"><span>Percorri uma lista com <code>for</code>, com <code>if</code> dentro</span></li>
+      <li><input type="checkbox"><span>Criei a função <code>log()</code> e confirmei a gravação no arquivo</span></li>
+      <li><input type="checkbox"><span>Montei o script completo e verifiquei o código de saída com <code>echo $?</code></span></li>
+      <li><input type="checkbox"><span>Escrevi um script que verifica e sobe um container, e rodei duas vezes</span></li>
+      <li><input type="checkbox"><span>Li as explicações deste roteiro por inteiro (é a leitura da semana)</span></li>
+      <li><input type="checkbox"><span>Preenchi as 3 observações acima (vou colar no quiz semanal)</span></li>
+    </ul>
+  </section>
+
+</div>
+
+<div class="progress">
+  <span id="progtext">0 / 9 verificados</span>
+  <div class="bar"><i id="progbar"></i></div>
+</div>
+
+<footer>Sistemas Operacionais · ADS23 · IFCE Campus Horizonte · Encontro 13 de 17</footer>
+
+<script>
+  const boxes = document.querySelectorAll('#checklist input[type=checkbox]');
+  const progtext = document.getElementById('progtext');
+  const progbar = document.getElementById('progbar');
+  function updateProgress(){
+    const total = boxes.length;
+    const done = [...boxes].filter(b=>b.checked).length;
+    progtext.textContent = done + ' / ' + total + ' verificados';
+    progbar.style.width = (done/total*100) + '%';
+  }
+  boxes.forEach(b=>{
+    b.addEventListener('change', ()=>{
+      b.closest('li').classList.toggle('checked', b.checked);
+      updateProgress();
+    });
+  });
+  updateProgress();
+
+  document.querySelectorAll('.draft-box textarea').forEach(ta=>{
+    const counter = document.querySelector('.char-count[data-for="'+ta.id+'"]');
+    ta.addEventListener('input', ()=>{
+      const len = ta.value.length;
+      counter.textContent = len + ' caracteres (mínimo 40)';
+      counter.classList.toggle('ok', len >= 40);
+    });
+  });
+</script>
+
+</body>
+</html>

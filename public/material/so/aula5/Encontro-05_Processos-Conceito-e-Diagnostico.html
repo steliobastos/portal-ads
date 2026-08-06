@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Encontro 5 · Processos: Conceito e Diagnóstico — Sistemas Operacionais ADS23</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* paleta clara institucional (IFCE) — ver "Paleta visual dos materiais HTML" na memória do curso */
+    --bg:#fbfaf5;
+    --bg-panel:#f3f1e8;
+    --bg-card:#ffffff;
+    --bg-card-2:#f3f1e8;
+    --line:#e2ddd0;
+    --line-soft:#ece8db;
+    --primary:#1b878f;        /* teal — títulos, badges, destaques */
+    --primary-dim:#8fc7ca;    /* teal claro — bordas/divisores sutis */
+    --primary-soft:rgba(27,135,143,.09);
+    --primary-glow:rgba(27,135,143,.35);
+    --secondary:#399b3f;      /* verde IF — apoio técnico */
+    --secondary-dim:#a8d4ab;
+    --secondary-soft:rgba(57,155,63,.08);
+    --alert:#cd191e;          /* vermelho IF — alerta pontual */
+    --text:#20241f;
+    --text-dim:#5b6058;
+    --text-faint:#8b9088;
+    --font-display:'Space Grotesk',sans-serif;
+    --font-body:'IBM Plex Sans',sans-serif;
+    --font-mono:'IBM Plex Mono',monospace;
+    /* sub-paleta escura reservada — blocos de código/terminal permanecem escuros por contraste técnico */
+    --term-bg:#10161f;
+    --term-line:#212b3a;
+    --term-dim:#8d96a8;
+    --term-prompt:#7ee787;
+    --term-accent:#5fd9d3;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-body);line-height:1.65;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3{font-family:var(--font-display);font-weight:600;color:var(--text);letter-spacing:-.01em;margin:0;}
+  a{color:var(--primary);}
+  code{font-family:var(--font-mono);background:var(--primary-soft);color:var(--primary);padding:1px 6px;border-radius:4px;font-size:.92em;}
+  ::selection{background:var(--primary-soft);color:var(--text);}
+
+  .topbar{
+    position:sticky;top:0;z-index:30;background:rgba(251,250,245,.94);backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);padding:12px 22px;
+    display:flex;align-items:center;justify-content:space-between;gap:14px;
+  }
+  .topbar .brand{font-family:var(--font-mono);font-size:12.5px;color:var(--text-dim);letter-spacing:.03em;}
+  .topbar .brand b{color:var(--primary);}
+  .progress-track{position:absolute;left:0;bottom:-1px;height:2px;width:100%;background:var(--line-soft);}
+  .progress-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--primary),var(--secondary));transition:width .15s linear;}
+
+  .dot-nav{position:fixed;right:18px;top:50%;transform:translateY(-50%);z-index:30;display:flex;flex-direction:column;gap:9px;}
+  .dot-nav a{width:9px;height:9px;border-radius:50%;background:var(--line);border:1px solid var(--line);display:block;transition:.2s;position:relative;}
+  .dot-nav a:hover{background:var(--text-faint);}
+  .dot-nav a.active{background:var(--primary);border-color:var(--primary);box-shadow:0 0 8px var(--primary-glow);}
+  .dot-nav a .tip{position:absolute;right:18px;top:50%;transform:translateY(-50%);white-space:nowrap;font-family:var(--font-mono);font-size:11px;color:var(--text-dim);background:var(--bg-panel);border:1px solid var(--line);padding:3px 8px;border-radius:5px;opacity:0;pointer-events:none;transition:.15s;}
+  .dot-nav a:hover .tip{opacity:1;}
+  @media (max-width:780px){.dot-nav{display:none;}}
+
+  .slide{min-height:100vh;display:flex;align-items:center;padding:70px 22px;border-bottom:1px solid var(--line-soft);position:relative;}
+  .slide-inner{max-width:920px;margin:0 auto;width:100%;}
+  .eyebrow{font-family:var(--font-mono);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+  .eyebrow::before{content:'';width:22px;height:1px;background:var(--primary-dim);}
+  .slide-title{font-size:clamp(24px,3.4vw,38px);margin-bottom:22px;}
+  .lead{font-size:17.5px;color:var(--text-dim);max-width:680px;}
+  .big{font-size:clamp(36px,6.4vw,64px);line-height:1.05;}
+  .glow{text-shadow:0 0 34px var(--primary-glow);}
+  .meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:26px;font-family:var(--font-mono);font-size:12.5px;color:var(--text-faint);}
+  .meta span{padding-left:16px;border-left:1px solid var(--line);}
+  .meta span:first-child{padding-left:0;border-left:none;}
+  .hint{margin-top:40px;font-family:var(--font-mono);font-size:11.5px;color:var(--text-faint);}
+
+  .fragment{opacity:0;transform:translateY(14px);transition:opacity .55s ease,transform .55s ease;}
+  .fragment.visible{opacity:1;transform:translateY(0);}
+  .fragment.d1{transition-delay:.08s;} .fragment.d2{transition-delay:.16s;} .fragment.d3{transition-delay:.24s;} .fragment.d4{transition-delay:.32s;}
+
+  .qmark{font-family:var(--font-mono);font-size:12.5px;letter-spacing:.1em;color:var(--primary);text-transform:uppercase;}
+  .question-wrap{text-align:left;}
+
+  .cards2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px;}
+  .card{background:var(--bg-card);border:1px solid var(--line);border-radius:12px;padding:22px 22px;}
+  .card.alt{border-color:var(--secondary-dim);}
+  .card .kicker{font-family:var(--font-mono);font-size:11.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+  .card h3{font-size:19px;margin-bottom:8px;}
+  .card p{color:var(--text-dim);font-size:14.5px;margin:0;}
+  @media (max-width:720px){.cards2{grid-template-columns:1fr;}}
+
+  .blist{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:12px;}
+  .blist li{display:flex;gap:12px;align-items:flex-start;font-size:15.5px;color:var(--text-dim);}
+  .blist .ico{font-family:var(--font-mono);color:var(--primary);flex-shrink:0;}
+
+  /* diagramas de camadas (estados / hierarquia / PID) */
+  .arch-tag{display:inline-block;font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;background:var(--primary-soft);color:var(--primary);border:1px solid var(--primary-dim);border-radius:20px;padding:4px 12px;margin-bottom:16px;}
+  .arch-diagram{background:var(--bg-card-2);border:1px solid var(--line);border-radius:12px;padding:22px;margin:20px 0;font-family:var(--font-mono);font-size:13px;}
+  .arch-layer{padding:10px 14px;border-radius:6px;margin-bottom:6px;text-align:center;color:var(--text);}
+  .arch-layer:last-child{margin-bottom:0;}
+  .arch-layer.hw{background:var(--line-soft);color:var(--text-dim);}
+  .arch-layer.kernel{background:rgba(27,135,143,.15);border:1px solid var(--primary-dim);}
+  .arch-layer.user{background:rgba(57,155,63,.1);border:1px solid var(--secondary-dim);}
+  .arch-layer.split{display:flex;gap:6px;}
+  .arch-layer.split > div{flex:1;padding:8px;background:rgba(57,155,63,.1);border:1px solid var(--secondary-dim);border-radius:6px;text-align:center;font-size:12px;}
+  .arch-arrow{text-align:center;font-size:16px;color:var(--text-faint);margin:2px 0;}
+  .arch-facts{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px;}
+  .fact-box{background:var(--bg-card);border:1px solid var(--line);border-radius:10px;padding:16px;}
+  .fact-box .lbl{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-faint);margin-bottom:6px;}
+  .fact-box p{margin:0;font-size:14px;color:var(--text-dim);}
+  .fact-box.good .lbl{color:var(--secondary);}
+  .fact-box.bad .lbl{color:var(--alert);}
+
+  /* tabelas de comparação / colunas */
+  .compare-table{width:100%;border-collapse:collapse;margin-top:18px;font-size:14px;}
+  .compare-table th,.compare-table td{border:1px solid var(--line);padding:11px 13px;text-align:left;vertical-align:top;}
+  .compare-table th{background:var(--bg-card-2);font-family:var(--font-mono);font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-dim);}
+  .compare-table td{color:var(--text-dim);}
+  .compare-table td.hl{color:var(--text);}
+  .compare-table tr td:first-child{font-family:var(--font-mono);color:var(--primary);font-size:13px;white-space:nowrap;}
+  @media (max-width:780px){.compare-table{font-size:12.5px;} .compare-table th,.compare-table td{padding:8px;}}
+
+  .term{background:var(--term-bg);border:1px solid var(--term-line);border-radius:10px;overflow:hidden;margin-top:18px;}
+  .term .bar{background:var(--term-bg);padding:8px 12px;display:flex;gap:6px;border-bottom:1px solid var(--term-line);}
+  .term .bar .dot{width:9px;height:9px;border-radius:50%;background:var(--term-line);}
+  .term .bar .dot:nth-child(1){background:#e0605f;} .term .bar .dot:nth-child(2){background:#e0b25f;} .term .bar .dot:nth-child(3){background:#5fbf6b;}
+  .term-body{padding:16px 18px;font-family:var(--font-mono);font-size:13.5px;color:var(--term-dim);min-height:170px;white-space:pre-wrap;line-height:1.55;}
+  .term-body .prompt{color:var(--term-prompt);}
+  .term-body .sys{color:var(--term-accent);}
+  .term-body .ok{color:var(--term-prompt);}
+
+  .plan-track{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap;}
+  .plan-step{flex:1;min-width:150px;background:var(--bg-card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;}
+  .plan-step .t{font-family:var(--font-mono);font-size:11px;color:var(--primary);margin-bottom:6px;}
+  .plan-step h4{margin:0 0 4px;font-family:var(--font-display);font-size:15px;color:var(--text);}
+  .plan-step p{margin:0;font-size:13px;color:var(--text-dim);}
+
+  .read-list{display:flex;flex-direction:column;gap:14px;margin-top:10px;}
+  .read-item{display:flex;gap:14px;align-items:flex-start;background:var(--bg-card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;}
+  .read-item .tag{font-size:20px;flex-shrink:0;}
+  .read-item h4{margin:0 0 4px;font-size:15.5px;font-family:var(--font-display);color:var(--text);}
+  .read-item p{margin:0;font-size:13.5px;color:var(--text-dim);}
+  .read-item .pages{font-family:var(--font-mono);font-size:12px;color:var(--primary);}
+
+  footer.endnote{text-align:center;padding:40px 20px 60px;font-family:var(--font-mono);font-size:11.5px;color:var(--text-faint);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">Sistemas Operacionais · <b>ADS23</b></div>
+  <div class="brand" id="slideCounter">01 / 14</div>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+</div>
+
+<nav class="dot-nav" id="dotNav"></nav>
+
+<!-- 0. CAPA -->
+<section class="slide active" id="slide-0">
+  <div class="slide-inner">
+    <div class="eyebrow">Encontro 5 de 17</div>
+    <h1 class="big glow">Processos: Conceito<br>e Diagnóstico</h1>
+    <p class="lead">Abrindo a Unidade III: o que é, de fato, um processo — e como enxergar, ao vivo, o que está rodando (ou preso) numa máquina Linux.</p>
+    <div class="meta">
+      <span>ADS23</span><span>IFCE Campus Horizonte</span><span>Prof. José Stelio Sampaio Bastos Neto</span>
+    </div>
+    <div class="hint">↓ role pra avançar · use os pontos à direita pra navegar direto</div>
+  </div>
+</section>
+
+<!-- 1. RECAP -->
+<section class="slide" id="slide-1">
+  <div class="slide-inner">
+    <div class="eyebrow">De onde viemos</div>
+    <h2 class="slide-title">Três encontros de arquitetura, um de Docker de verdade — hoje, processos</h2>
+    <div class="cards2">
+      <div class="card fragment">
+        <div class="kicker">Encontros 1–3</div>
+        <h3>O SO por fora e por dentro</h3>
+        <p>Máquina estendida, gerenciador de recursos, arquiteturas, chamadas de sistema — o mapa geral de como um SO é organizado.</p>
+      </div>
+      <div class="card alt fragment d1">
+        <div class="kicker">Encontro 4</div>
+        <h3>Virtualização e Docker de verdade</h3>
+        <p>Imagem, container, <code>Dockerfile</code> — vocês já constroem e rodam containers próprios.</p>
+      </div>
+    </div>
+    <p class="lead fragment d2" style="margin-top:26px;">Agora a gente entra na <b style="color:var(--primary)">Unidade III</b>: processos. É aqui que "gerenciador de recursos" — a segunda lente do Encontro 1 — ganha nome, número e comando de diagnóstico.</p>
+  </div>
+</section>
+
+<!-- 2. PERGUNTA MOTIVADORA -->
+<section class="slide" id="slide-2">
+  <div class="slide-inner question-wrap">
+    <div class="qmark">Pergunta pra turma</div>
+    <h1 class="big" style="margin-top:18px;">Quando vocês abrem o mesmo navegador <span class="glow" style="color:var(--primary)">duas vezes</span>,<br>é o mesmo programa rodando duas vezes, ou duas coisas diferentes?</h1>
+    <p class="lead fragment" style="margin:20px auto 0;">E se uma das duas travar — por que a outra continua funcionando normalmente?</p>
+  </div>
+</section>
+
+<!-- 3. PROCESSO x PROGRAMA -->
+<section class="slide" id="slide-3">
+  <div class="slide-inner">
+    <div class="arch-tag">Conceito-base</div>
+    <h2 class="slide-title">Programa é estático. Processo é vivo.</h2>
+    <div class="cards2">
+      <div class="card fragment">
+        <div class="kicker">Programa</div>
+        <h3>Um arquivo parado no disco</h3>
+        <p>Um binário, instruções guardadas. Não faz nada sozinho — só existe fisicamente, esperando ser executado.</p>
+      </div>
+      <div class="card alt fragment d1">
+        <div class="kicker">Processo</div>
+        <h3>Um programa em execução, com estado próprio</h3>
+        <p>Tem um número (PID), uma posição de memória, um contador de instruções, e um lugar na fila da CPU. Dois processos podem vir do <b style="color:var(--text)">mesmo</b> programa e serem completamente independentes.</p>
+      </div>
+    </div>
+    <p class="lead fragment d2" style="margin-top:20px;font-size:14.5px;">É por isso que dois navegadores abertos não derrubam um o outro: são <b style="color:var(--primary)">processos diferentes</b>, ainda que rodem o mesmo programa.</p>
+  </div>
+</section>
+
+<!-- 4. ANATOMIA DE UM PROCESSO -->
+<section class="slide" id="slide-4">
+  <div class="slide-inner">
+    <div class="eyebrow">O que compõe um processo</div>
+    <h2 class="slide-title">Todo processo carrega uma identidade própria</h2>
+    <ul class="blist">
+      <li class="fragment"><span class="ico">▸</span><span><b style="color:var(--text)">PID</b> (Process ID) — o número único que o identifica enquanto existir.</span></li>
+      <li class="fragment d1"><span class="ico">▸</span><span><b style="color:var(--text)">Contador de programa</b> — em qual instrução exata o processo está agora.</span></li>
+      <li class="fragment d2"><span class="ico">▸</span><span><b style="color:var(--text)">Memória própria</b> — variáveis, pilha de chamadas, dados — isolada da memória de outros processos.</span></li>
+      <li class="fragment d3"><span class="ico">▸</span><span><b style="color:var(--text)">Estado</b> — rodando, pronto ou bloqueado (o assunto do próximo slide).</span></li>
+    </ul>
+    <p class="lead fragment d4" style="margin-top:20px;font-size:14.5px;">Guardem "PID" — é a chave que vocês vão usar em praticamente todo comando de diagnóstico a partir de hoje.</p>
+  </div>
+</section>
+
+<!-- 5. ESTADOS DE UM PROCESSO -->
+<section class="slide" id="slide-5">
+  <div class="slide-inner">
+    <div class="eyebrow">O ciclo de vida</div>
+    <h2 class="slide-title">Três estados — e é isso que "gerenciar recursos" significa</h2>
+    <p class="lead">Um processo nunca está "rodando" o tempo inteiro. Ele alterna entre três estados, e é o SO quem decide quando cada transição acontece.</p>
+    <div class="arch-diagram">
+      <div class="arch-layer user">PRONTO — na fila, esperando o escalonador liberar a CPU</div>
+      <div class="arch-arrow">⇅ escalonado / interrompido (preemptado)</div>
+      <div class="arch-layer kernel">RODANDO — usando a CPU agora (só um processo por núcleo, por vez)</div>
+      <div class="arch-arrow">⇅ pede E/S (bloqueia) / E/S termina (libera)</div>
+      <div class="arch-layer hw">BLOQUEADO — esperando algo externo (disco, rede, teclado)</div>
+    </div>
+    <p class="lead fragment" style="margin-top:18px;font-size:14.5px;">Um processo <b style="color:var(--primary)">nunca</b> pula direto de bloqueado pra rodando — ele sempre passa por pronto primeiro, esperando sua vez na fila.</p>
+  </div>
+</section>
+
+<!-- 6. HIERARQUIA DE PROCESSOS -->
+<section class="slide" id="slide-6">
+  <div class="slide-inner">
+    <div class="eyebrow">Ninguém nasce sozinho</div>
+    <h2 class="slide-title">Todo processo tem um pai — exceto o primeiro</h2>
+    <p class="lead">Um processo só existe porque outro processo pediu pra criá-lo, através da chamada de sistema <code>fork</code> (relembrando o Encontro 3). Isso forma uma árvore genealógica inteira.</p>
+    <div class="arch-diagram">
+      <div class="arch-layer kernel">systemd — PID 1 (o processo raiz; nasce direto do kernel no boot)</div>
+      <div class="arch-layer split"><div>cron</div><div>sshd</div><div>bash (seu terminal)</div></div>
+      <div class="arch-layer split"><div>top</div><div>sleep 300</div></div>
+    </div>
+    <p class="lead fragment" style="margin-top:18px;font-size:14.5px;">Cada processo guarda o <b style="color:var(--text)">PPID</b> (PID do pai) — é assim que o comando <code>pstree</code> desenha essa árvore inteira na tela.</p>
+  </div>
+</section>
+
+<!-- 7. PS: A FOTOGRAFIA -->
+<section class="slide" id="slide-7">
+  <div class="slide-inner">
+    <div class="eyebrow">Primeira ferramenta de diagnóstico</div>
+    <h2 class="slide-title"><code style="font-size:.85em;">ps</code>: uma fotografia de tudo que está rodando agora</h2>
+    <p class="lead"><code>ps aux</code> lista todos os processos do sistema num instante — cada coluna revela uma parte da anatomia que vimos no slide 4.</p>
+    <table class="compare-table fragment">
+      <tr><th>Coluna</th><th>O que revela</th></tr>
+      <tr><td>USER</td><td class="hl">Quem é dono do processo</td></tr>
+      <tr><td>PID</td><td class="hl">O número único do processo</td></tr>
+      <tr><td>%CPU / %MEM</td><td class="hl">Quanto de CPU/memória ele está consumindo agora</td></tr>
+      <tr><td>STAT</td><td class="hl">O estado (R=rodando, S=dormindo/bloqueado, Z=zumbi)</td></tr>
+      <tr><td>COMMAND</td><td class="hl">O comando que originou o processo</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- 8. TOP: O VÍDEO AO VIVO -->
+<section class="slide" id="slide-8">
+  <div class="slide-inner">
+    <div class="eyebrow">Segunda ferramenta</div>
+    <h2 class="slide-title"><code style="font-size:.85em;">top</code>: se <code>ps</code> é foto, <code>top</code> é vídeo</h2>
+    <p class="lead">Em vez de uma fotografia parada, <code>top</code> atualiza a lista de processos ao vivo, ordenada por quem está consumindo mais CPU agora.</p>
+    <ul class="blist" style="margin-top:20px;">
+      <li class="fragment"><span class="ico">▸</span><span><b style="color:var(--text)">Load average</b> — a fila média de processos esperando CPU nos últimos 1, 5 e 15 minutos.</span></li>
+      <li class="fragment d1"><span class="ico">▸</span><span>Colunas parecidas com o <code>ps</code> — mas atualizando a cada segundo, sem você precisar rodar o comando de novo.</span></li>
+      <li class="fragment d2"><span class="ico">▸</span><span><code>q</code> sai do <code>top</code> — o comando "trava" a tela até você mandar sair.</span></li>
+    </ul>
+  </div>
+</section>
+
+<!-- 9. /PROC/[PID]/ REVISITADO -->
+<section class="slide" id="slide-9">
+  <div class="slide-inner">
+    <div class="eyebrow">A ponte que vocês já conhecem</div>
+    <h2 class="slide-title">Todo PID também é uma pasta em <code style="font-size:.8em;">/proc</code></h2>
+    <p class="lead">Lembram do Encontro 2? Cada processo rodando tem sua própria pasta dentro de <code>/proc</code>, nomeada com o próprio PID — e <code>ps</code>/<code>top</code> são, por baixo, só leitores organizados dessas pastas.</p>
+    <table class="compare-table fragment">
+      <tr><th>Arquivo</th><th>O que revela</th></tr>
+      <tr><td>/proc/&lt;pid&gt;/status</td><td class="hl">Nome, estado, PPID, uso de memória — em texto legível</td></tr>
+      <tr><td>/proc/&lt;pid&gt;/cmdline</td><td class="hl">O comando exato (com argumentos) que criou o processo</td></tr>
+      <tr><td>/proc/&lt;pid&gt;/exe</td><td class="hl">Link pro binário executável que originou o processo</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- 10. GANCHO DOCKER: PID DENTRO x FORA -->
+<section class="slide" id="slide-10">
+  <div class="slide-inner">
+    <div class="eyebrow">Eixo do curso</div>
+    <h2 class="slide-title">Um processo pode ter dois PIDs diferentes ao mesmo tempo</h2>
+    <p class="lead">Lembram que container compartilha o núcleo do host (Encontro 4)? Pois bem: o <i>namespace de PID</i> do Linux faz um processo dentro de um container se enxergar como <b>PID 1</b> — mesmo tendo um PID bem diferente visto de fora.</p>
+    <div class="cards2">
+      <div class="card fragment">
+        <div class="kicker">Visto de fora (no host)</div>
+        <h3>Só mais um processo comum</h3>
+        <p>Um <code>ps aux</code> no host mostra o processo do container com um PID qualquer, como 48213 — igual a qualquer outro processo do sistema.</p>
+      </div>
+      <div class="card alt fragment d1">
+        <div class="kicker">Visto de dentro (no container)</div>
+        <h3>PID 1 — o "processo raiz" daquele mundo isolado</h3>
+        <p>Um <code>ps aux</code> rodado <b style="color:var(--text)">dentro</b> do mesmo container mostra o processo como PID 1 — o container tem seu próprio namespace de números de PID.</p>
+      </div>
+    </div>
+    <p class="lead fragment d2" style="margin-top:20px;font-size:14.5px;">Isso é <code>namespaces</code> na prática — a mesma peça técnica que faz o container "achar" que está sozinho na máquina, mencionada de leve no Encontro 4.</p>
+  </div>
+</section>
+
+<!-- 11. TERMINAL SIMULADO -->
+<section class="slide" id="slide-11" data-anim="procdemo">
+  <div class="slide-inner">
+    <div class="eyebrow">Prévia da prática</div>
+    <h2 class="slide-title">Do <code style="font-size:.8em;">ps</code> comum ao PID duplo do container</h2>
+    <p class="lead">Uma sequência real: localizar um processo, subir um container em segundo plano, e comparar o PID de dentro e de fora.</p>
+    <div class="term">
+      <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+      <div class="term-body" id="procBody"></div>
+    </div>
+    <p class="lead" style="margin-top:16px;font-size:14px;">Cada uma dessas linhas vira um passo do roteiro de laboratório de hoje.</p>
+  </div>
+</section>
+
+<!-- 12. MAPA DA PRÁTICA -->
+<section class="slide" id="slide-12">
+  <div class="slide-inner">
+    <div class="eyebrow">Mão na massa</div>
+    <h2 class="slide-title">De observar processos comuns ao PID duplo do container</h2>
+    <div class="plan-track">
+      <div class="plan-step fragment">
+        <div class="t">DIAGNÓSTICO</div>
+        <h4><code>ps</code>, <code>top</code> e <code>/proc/&lt;pid&gt;</code></h4>
+        <p>Localizar processos, ler colunas, comparar a "foto" do <code>ps</code> com o "vídeo" do <code>top</code>.</p>
+      </div>
+      <div class="plan-step alt fragment d1" style="border-color:var(--primary-dim);">
+        <div class="t">REFORÇO DOCKER</div>
+        <h4>PID por dentro x por fora</h4>
+        <p>Subir um container em segundo plano e comparar o mesmo processo visto do host e visto de dentro.</p>
+      </div>
+    </div>
+    <p class="lead fragment d2" style="margin-top:22px;">O roteiro de laboratório detalha os passos, com dicas se algo travar. Todas as observações vão pro instrumento semanal (quiz) no fim.</p>
+  </div>
+</section>
+
+<!-- 13. LEITURA -->
+<section class="slide" id="slide-13">
+  <div class="slide-inner">
+    <div class="eyebrow">Para ler</div>
+    <h2 class="slide-title">Leitura da semana</h2>
+    <div class="read-list">
+      <div class="read-item fragment">
+        <div class="tag">🟢</div>
+        <div>
+          <h4>Laureano — Programas e Processos + Informações no /proc</h4>
+          <p>A base teórica de hoje, com os mesmos arquivos de <code>/proc</code> que vimos no slide 9. <span class="pages">p. 99–106</span></p>
+        </div>
+      </div>
+      <div class="read-item fragment d1">
+        <div class="tag">🔵</div>
+        <div>
+          <h4>Tanenbaum — Processos</h4>
+          <p>Modelo de processo, criação, término, hierarquia e os três estados — a teoria por trás do <code>ps</code> e do <code>top</code>. <span class="pages">p. 59–67</span></p>
+        </div>
+      </div>
+      <div class="read-item fragment d2">
+        <div class="tag">⚪</div>
+        <div>
+          <h4>Laureano — O ciclo de vida de um processo no Linux</h4>
+          <p>Pra quem quer se aprofundar além do que cai no quiz. <span class="pages">p. 132–150</span></p>
+        </div>
+      </div>
+    </div>
+    <p class="lead" style="margin-top:22px;font-size:14px;">O quiz da semana verifica essa leitura e recolhe suas observações da prática — tudo no mesmo instrumento.</p>
+  </div>
+</section>
+
+<footer class="endnote">Sistemas Operacionais · ADS23 · IFCE Campus Horizonte · Encontro 5 de 17</footer>
+
+<script>
+(function(){
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const dotNav = document.getElementById('dotNav');
+  const counter = document.getElementById('slideCounter');
+  const progressFill = document.getElementById('progressFill');
+  const total = slides.length;
+
+  slides.forEach((s,i)=>{
+    const a = document.createElement('a');
+    a.href = '#'+s.id;
+    const tip = document.createElement('span');
+    tip.className = 'tip';
+    tip.textContent = String(i+1).padStart(2,'0');
+    a.appendChild(tip);
+    dotNav.appendChild(a);
+  });
+  const dots = Array.from(dotNav.querySelectorAll('a'));
+
+  function setActive(idx){
+    dots.forEach((d,i)=>d.classList.toggle('active', i===idx));
+    counter.textContent = String(idx+1).padStart(2,'0') + ' / ' + String(total).padStart(2,'0');
+  }
+
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      const idx = slides.indexOf(entry.target);
+      if(entry.isIntersecting){
+        if(entry.intersectionRatio > 0.5) setActive(idx);
+        entry.target.querySelectorAll('.fragment').forEach(f=>f.classList.add('visible'));
+      }
+    });
+  }, {threshold:[0,0.5,1]});
+  slides.forEach(s=>io.observe(s));
+
+  window.addEventListener('scroll', ()=>{
+    const scrolled = window.scrollY;
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    progressFill.style.width = (max>0 ? (scrolled/max*100) : 0) + '%';
+  });
+
+  document.addEventListener('keydown', (e)=>{
+    const activeIdx = dots.findIndex(d=>d.classList.contains('active'));
+    if(e.key === 'ArrowDown' || e.key === ' '){
+      e.preventDefault();
+      const next = slides[Math.min(activeIdx+1, total-1)];
+      next.scrollIntoView({behavior:'smooth'});
+    } else if(e.key === 'ArrowUp'){
+      e.preventDefault();
+      const prev = slides[Math.max(activeIdx-1, 0)];
+      prev.scrollIntoView({behavior:'smooth'});
+    }
+  });
+
+  setActive(0);
+
+  // process/docker demo preview animation
+  const procLines = [
+    ['$ ps aux | grep firefox', 'prompt'],
+    ['user   4213  2.1  3.4 ...  firefox', 'sys'],
+    ['$ docker run -d --name meuproc alpine sleep 300', 'prompt'],
+    ['8f2c91a7e6b0...', 'ok'],
+    ['$ ps aux | grep sleep', 'prompt'],
+    ['user  48213  0.0  0.0 ...  sleep 300', 'sys'],
+    ['$ docker exec meuproc ps aux', 'prompt'],
+    ['PID    USER   COMMAND', 'sys'],
+    ['1      root   sleep 300', 'ok'],
+  ];
+  const procBody = document.getElementById('procBody');
+  let procStarted = false;
+  function typeLine(i){
+    if(i >= procLines.length) return;
+    const [txt, cls] = procLines[i];
+    const span = document.createElement('div');
+    span.className = cls;
+    procBody.appendChild(span);
+    let c = 0;
+    const iv = setInterval(()=>{
+      span.textContent = txt.slice(0, c+1);
+      c++;
+      if(c >= txt.length){
+        clearInterval(iv);
+        setTimeout(()=>typeLine(i+1), 110);
+      }
+    }, 14);
+  }
+  const procSlide = document.getElementById('slide-11');
+  const procIo = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      if(entry.isIntersecting && !procStarted){
+        procStarted = true;
+        typeLine(0);
+      }
+    });
+  }, {threshold:0.4});
+  procIo.observe(procSlide);
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roteiro de Laboratório — Encontro 15 · Sistemas Operacionais ADS23</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#fbfaf5;
+    --bg-card:#ffffff;
+    --bg-card-2:#f3f1e8;
+    --line:#e2ddd0;
+    --line-soft:#ece8db;
+    --primary:#1b878f;
+    --primary-dim:#8fc7ca;
+    --primary-soft:rgba(27,135,143,.09);
+    --secondary:#399b3f;
+    --secondary-soft:rgba(57,155,63,.08);
+    --alert:#cd191e;
+    --alert-soft:rgba(205,25,30,.07);
+    --text:#20241f;
+    --text-dim:#5b6058;
+    --text-faint:#8b9088;
+    --font-display:'Space Grotesk',sans-serif;
+    --font-body:'IBM Plex Sans',sans-serif;
+    --font-mono:'IBM Plex Mono',monospace;
+    --term-bg:#10161f;
+    --term-line:#212b3a;
+    --term-dim:#8d96a8;
+    --term-prompt:#7ee787;
+    --term-accent:#5fd9d3;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-body);line-height:1.6;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3,h4{font-family:var(--font-display);font-weight:600;color:var(--text);letter-spacing:-.01em;}
+  code{font-family:var(--font-mono);background:var(--primary-soft);color:var(--primary);padding:1px 6px;border-radius:4px;font-size:.92em;}
+  ::selection{background:var(--primary-soft);color:var(--text);}
+
+  .topbar{
+    position:sticky;top:0;z-index:20;background:rgba(251,250,245,.92);backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);padding:12px 22px;
+    display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  }
+  .topbar .brand{font-family:var(--font-mono);font-size:12.5px;color:var(--text-dim);}
+  .topbar .brand b{color:var(--primary);}
+  .topbar .progress-mini{font-family:var(--font-mono);font-size:12px;color:var(--text-faint);}
+
+  .wrap{max-width:880px;margin:0 auto;padding:36px 22px 80px;}
+
+  .hero{margin-bottom:44px;}
+  .hero .eyebrow{font-family:var(--font-mono);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);margin-bottom:12px;display:flex;align-items:center;gap:10px;}
+  .hero .eyebrow::before{content:'';width:22px;height:1px;background:var(--primary-dim);}
+  .hero h1{font-size:clamp(26px,4vw,38px);margin:0 0 14px;}
+  .hero p{color:var(--text-dim);font-size:16px;max-width:640px;margin:0;}
+  .hero .parts{display:flex;gap:14px;margin-top:22px;flex-wrap:wrap;}
+  .hero .part-chip{background:var(--bg-card);border:1px solid var(--line);border-radius:8px;padding:10px 16px;font-family:var(--font-mono);font-size:12.5px;color:var(--text-dim);}
+  .hero .part-chip b{color:var(--primary);}
+
+  .block{margin-bottom:52px;}
+  .block-num{font-family:var(--font-mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-faint);margin-bottom:8px;}
+  .block h2{font-size:22px;margin-bottom:10px;}
+  .block .intro{color:var(--text-dim);font-size:15px;max-width:680px;margin:0 0 20px;}
+
+  .part-divider{display:flex;align-items:center;gap:16px;margin:56px 0 32px;}
+  .part-divider .line{flex:1;height:1px;background:var(--line);}
+  .part-divider .label{font-family:var(--font-mono);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);white-space:nowrap;}
+
+  .cmd-card{background:var(--bg-card);border:1px solid var(--line);border-radius:12px;padding:20px 22px;margin-bottom:18px;}
+  .cmd-title{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+  .step-badge{width:24px;height:24px;border-radius:50%;background:var(--primary);color:#fff;font-family:var(--font-mono);font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  code.big{font-size:15px;padding:4px 10px;}
+
+  .explain-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+  .explain-box{background:var(--bg-card-2);border:1px solid var(--line-soft);border-radius:8px;padding:12px 14px;}
+  .explain-box .lbl{font-family:var(--font-mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-faint);margin-bottom:5px;}
+  .explain-box p{margin:0;font-size:13.5px;color:var(--text-dim);}
+  @media (max-width:680px){.explain-grid{grid-template-columns:1fr;}}
+
+  .terminal-mini{background:var(--term-bg);border:1px solid var(--term-line);border-radius:8px;overflow:hidden;margin-bottom:12px;}
+  .terminal-mini .bar{background:var(--term-bg);padding:6px 10px;display:flex;gap:5px;}
+  .terminal-mini .bar span{width:8px;height:8px;border-radius:50%;background:var(--term-line);}
+  .terminal-mini .body{padding:14px 16px;font-family:var(--font-mono);font-size:13px;color:var(--term-dim);white-space:pre-wrap;line-height:1.55;}
+  .terminal-mini .prompt{color:var(--term-prompt);}
+  .terminal-mini .out{color:var(--term-dim);}
+  .terminal-mini .hi{color:var(--term-accent);}
+  .terminal-mini .err{color:#e0605f;font-weight:600;}
+
+  details.tip{background:var(--bg-card-2);border:1px solid var(--line-soft);border-radius:8px;margin-top:8px;}
+  details.tip summary{padding:10px 14px;cursor:pointer;font-size:13.5px;color:var(--primary);font-family:var(--font-mono);}
+  details.tip .tip-body{padding:0 14px 14px;font-size:13.5px;color:var(--text-dim);}
+
+  .obs-note{font-size:13.5px;color:var(--text-dim);margin-top:2px;}
+  .obs-note b{color:var(--text);}
+
+  .warn-box{background:var(--alert-soft);border:1px solid var(--alert);border-radius:8px;padding:12px 16px;margin-top:12px;font-size:13.5px;color:var(--text-dim);}
+  .warn-box b{color:var(--alert);}
+
+  .example-pair{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0;}
+  .example-box{border-radius:8px;padding:14px 16px;font-size:13.5px;}
+  .example-box.weak{background:var(--alert-soft);border:1px solid var(--alert);}
+  .example-box.good{background:var(--secondary-soft);border:1px solid var(--secondary);}
+  .example-box .lbl{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;margin-bottom:6px;}
+  .example-box.weak .lbl{color:var(--alert);}
+  .example-box.good .lbl{color:var(--secondary);}
+  .example-box p{margin:0;color:var(--text-dim);font-style:italic;}
+  @media (max-width:680px){.example-pair{grid-template-columns:1fr;}}
+
+  .draft-box{margin-top:14px;}
+  .draft-box label{display:block;font-size:13.5px;color:var(--text-dim);margin-bottom:6px;}
+  .draft-box textarea{width:100%;min-height:90px;background:var(--bg-card-2);border:1px solid var(--line);border-radius:8px;color:var(--text);font-family:var(--font-body);font-size:14px;padding:10px 12px;resize:vertical;}
+  .draft-box textarea:focus{outline:none;border-color:var(--primary-dim);}
+  .char-count{font-family:var(--font-mono);font-size:11.5px;color:var(--text-faint);margin-top:5px;text-align:right;}
+  .char-count.ok{color:var(--secondary);}
+
+  .theory-link{background:var(--primary-soft);border:1px solid var(--primary-dim);border-radius:10px;padding:16px 18px;margin-top:20px;}
+  .theory-link .lbl{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;color:var(--primary);margin-bottom:6px;}
+  .theory-link p{margin:0;font-size:14px;color:var(--text-dim);}
+
+  .checklist{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px;}
+  .checklist li{display:flex;align-items:flex-start;gap:12px;background:var(--bg-card);border:1px solid var(--line);border-radius:8px;padding:12px 16px;font-size:14px;color:var(--text-dim);transition:.2s;}
+  .checklist li.checked{border-color:var(--secondary);background:var(--secondary-soft);color:var(--text);}
+  .checklist input[type=checkbox]{width:18px;height:18px;margin-top:1px;accent-color:var(--secondary);flex-shrink:0;}
+
+  .progress{position:sticky;bottom:0;background:rgba(251,250,245,.95);backdrop-filter:blur(6px);border-top:1px solid var(--line);padding:14px 22px;display:flex;align-items:center;gap:16px;justify-content:center;}
+  .progress #progtext{font-family:var(--font-mono);font-size:12.5px;color:var(--text-dim);white-space:nowrap;}
+  .progress .bar{flex:1;max-width:320px;height:6px;background:var(--line-soft);border-radius:3px;overflow:hidden;}
+  .progress .bar i{display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--primary),var(--secondary));transition:width .3s;}
+
+  footer{text-align:center;padding:30px 20px 90px;font-family:var(--font-mono);font-size:11.5px;color:var(--text-faint);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">Sistemas Operacionais · <b>ADS23</b></div>
+  <div class="progress-mini">Encontro 15 de 17 · Guia de Trabalho</div>
+</div>
+
+<div class="wrap">
+
+  <div class="hero">
+    <div class="eyebrow">Semana de projeto · desenvolvimento</div>
+    <h1>Colocando o toolkit de pé</h1>
+    <p>Hoje não há conteúdo novo. A aula inteira é tempo de trabalho, com o professor circulando para destravar o que emperrar. A meta é sair daqui com o <code>deploy.sh</code> funcionando.</p>
+    <div class="parts">
+      <div class="part-chip"><b>Meta do dia</b> · deploy.sh subindo o serviço</div>
+      <div class="part-chip"><b>Faltam</b> · 2 encontros até a apresentação</div>
+    </div>
+  </div>
+
+  <section class="block">
+    <div class="block-num">POR ONDE COMEÇAR</div>
+    <h2>A ordem que funciona</h2>
+    <p class="intro">Os três scripts têm uma dependência natural entre si. Fazer fora de ordem custa retrabalho.</p>
+    <ul class="numlist" style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px;">
+      <li style="display:flex;gap:14px;align-items:flex-start;background:var(--bg-card);border:1px solid var(--line);border-radius:10px;padding:13px 16px;font-size:14.5px;color:var(--text-dim);"><span style="font-family:var(--font-mono);color:var(--primary);font-weight:600;">1º</span><span><b style="color:var(--text)">Suba o serviço na mão, sem script.</b> Confirme que o container roda, com volume e limite de memória. Só depois automatize.</span></li>
+      <li style="display:flex;gap:14px;align-items:flex-start;background:var(--bg-card);border:1px solid var(--line);border-radius:10px;padding:13px 16px;font-size:14.5px;color:var(--text-dim);"><span style="font-family:var(--font-mono);color:var(--primary);font-weight:600;">2º</span><span><b style="color:var(--text)"><code>deploy.sh</code></b> — transforme os comandos que funcionaram num script, acrescentando as verificações.</span></li>
+      <li style="display:flex;gap:14px;align-items:flex-start;background:var(--bg-card);border:1px solid var(--line);border-radius:10px;padding:13px 16px;font-size:14.5px;color:var(--text-dim);"><span style="font-family:var(--font-mono);color:var(--primary);font-weight:600;">3º</span><span><b style="color:var(--text)"><code>backup.sh</code></b> — depende de já existir dado no volume, ou seja, do deploy funcionando.</span></li>
+      <li style="display:flex;gap:14px;align-items:flex-start;background:var(--bg-card);border:1px solid var(--line);border-radius:10px;padding:13px 16px;font-size:14.5px;color:var(--text-dim);"><span style="font-family:var(--font-mono);color:var(--primary);font-weight:600;">4º</span><span><b style="color:var(--text)"><code>monitor.sh</code></b> — depende do container estar no ar para haver o que monitorar.</span></li>
+    </ul>
+    <div style="background:var(--primary-soft);border:1px solid var(--primary-dim);border-radius:10px;padding:16px 18px;margin-top:20px;">
+      <p style="margin:0;font-size:14px;color:var(--text-dim);"><b style="color:var(--primary);">Regra de ouro:</b> nunca escreva um script para automatizar comandos que você ainda não viu funcionar manualmente. Automatizar algo quebrado só produz um script quebrado mais difícil de depurar.</p>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">DESTRAVANDO SOZINHO</div>
+    <h2>Erros comuns e onde está a resposta</h2>
+    <p class="intro">Antes de chamar o professor, confira se o seu caso está aqui — quase todos estão.</p>
+    <table style="width:100%;border-collapse:collapse;margin-top:16px;font-size:13.5px;">
+      <tr><th style="border:1px solid var(--line);padding:10px 12px;text-align:left;background:var(--bg-card-2);font-family:var(--font-mono);font-size:11px;text-transform:uppercase;color:var(--text-dim);">Sintoma</th><th style="border:1px solid var(--line);padding:10px 12px;text-align:left;background:var(--bg-card-2);font-family:var(--font-mono);font-size:11px;text-transform:uppercase;color:var(--text-dim);">Causa provável</th><th style="border:1px solid var(--line);padding:10px 12px;text-align:left;background:var(--bg-card-2);font-family:var(--font-mono);font-size:11px;text-transform:uppercase;color:var(--text-dim);">Onde revisar</th></tr>
+      <tr><td style="border:1px solid var(--line);padding:10px 12px;color:var(--text-dim);">Permission denied ao rodar o script</td><td style="border:1px solid var(--line);padding:10px 12px;color:var(--text-dim);">Faltou <code>chmod +x</code></td><td style="border:1px solid var(--line);padding:10px 12px;color:var(--primary);font-family:var(--font-mono);font-size:12.5px;">Enc. 13, passo 1</td></tr>
+      <tr><td style="border:1px solid var(--line);padding:10px 12px;color:var(--text-dim);">"command not found" numa atribuição</td><td style="border:1px solid var(--line);padding:10px 12px;color:var(--text-dim);">Espaço em volta do <code>=</code></td><td style="border:1px solid var(--line);padding:10px 12px;color:var(--primary);font-family:var(--font-mono);font-size:12.5px;">Enc. 13, passo 2</td></tr>
+      <tr><td style="border:1px solid var(--line);padding:10px 12px;color:var(--text-dim);">Erro de sintaxe no <code>if</code></td><td style="border:1px solid var(--line);padding:10px 12px;color:var(--text-dim);">Faltam espaços dentro de <code>[ ]</code></td><td style="border:1px solid var(--line);padding:10px 12px;color:var(--primary);font-family:var(--font-mono);font-size:12.5px;">Enc. 13, passo 3</td></tr>
+      <tr><td style="border:1px solid var(--line);padding:10px 12px;color:var(--text-dim);">docker run falha: nome já em uso</td><td style="border:1px solid var(--line);padding:10px 12px;color:var(--text-dim);">Container parado, não removido</td><td style="border:1px solid var(--line);padding:10px 12px;color:var(--primary);font-family:var(--font-mono);font-size:12.5px;">use <code>docker ps -aq</code></td></tr>
+      <tr><td style="border:1px solid var(--line);padding:10px 12px;color:var(--text-dim);">Dados somem ao recriar o container</td><td style="border:1px solid var(--line);padding:10px 12px;color:var(--text-dim);">Falta volume montado</td><td style="border:1px solid var(--line);padding:10px 12px;color:var(--primary);font-family:var(--font-mono);font-size:12.5px;">Enc. 11, passos 6–7</td></tr>
+      <tr><td style="border:1px solid var(--line);padding:10px 12px;color:var(--text-dim);">Container morre com código 137</td><td style="border:1px solid var(--line);padding:10px 12px;color:var(--text-dim);">Limite de memória baixo demais</td><td style="border:1px solid var(--line);padding:10px 12px;color:var(--primary);font-family:var(--font-mono);font-size:12.5px;">Enc. 9 e 10</td></tr>
+      <tr><td style="border:1px solid var(--line);padding:10px 12px;color:var(--text-dim);">Funciona no terminal, não no cron</td><td style="border:1px solid var(--line);padding:10px 12px;color:var(--text-dim);">Caminho relativo</td><td style="border:1px solid var(--line);padding:10px 12px;color:var(--primary);font-family:var(--font-mono);font-size:12.5px;">Enc. 14, passo 3</td></tr>
+    </table>
+  </section>
+
+  <section class="block">
+    <div class="block-num">TRABALHO EM EQUIPE</div>
+    <h2>Todo mundo precisa entender tudo</h2>
+    <p class="intro">Na apresentação, qualquer integrante pode ser questionado sobre qualquer parte — e a participação equilibrada é critério avaliado.</p>
+    <div class="example-pair">
+      <div class="example-box weak">
+        <div class="lbl">Padrão de risco</div>
+        <p>"Fulano faz os scripts porque manja mais, a gente ajuda no README." Resultado: uma pessoa sobrecarregada, o resto sem conseguir defender o trabalho.</p>
+      </div>
+      <div class="example-box good">
+        <div class="lbl">Padrão que funciona</div>
+        <p>Cada um escreve um script, mas todos leem e testam os três. Ao fim de cada encontro, quem escreveu explica seu script para os demais — em 5 minutos.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" style="margin-top:48px;">
+    <h2 style="font-size:18px;">Checklist do encontro</h2>
+    <ul class="checklist" id="checklist">
+      <li><input type="checkbox"><span>Subimos o serviço manualmente, com volume e limite de memória</span></li>
+      <li><input type="checkbox"><span>O <code>deploy.sh</code> sobe o serviço com sucesso</span></li>
+      <li><input type="checkbox"><span>O <code>deploy.sh</code> roda duas vezes seguidas sem erro</span></li>
+      <li><input type="checkbox"><span>Começamos o <code>backup.sh</code></span></li>
+      <li><input type="checkbox"><span>Todos da equipe entendem o que cada script faz até aqui</span></li>
+      <li><input type="checkbox"><span>Combinamos o que cada um traz pronto no próximo encontro</span></li>
+    </ul>
+  </section>
+
+</div>
+
+<div class="progress">
+  <span id="progtext">0 / 6 verificados</span>
+  <div class="bar"><i id="progbar"></i></div>
+</div>
+
+<footer>Sistemas Operacionais · ADS23 · IFCE Campus Horizonte · Encontro 15 de 17</footer>
+
+<script>
+  const boxes = document.querySelectorAll('#checklist input[type=checkbox]');
+  const progtext = document.getElementById('progtext');
+  const progbar = document.getElementById('progbar');
+  function updateProgress(){
+    const total = boxes.length;
+    const done = [...boxes].filter(b=>b.checked).length;
+    progtext.textContent = done + ' / ' + total + ' verificados';
+    progbar.style.width = (done/total*100) + '%';
+  }
+  boxes.forEach(b=>{ b.addEventListener('change', ()=>{ b.closest('li').classList.toggle('checked', b.checked); updateProgress(); }); });
+  updateProgress();
+</script>
+
+</body>
+</html>

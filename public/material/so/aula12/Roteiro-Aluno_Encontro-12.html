@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roteiro de Laboratório — Encontro 12 · Sistemas Operacionais ADS23</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#fbfaf5;
+    --bg-card:#ffffff;
+    --bg-card-2:#f3f1e8;
+    --line:#e2ddd0;
+    --line-soft:#ece8db;
+    --primary:#1b878f;
+    --primary-dim:#8fc7ca;
+    --primary-soft:rgba(27,135,143,.09);
+    --secondary:#399b3f;
+    --secondary-soft:rgba(57,155,63,.08);
+    --alert:#cd191e;
+    --alert-soft:rgba(205,25,30,.07);
+    --text:#20241f;
+    --text-dim:#5b6058;
+    --text-faint:#8b9088;
+    --font-display:'Space Grotesk',sans-serif;
+    --font-body:'IBM Plex Sans',sans-serif;
+    --font-mono:'IBM Plex Mono',monospace;
+    --term-bg:#10161f;
+    --term-line:#212b3a;
+    --term-dim:#8d96a8;
+    --term-prompt:#7ee787;
+    --term-accent:#5fd9d3;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-body);line-height:1.6;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3,h4{font-family:var(--font-display);font-weight:600;color:var(--text);letter-spacing:-.01em;}
+  code{font-family:var(--font-mono);background:var(--primary-soft);color:var(--primary);padding:1px 6px;border-radius:4px;font-size:.92em;}
+  ::selection{background:var(--primary-soft);color:var(--text);}
+
+  .topbar{
+    position:sticky;top:0;z-index:20;background:rgba(251,250,245,.92);backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);padding:12px 22px;
+    display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  }
+  .topbar .brand{font-family:var(--font-mono);font-size:12.5px;color:var(--text-dim);}
+  .topbar .brand b{color:var(--primary);}
+  .topbar .progress-mini{font-family:var(--font-mono);font-size:12px;color:var(--text-faint);}
+
+  .wrap{max-width:880px;margin:0 auto;padding:36px 22px 80px;}
+
+  .hero{margin-bottom:44px;}
+  .hero .eyebrow{font-family:var(--font-mono);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);margin-bottom:12px;display:flex;align-items:center;gap:10px;}
+  .hero .eyebrow::before{content:'';width:22px;height:1px;background:var(--primary-dim);}
+  .hero h1{font-size:clamp(26px,4vw,38px);margin:0 0 14px;}
+  .hero p{color:var(--text-dim);font-size:16px;max-width:640px;margin:0;}
+  .hero .parts{display:flex;gap:14px;margin-top:22px;flex-wrap:wrap;}
+  .hero .part-chip{background:var(--bg-card);border:1px solid var(--line);border-radius:8px;padding:10px 16px;font-family:var(--font-mono);font-size:12.5px;color:var(--text-dim);}
+  .hero .part-chip b{color:var(--primary);}
+
+  .block{margin-bottom:52px;}
+  .block-num{font-family:var(--font-mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-faint);margin-bottom:8px;}
+  .block h2{font-size:22px;margin-bottom:10px;}
+  .block .intro{color:var(--text-dim);font-size:15px;max-width:680px;margin:0 0 20px;}
+
+  .part-divider{display:flex;align-items:center;gap:16px;margin:56px 0 32px;}
+  .part-divider .line{flex:1;height:1px;background:var(--line);}
+  .part-divider .label{font-family:var(--font-mono);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);white-space:nowrap;}
+
+  .cmd-card{background:var(--bg-card);border:1px solid var(--line);border-radius:12px;padding:20px 22px;margin-bottom:18px;}
+  .cmd-title{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+  .step-badge{width:24px;height:24px;border-radius:50%;background:var(--primary);color:#fff;font-family:var(--font-mono);font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  code.big{font-size:15px;padding:4px 10px;}
+
+  .explain-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+  .explain-box{background:var(--bg-card-2);border:1px solid var(--line-soft);border-radius:8px;padding:12px 14px;}
+  .explain-box .lbl{font-family:var(--font-mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-faint);margin-bottom:5px;}
+  .explain-box p{margin:0;font-size:13.5px;color:var(--text-dim);}
+  @media (max-width:680px){.explain-grid{grid-template-columns:1fr;}}
+
+  .terminal-mini{background:var(--term-bg);border:1px solid var(--term-line);border-radius:8px;overflow:hidden;margin-bottom:12px;}
+  .terminal-mini .bar{background:var(--term-bg);padding:6px 10px;display:flex;gap:5px;}
+  .terminal-mini .bar span{width:8px;height:8px;border-radius:50%;background:var(--term-line);}
+  .terminal-mini .body{padding:14px 16px;font-family:var(--font-mono);font-size:13px;color:var(--term-dim);white-space:pre-wrap;line-height:1.55;}
+  .terminal-mini .prompt{color:var(--term-prompt);}
+  .terminal-mini .out{color:var(--term-dim);}
+  .terminal-mini .hi{color:var(--term-accent);}
+  .terminal-mini .err{color:#e0605f;font-weight:600;}
+
+  details.tip{background:var(--bg-card-2);border:1px solid var(--line-soft);border-radius:8px;margin-top:8px;}
+  details.tip summary{padding:10px 14px;cursor:pointer;font-size:13.5px;color:var(--primary);font-family:var(--font-mono);}
+  details.tip .tip-body{padding:0 14px 14px;font-size:13.5px;color:var(--text-dim);}
+
+  .obs-note{font-size:13.5px;color:var(--text-dim);margin-top:2px;}
+  .obs-note b{color:var(--text);}
+
+  .warn-box{background:var(--alert-soft);border:1px solid var(--alert);border-radius:8px;padding:12px 16px;margin-top:12px;font-size:13.5px;color:var(--text-dim);}
+  .warn-box b{color:var(--alert);}
+
+  .example-pair{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0;}
+  .example-box{border-radius:8px;padding:14px 16px;font-size:13.5px;}
+  .example-box.weak{background:var(--alert-soft);border:1px solid var(--alert);}
+  .example-box.good{background:var(--secondary-soft);border:1px solid var(--secondary);}
+  .example-box .lbl{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;margin-bottom:6px;}
+  .example-box.weak .lbl{color:var(--alert);}
+  .example-box.good .lbl{color:var(--secondary);}
+  .example-box p{margin:0;color:var(--text-dim);font-style:italic;}
+  @media (max-width:680px){.example-pair{grid-template-columns:1fr;}}
+
+  .draft-box{margin-top:14px;}
+  .draft-box label{display:block;font-size:13.5px;color:var(--text-dim);margin-bottom:6px;}
+  .draft-box textarea{width:100%;min-height:90px;background:var(--bg-card-2);border:1px solid var(--line);border-radius:8px;color:var(--text);font-family:var(--font-body);font-size:14px;padding:10px 12px;resize:vertical;}
+  .draft-box textarea:focus{outline:none;border-color:var(--primary-dim);}
+  .char-count{font-family:var(--font-mono);font-size:11.5px;color:var(--text-faint);margin-top:5px;text-align:right;}
+  .char-count.ok{color:var(--secondary);}
+
+  .theory-link{background:var(--primary-soft);border:1px solid var(--primary-dim);border-radius:10px;padding:16px 18px;margin-top:20px;}
+  .theory-link .lbl{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;color:var(--primary);margin-bottom:6px;}
+  .theory-link p{margin:0;font-size:14px;color:var(--text-dim);}
+
+  .checklist{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px;}
+  .checklist li{display:flex;align-items:flex-start;gap:12px;background:var(--bg-card);border:1px solid var(--line);border-radius:8px;padding:12px 16px;font-size:14px;color:var(--text-dim);transition:.2s;}
+  .checklist li.checked{border-color:var(--secondary);background:var(--secondary-soft);color:var(--text);}
+  .checklist input[type=checkbox]{width:18px;height:18px;margin-top:1px;accent-color:var(--secondary);flex-shrink:0;}
+
+  .progress{position:sticky;bottom:0;background:rgba(251,250,245,.95);backdrop-filter:blur(6px);border-top:1px solid var(--line);padding:14px 22px;display:flex;align-items:center;gap:16px;justify-content:center;}
+  .progress #progtext{font-family:var(--font-mono);font-size:12.5px;color:var(--text-dim);white-space:nowrap;}
+  .progress .bar{flex:1;max-width:320px;height:6px;background:var(--line-soft);border-radius:3px;overflow:hidden;}
+  .progress .bar i{display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--primary),var(--secondary));transition:width .3s;}
+
+  footer{text-align:center;padding:30px 20px 90px;font-family:var(--font-mono);font-size:11.5px;color:var(--text-faint);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">Sistemas Operacionais · <b>ADS23</b></div>
+  <div class="progress-mini">Encontro 12 de 17 · Roteiro de Laboratório</div>
+</div>
+
+<div class="wrap">
+
+  <div class="hero">
+    <div class="eyebrow">Mão na massa · ~28 min</div>
+    <h1>Coringas, busca e manipulação em lote</h1>
+    <p>Hoje você monta uma estrutura de teste, aprende a técnica de segurança que evita apagar o que não devia, manipula dezenas de arquivos com um comando só, e termina usando os mesmos comandos dentro de um container.</p>
+    <div class="parts">
+      <div class="part-chip"><b>Passos 1–5</b> · Coringas, busca e redirecionamento</div>
+      <div class="part-chip"><b>Passo 6</b> · Reforço Docker: shell no container</div>
+    </div>
+  </div>
+
+  <div class="n1-card" style="background:var(--primary-soft);border:1px solid var(--primary-dim);border-radius:12px;padding:18px 22px;margin-bottom:44px;">
+    <div style="font-family:var(--font-mono);font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--primary);margin-bottom:8px;">⏱️ Prática mais curta hoje</div>
+    <p style="margin:0;font-size:14.5px;color:var(--text-dim);">Como a primeira parte da aula foi a <b>N1 da 2ª etapa</b>, sobra menos tempo de laboratório. Se não conseguir concluir todos os passos em aula, termine fora dela — este roteiro é suficiente pra você seguir sozinho, e as observações podem ser preenchidas depois.</p>
+  </div>
+
+  <section class="block">
+    <div class="block-num">PASSO 1 DE 6</div>
+    <h2>Montando uma estrutura de teste</h2>
+    <p class="intro">Antes de manipular arquivos em lote, precisamos de arquivos para manipular — criados de forma controlada, para não haver risco.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">1</span> <code class="big">mkdir -p ~/lab12/logs &amp;&amp; cd ~/lab12 &amp;&amp; touch relatorio{1..5}.txt sistema{1..3}.log notas.md</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p><code>mkdir -p</code> cria o diretório e os pais que faltarem. O <code>{1..5}</code> é expansão de chaves: o shell gera <code>relatorio1.txt</code> até <code>relatorio5.txt</code> automaticamente.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>Já é um coringa em ação — nove arquivos criados com um comando só, em vez de nove <code>touch</code> separados.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="prompt">$</span> mkdir -p ~/lab12/logs &amp;&amp; cd ~/lab12 &amp;&amp; touch relatorio{1..5}.txt sistema{1..3}.log notas.md
+<span class="prompt">$</span> ls
+<span class="out">logs  notas.md  relatorio1.txt  relatorio2.txt  relatorio3.txt
+relatorio4.txt  relatorio5.txt  sistema1.log  sistema2.log  sistema3.log</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> nove arquivos e um diretório <code>logs</code> vazio. Trabalhe sempre dentro de <code>~/lab12</code> nos próximos passos — assim nenhum comando de hoje toca seus arquivos pessoais.</p>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">PASSO 2 DE 6</div>
+    <h2>A técnica de segurança: veja antes de agir</h2>
+    <p class="intro">Este é o passo mais importante do roteiro. No shell não existe lixeira — o que você apaga, some. A defesa é sempre testar o padrão antes de usá-lo num comando destrutivo.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">2</span> <code class="big">echo *.log</code> <span style="color:var(--text-faint);font-family:var(--font-mono);font-size:12.5px;">e</span> <code class="big">ls *.txt</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p>Quem expande o coringa é o <b>shell</b>, antes do comando rodar. Então <code>echo</code> mostra exatamente a lista que qualquer outro comando receberia.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>É a diferença entre apagar o que você quis e apagar o que você não percebeu que casava com o padrão.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="prompt">$</span> echo *.log
+<span class="hi">sistema1.log sistema2.log sistema3.log</span>
+<span class="prompt">$</span> ls *.txt
+<span class="out">relatorio1.txt  relatorio2.txt  relatorio3.txt  relatorio4.txt  relatorio5.txt</span>
+<span class="prompt">$</span> echo relatorio[12].txt
+<span class="hi">relatorio1.txt relatorio2.txt</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> a lista expandida. Experimente também <code>echo *</code>, <code>echo relatorio?.txt</code> e <code>echo *.{txt,md}</code> pra ver como cada coringa se comporta.</p>
+      <details class="tip">
+        <summary>Por que o echo mostra a lista se eu não digitei os nomes?</summary>
+        <div class="tip-body">
+          Porque o <code>echo</code> nunca viu o coringa. O shell substituiu <code>*.log</code> pela lista de arquivos correspondentes <b>antes</b> de chamar o <code>echo</code> — que apenas imprimiu o que recebeu. É exatamente isso que acontece com <code>rm</code>, <code>cp</code> e todos os outros. Por isso testar com <code>echo</code> é seguro e confiável.
+        </div>
+      </details>
+    </div>
+
+    <div class="draft-box">
+      <label for="obs1">Rascunho da observação 1 — por que testar um coringa com echo ou ls antes de usá-lo num rm é uma boa prática? Quem expande o coringa: o shell ou o comando?</label>
+      <textarea id="obs1" placeholder="Ex: quem expande é o shell, antes do comando rodar, então..."></textarea>
+      <div class="char-count" data-for="obs1">0 caracteres (mínimo 40)</div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">PASSO 3 DE 6</div>
+    <h2>Manipulando em lote</h2>
+    <p class="intro">Agora sim — depois de confirmar o padrão no passo 2, use-o para valer.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">3</span> <code class="big">mv *.log logs/ &amp;&amp; ls logs/</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p>Move todos os arquivos <code>.log</code> de uma vez para o subdiretório <code>logs/</code>. O mesmo <code>mv</code> também renomeia, quando o destino é um nome de arquivo.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>É a resposta da pergunta do slide: organizar dezenas ou centenas de arquivos num comando, não num por um.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="prompt">$</span> mv *.log logs/ &amp;&amp; ls logs/
+<span class="out">sistema1.log  sistema2.log  sistema3.log</span>
+<span class="prompt">$</span> cp -r logs/ logs_backup/
+<span class="prompt">$</span> ls
+<span class="out">logs  logs_backup  notas.md  relatorio1.txt ...</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> os três <code>.log</code> agora dentro de <code>logs/</code> e uma cópia completa em <code>logs_backup/</code>. Sem o <code>-r</code> no <code>cp</code>, copiar um diretório dá erro — teste e veja a mensagem.</p>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">PASSO 4 DE 6</div>
+    <h2>Procurar arquivos e procurar conteúdo</h2>
+    <p class="intro">Duas buscas diferentes: uma pelo nome do arquivo, outra pelo que está escrito dentro dele.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">4</span> <code class="big">find ~/lab12 -name "*.log"</code> <span style="color:var(--text-faint);font-family:var(--font-mono);font-size:12.5px;">e</span> <code class="big">grep -rn "ERRO" ~/lab12</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p><code>find</code> percorre a árvore de diretórios procurando <b>pelo nome</b>. <code>grep -rn</code> procura <b>dentro</b> dos arquivos, mostrando arquivo e número da linha.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>"Onde está esse arquivo?" e "onde aparece essa mensagem de erro?" são duas perguntas distintas, com ferramentas distintas.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="prompt">$</span> echo "[ERRO] falha ao conectar" &gt; logs/sistema1.log
+<span class="prompt">$</span> find ~/lab12 -name "*.log"
+<span class="out">/home/aluno/lab12/logs/sistema1.log
+/home/aluno/lab12/logs/sistema2.log
+/home/aluno/lab12/logs_backup/sistema1.log</span>
+<span class="prompt">$</span> grep -rn "ERRO" ~/lab12
+<span class="hi">/home/aluno/lab12/logs/sistema1.log:1:[ERRO] falha ao conectar</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> o <code>find</code> lista caminhos de arquivos; o <code>grep -rn</code> mostra <b>arquivo:linha:conteúdo</b>. Repare que o <code>find</code> encontrou também a cópia em <code>logs_backup/</code>, mas o <code>grep</code> só achou a mensagem onde ela realmente foi escrita.</p>
+      <details class="tip">
+        <summary>Meu grep não encontrou nada</summary>
+        <div class="tip-body">
+          Confirme que você rodou o <code>echo "[ERRO] ..." &gt; logs/sistema1.log</code> antes — os arquivos criados com <code>touch</code> no passo 1 estão vazios. O <code>grep</code> diferencia maiúsculas de minúsculas por padrão; use <code>grep -rni</code> para ignorar essa diferença.
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">PASSO 5 DE 6</div>
+    <h2>Substituir ou acrescentar: a diferença que importa</h2>
+    <p class="intro">Os dois operadores de redirecionamento parecem quase iguais — e confundi-los é a causa clássica de "meu script apagou o log inteiro".</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">5</span> <code class="big">&gt;</code> <span style="color:var(--text-faint);font-family:var(--font-mono);font-size:12.5px;">versus</span> <code class="big">&gt;&gt;</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p><code>&gt;</code> <b>substitui</b> todo o conteúdo do arquivo. <code>&gt;&gt;</code> <b>acrescenta</b> ao final, preservando o que já existia.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>Todo script que grava log usa <code>&gt;&gt;</code>. Usar <code>&gt;</code> por engano descarta silenciosamente todo o histórico anterior.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="prompt">$</span> echo "primeira linha" &gt; relatorio.txt
+<span class="prompt">$</span> echo "segunda linha" &gt;&gt; relatorio.txt
+<span class="prompt">$</span> cat relatorio.txt
+<span class="out">primeira linha
+segunda linha</span>
+<span class="prompt">$</span> echo "apaguei tudo" &gt; relatorio.txt
+<span class="prompt">$</span> cat relatorio.txt
+<span class="err">apaguei tudo</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> as duas primeiras linhas convivendo, e depois <b>desaparecendo</b> quando o <code>&gt;</code> é usado. Rode você mesmo e veja o conteúdo sumir — é uma lição que se aprende melhor vendo.</p>
+    </div>
+
+    <div class="draft-box">
+      <label for="obs2">Rascunho da observação 2 — qual a diferença prática entre &gt; e &gt;&gt;? Descreva uma situação real em que usar o errado causaria um problema sério.</label>
+      <textarea id="obs2" placeholder="Ex: o > substitui e o >> acrescenta; num script de log isso significaria..."></textarea>
+      <div class="char-count" data-for="obs2">0 caracteres (mínimo 40)</div>
+    </div>
+  </section>
+
+  <div class="part-divider"><div class="line"></div><div class="label">Reforço Docker · shell dentro do container</div><div class="line"></div></div>
+
+  <section class="block">
+    <div class="block-num">PASSO 6 DE 6</div>
+    <h2>Os mesmos comandos, do lado de dentro</h2>
+    <p class="intro">Vocês já usaram <code>docker exec</code> no Encontro 5. Agora dá pra usar de forma interativa — abrindo um shell dentro do container e trabalhando lá.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">6</span> <code class="big">docker run -d --name shelldemo alpine sleep 600</code> <span style="color:var(--text-faint);font-family:var(--font-mono);font-size:12.5px;">depois</span> <code class="big">docker exec -it shelldemo sh</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p><code>-it</code> significa interativo + terminal: em vez de rodar um comando e sair, você fica <b>dentro</b> do container, com um shell próprio.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>É exatamente assim que se diagnostica um container quebrado em produção — entrando nele e usando os comandos básicos.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="prompt">$</span> docker exec -it shelldemo sh
+<span class="prompt">/ #</span> pwd
+<span class="out">/</span>
+<span class="prompt">/ #</span> ls /
+<span class="out">bin  dev  etc  home  proc  root  tmp  usr  var</span>
+<span class="prompt">/ #</span> mkdir -p /teste &amp;&amp; touch /teste/arq{1..3}.txt &amp;&amp; ls /teste
+<span class="out">arq1.txt  arq2.txt  arq3.txt</span>
+<span class="prompt">/ #</span> exit</div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> o prompt muda para <code>/ #</code> — você está dentro do container. Os coringas funcionam igual. Note que a árvore de arquivos é <b>outra</b>: você não vê seu <code>~/lab12</code> ali, porque é um sistema de arquivos isolado. Digite <code>exit</code> para voltar.</p>
+      <details class="tip">
+        <summary>Por que "sh" e não "bash"?</summary>
+        <div class="tip-body">
+          A imagem <code>alpine</code> é mínima e não inclui o <code>bash</code> — só o <code>sh</code>, mais básico. É um bom lembrete de por que dominar os comandos essenciais importa: em imagens enxutas você não tem as ferramentas confortáveis à disposição, e não dá pra instalar nada no meio de um incidente.
+        </div>
+      </details>
+      <p class="obs-note" style="margin-top:12px;"><b>Limpeza:</b> ao sair, rode <code>docker stop shelldemo &amp;&amp; docker rm shelldemo</code>.</p>
+    </div>
+
+    <div class="draft-box">
+      <label for="obs3">Rascunho da observação 3 — livre: o que você notou ao usar os comandos dentro do container em vez do host? Ou uma dúvida que sobrou de hoje</label>
+      <textarea id="obs3" placeholder="Ex: o sistema de arquivos era completamente diferente, e..."></textarea>
+      <div class="char-count" data-for="obs3">0 caracteres (mínimo 40)</div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2 style="font-size:18px;">Exemplo de observação forte x fraca</h2>
+    <div class="example-pair">
+      <div class="example-box weak">
+        <div class="lbl">Observação fraca</div>
+        <p>"É melhor testar com echo antes de apagar."</p>
+      </div>
+      <div class="example-box good">
+        <div class="lbl">Observação forte</div>
+        <p>"Quem expande o coringa é o shell, não o comando — quando rodei <code>echo *.log</code>, o echo recebeu a lista já pronta e nunca viu o asterisco. Como <code>rm</code> funciona exatamente do mesmo jeito, testar o padrão com <code>echo</code> ou <code>ls</code> antes mostra precisamente o que seria apagado. Sem lixeira no shell, essa checagem é a única defesa contra apagar um arquivo que casava com o padrão sem eu perceber."</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="theory-link">
+    <div class="lbl">Conexão com a teoria</div>
+    <p>Os passos 1–5 são os comandos básicos e de manipulação de arquivos do Laureano (p. 33–38 e 43–53). O passo 2 demonstra o papel do shell como interpretador descrito pelo Tanenbaum (p. 32–33): a expansão de coringas acontece <b>no shell</b>, antes de qualquer chamada de sistema — as mesmas chamadas que vocês rastrearam com <code>strace</code> no Encontro 3. O passo 5 retoma o redirecionamento de fluxos do Encontro 6, e o passo 6 é o gancho Docker do slide 10.</p>
+  </div>
+
+  <section class="block" style="margin-top:48px;">
+    <h2 style="font-size:18px;">Checklist final</h2>
+    <ul class="checklist" id="checklist">
+      <li><input type="checkbox"><span>Criei a estrutura de teste em <code>~/lab12</code></span></li>
+      <li><input type="checkbox"><span>Testei coringas com <code>echo</code> antes de usá-los</span></li>
+      <li><input type="checkbox"><span>Movi e copiei arquivos em lote com coringa</span></li>
+      <li><input type="checkbox"><span>Usei <code>find</code> por nome e <code>grep -rn</code> por conteúdo</span></li>
+      <li><input type="checkbox"><span>Comprovei a diferença entre <code>&gt;</code> e <code>&gt;&gt;</code></span></li>
+      <li><input type="checkbox"><span>Entrei num container com <code>docker exec -it</code> e usei os comandos lá dentro</span></li>
+      <li><input type="checkbox"><span>Limpei o container de teste</span></li>
+      <li><input type="checkbox"><span>Preenchi as 3 observações acima (vou colar no quiz semanal)</span></li>
+    </ul>
+  </section>
+
+</div>
+
+<div class="progress">
+  <span id="progtext">0 / 8 verificados</span>
+  <div class="bar"><i id="progbar"></i></div>
+</div>
+
+<footer>Sistemas Operacionais · ADS23 · IFCE Campus Horizonte · Encontro 12 de 17</footer>
+
+<script>
+  const boxes = document.querySelectorAll('#checklist input[type=checkbox]');
+  const progtext = document.getElementById('progtext');
+  const progbar = document.getElementById('progbar');
+  function updateProgress(){
+    const total = boxes.length;
+    const done = [...boxes].filter(b=>b.checked).length;
+    progtext.textContent = done + ' / ' + total + ' verificados';
+    progbar.style.width = (done/total*100) + '%';
+  }
+  boxes.forEach(b=>{
+    b.addEventListener('change', ()=>{
+      b.closest('li').classList.toggle('checked', b.checked);
+      updateProgress();
+    });
+  });
+  updateProgress();
+
+  document.querySelectorAll('.draft-box textarea').forEach(ta=>{
+    const counter = document.querySelector('.char-count[data-for="'+ta.id+'"]');
+    ta.addEventListener('input', ()=>{
+      const len = ta.value.length;
+      counter.textContent = len + ' caracteres (mínimo 40)';
+      counter.classList.toggle('ok', len >= 40);
+    });
+  });
+</script>
+
+</body>
+</html>

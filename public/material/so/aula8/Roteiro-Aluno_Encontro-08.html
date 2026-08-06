@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guia de Defesa — Encontro 8 · Sistemas Operacionais ADS23</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#fbfaf5;
+    --bg-card:#ffffff;
+    --bg-card-2:#f3f1e8;
+    --line:#e2ddd0;
+    --line-soft:#ece8db;
+    --primary:#1b878f;
+    --primary-dim:#8fc7ca;
+    --primary-soft:rgba(27,135,143,.09);
+    --secondary:#399b3f;
+    --secondary-soft:rgba(57,155,63,.08);
+    --alert:#cd191e;
+    --alert-soft:rgba(205,25,30,.07);
+    --text:#20241f;
+    --text-dim:#5b6058;
+    --text-faint:#8b9088;
+    --font-display:'Space Grotesk',sans-serif;
+    --font-body:'IBM Plex Sans',sans-serif;
+    --font-mono:'IBM Plex Mono',monospace;
+    --term-bg:#10161f;
+    --term-line:#212b3a;
+    --term-dim:#8d96a8;
+    --term-prompt:#7ee787;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-body);line-height:1.6;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3,h4{font-family:var(--font-display);font-weight:600;color:var(--text);letter-spacing:-.01em;}
+  code{font-family:var(--font-mono);background:var(--primary-soft);color:var(--primary);padding:1px 6px;border-radius:4px;font-size:.92em;}
+  ::selection{background:var(--primary-soft);color:var(--text);}
+
+  .topbar{
+    position:sticky;top:0;z-index:20;background:rgba(251,250,245,.92);backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);padding:12px 22px;
+    display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  }
+  .topbar .brand{font-family:var(--font-mono);font-size:12.5px;color:var(--text-dim);}
+  .topbar .brand b{color:var(--primary);}
+  .topbar .progress-mini{font-family:var(--font-mono);font-size:12px;color:var(--text-faint);}
+
+  .wrap{max-width:880px;margin:0 auto;padding:36px 22px 80px;}
+
+  .hero{margin-bottom:32px;}
+  .hero .eyebrow{font-family:var(--font-mono);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);margin-bottom:12px;display:flex;align-items:center;gap:10px;}
+  .hero .eyebrow::before{content:'';width:22px;height:1px;background:var(--primary-dim);}
+  .hero h1{font-size:clamp(26px,4vw,38px);margin:0 0 14px;}
+  .hero p{color:var(--text-dim);font-size:16px;max-width:640px;margin:0;}
+
+  .draft-note{background:var(--alert-soft);border:1px solid var(--alert);border-radius:12px;padding:16px 20px;margin-bottom:40px;}
+  .draft-note .lbl{font-family:var(--font-mono);font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--alert);margin-bottom:8px;}
+  .draft-note p{margin:0;font-size:14px;color:var(--text-dim);}
+
+  .block{margin-bottom:48px;}
+  .block-num{font-family:var(--font-mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-faint);margin-bottom:8px;}
+  .block h2{font-size:22px;margin-bottom:10px;}
+  .block .intro{color:var(--text-dim);font-size:15px;max-width:680px;margin:0 0 20px;}
+
+  .cards2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px;}
+  .card{background:var(--bg-card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;}
+  .card.alt{border-color:var(--secondary-dim,var(--secondary));}
+  .card .kicker{font-family:var(--font-mono);font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;}
+  .card h3{font-size:16.5px;margin-bottom:8px;}
+  .card p{color:var(--text-dim);font-size:13.5px;margin:0;}
+  @media (max-width:680px){.cards2{grid-template-columns:1fr;}}
+
+  .timebox{display:flex;gap:0;margin-top:20px;border:1px solid var(--line);border-radius:12px;overflow:hidden;}
+  .tb-seg{flex:1;padding:16px 14px;text-align:center;border-right:1px solid var(--line-soft);}
+  .tb-seg:last-child{border-right:none;}
+  .tb-seg .min{font-family:var(--font-mono);font-size:22px;color:var(--primary);font-weight:600;}
+  .tb-seg .lbl{font-size:12.5px;color:var(--text-dim);margin-top:4px;}
+  @media (max-width:680px){.timebox{flex-direction:column;} .tb-seg{border-right:none;border-bottom:1px solid var(--line-soft);}}
+
+  .numlist{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px;}
+  .numlist li{display:flex;gap:14px;align-items:flex-start;background:var(--bg-card);border:1px solid var(--line);border-radius:10px;padding:13px 16px;font-size:14.5px;color:var(--text-dim);}
+  .numlist .n{font-family:var(--font-mono);color:var(--primary);font-weight:600;flex-shrink:0;}
+
+  .rubric-table{width:100%;border-collapse:collapse;margin-top:16px;font-size:13.5px;}
+  .rubric-table th,.rubric-table td{border:1px solid var(--line);padding:10px 12px;text-align:left;vertical-align:top;}
+  .rubric-table th{background:var(--bg-card-2);font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-dim);}
+  .rubric-table td{color:var(--text-dim);}
+  .rubric-table td.weight{font-family:var(--font-mono);color:var(--primary);white-space:nowrap;font-weight:600;}
+  @media (max-width:780px){.rubric-table{font-size:12px;} .rubric-table th,.rubric-table td{padding:7px 8px;}}
+
+  .checklist{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px;}
+  .checklist li{display:flex;align-items:flex-start;gap:12px;background:var(--bg-card);border:1px solid var(--line);border-radius:8px;padding:12px 16px;font-size:14px;color:var(--text-dim);transition:.2s;}
+  .checklist li.checked{border-color:var(--secondary);background:var(--secondary-soft);color:var(--text);}
+  .checklist input[type=checkbox]{width:18px;height:18px;margin-top:1px;accent-color:var(--secondary);flex-shrink:0;}
+
+  .progress{position:sticky;bottom:0;background:rgba(251,250,245,.95);backdrop-filter:blur(6px);border-top:1px solid var(--line);padding:14px 22px;display:flex;align-items:center;gap:16px;justify-content:center;}
+  .progress #progtext{font-family:var(--font-mono);font-size:12.5px;color:var(--text-dim);white-space:nowrap;}
+  .progress .bar{flex:1;max-width:320px;height:6px;background:var(--line-soft);border-radius:3px;overflow:hidden;}
+  .progress .bar i{display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--primary),var(--secondary));transition:width .3s;}
+
+  footer{text-align:center;padding:30px 20px 90px;font-family:var(--font-mono);font-size:11.5px;color:var(--text-faint);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">Sistemas Operacionais · <b>ADS23</b></div>
+  <div class="progress-mini">Encontro 8 de 17 · Guia de Defesa</div>
+</div>
+
+<div class="wrap">
+
+  <div class="hero">
+    <div class="eyebrow">Fechamento da 1ª etapa · N2</div>
+    <h1>Guia de Defesa — Relatório Raio-X + Container ao vivo</h1>
+    <p>Hoje é o fechamento da primeira etapa do curso. Sua equipe apresenta o relatório Raio-X do sistema investigado, com o container do projeto rodando ao vivo, num timebox de 5 a 6 minutos seguido de perguntas.</p>
+  </div>
+
+  <div class="draft-note">
+    <div class="lbl">⚠️ Rubrica em fase de ajuste</div>
+    <p>Os critérios de avaliação mostrados abaixo são um <b>rascunho de trabalho</b> — os pesos exatos podem ser ajustados pelo professor antes da aplicação. O formato do instrumento (relatório + defesa + container) já está confirmado; os pontos exatos por critério podem mudar.</p>
+  </div>
+
+  <section class="block">
+    <div class="block-num">O que sua equipe apresenta</div>
+    <h2>Três entregas, um só momento</h2>
+    <div class="cards2">
+      <div class="card">
+        <div class="kicker">Relatório Raio-X</div>
+        <h3>Investigação escrita</h3>
+        <p>O relatório que sua dupla/trio já vem construindo desde o Encontro 1 — conceitos, arquitetura e processos do SO real que vocês investigaram, conectando prática ↔ teoria.</p>
+      </div>
+      <div class="card alt">
+        <div class="kicker">Defesa oral + Container</div>
+        <h3>Apresentação ao vivo</h3>
+        <p>5–6 minutos de apresentação, com o container do projeto rodando de verdade na hora — não só prints ou slides sobre ele.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">Como o tempo é dividido</div>
+    <h2>Timebox da defesa</h2>
+    <p class="intro">O professor vai avisar quando faltar 1 minuto — pratiquem o timing antes, o ensaio do Encontro 7 foi exatamente pra isso.</p>
+    <div class="timebox">
+      <div class="tb-seg"><div class="min">5–6 min</div><div class="lbl">Apresentação + demonstração do container</div></div>
+      <div class="tb-seg"><div class="min">2–3 min</div><div class="lbl">Perguntas do professor</div></div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">Preparação</div>
+    <h2>O que ter pronto antes da sua vez</h2>
+    <ul class="numlist">
+      <li><span class="n">1</span><span>Relatório Raio-X finalizado e entregue conforme combinado em sala.</span></li>
+      <li><span class="n">2</span><span>Container do projeto testado e pronto pra subir sem surpresas — revisem o ensaio do Encontro 7.</span></li>
+      <li><span class="n">3</span><span>Combinar entre a equipe quem fala em cada parte — todos os membros devem participar (é um critério avaliado).</span></li>
+      <li><span class="n">4</span><span>Ensaiar o tempo com um cronômetro real — 5–6 minutos passa mais rápido do que parece.</span></li>
+      <li><span class="n">5</span><span>Revisar os recortes 🔵 de leitura dos Encontros 1–7 — são a munição conceitual pras perguntas.</span></li>
+    </ul>
+  </section>
+
+  <section class="block">
+    <div class="block-num">Critérios de avaliação (rascunho)</div>
+    <h2>Como a defesa é avaliada</h2>
+    <p class="intro">Rubrica completa em <code>Rubrica_N2_Etapa1.md</code> — aqui está o resumo transparente do que cada critério observa.</p>
+    <table class="rubric-table">
+      <tr><th>Critério</th><th>Peso</th><th>O que é observado</th></tr>
+      <tr><td>Relatório Raio-X</td><td class="weight">4,0 pts</td><td>Completude e profundidade da investigação, conectando prática ↔ conceito citado.</td></tr>
+      <tr><td>Defesa oral</td><td class="weight">3,0 pts</td><td>Clareza, domínio do conteúdo, qualidade das respostas às perguntas.</td></tr>
+      <tr><td>Container ao vivo</td><td class="weight">2,0 pts</td><td>O container sobe e funciona na hora, domínio dos comandos usados.</td></tr>
+      <tr><td>Trabalho em equipe</td><td class="weight">1,0 pt</td><td>Participação equilibrada entre os membros da dupla/trio.</td></tr>
+    </table>
+  </section>
+
+  <section class="block" style="margin-top:48px;">
+    <h2 style="font-size:18px;">Checklist final antes de apresentar</h2>
+    <ul class="checklist" id="checklist">
+      <li><input type="checkbox"><span>Relatório Raio-X entregue</span></li>
+      <li><input type="checkbox"><span>Container testado e funcionando nesta máquina</span></li>
+      <li><input type="checkbox"><span>Divisão de fala combinada entre a equipe</span></li>
+      <li><input type="checkbox"><span>Tempo ensaiado com cronômetro (5–6 min)</span></li>
+      <li><input type="checkbox"><span>Recortes de leitura 🔵 revisados</span></li>
+    </ul>
+  </section>
+
+</div>
+
+<div class="progress">
+  <span id="progtext">0 / 5 verificados</span>
+  <div class="bar"><i id="progbar"></i></div>
+</div>
+
+<footer>Sistemas Operacionais · ADS23 · IFCE Campus Horizonte · Encontro 8 de 17</footer>
+
+<script>
+  const boxes = document.querySelectorAll('#checklist input[type=checkbox]');
+  const progtext = document.getElementById('progtext');
+  const progbar = document.getElementById('progbar');
+  function updateProgress(){
+    const total = boxes.length;
+    const done = [...boxes].filter(b=>b.checked).length;
+    progtext.textContent = done + ' / ' + total + ' verificados';
+    progbar.style.width = (done/total*100) + '%';
+  }
+  boxes.forEach(b=>{
+    b.addEventListener('change', ()=>{
+      b.closest('li').classList.toggle('checked', b.checked);
+      updateProgress();
+    });
+  });
+  updateProgress();
+</script>
+
+</body>
+</html>

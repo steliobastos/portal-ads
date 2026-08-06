@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roteiro de Laboratório — Encontro 3 · Sistemas Operacionais ADS23</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#fbfaf5;
+    --bg-card:#ffffff;
+    --bg-card-2:#f3f1e8;
+    --line:#e2ddd0;
+    --line-soft:#ece8db;
+    --primary:#1b878f;
+    --primary-dim:#8fc7ca;
+    --primary-soft:rgba(27,135,143,.09);
+    --secondary:#399b3f;
+    --secondary-soft:rgba(57,155,63,.08);
+    --alert:#cd191e;
+    --alert-soft:rgba(205,25,30,.07);
+    --text:#20241f;
+    --text-dim:#5b6058;
+    --text-faint:#8b9088;
+    --font-display:'Space Grotesk',sans-serif;
+    --font-body:'IBM Plex Sans',sans-serif;
+    --font-mono:'IBM Plex Mono',monospace;
+    /* sub-paleta escura reservada — blocos de terminal permanecem escuros */
+    --term-bg:#10161f;
+    --term-line:#212b3a;
+    --term-dim:#8d96a8;
+    --term-prompt:#7ee787;
+    --term-accent:#5fd9d3;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-body);line-height:1.6;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3,h4{font-family:var(--font-display);font-weight:600;color:var(--text);letter-spacing:-.01em;}
+  code{font-family:var(--font-mono);background:var(--primary-soft);color:var(--primary);padding:1px 6px;border-radius:4px;font-size:.92em;}
+  ::selection{background:var(--primary-soft);color:var(--text);}
+
+  .topbar{
+    position:sticky;top:0;z-index:20;background:rgba(251,250,245,.92);backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);padding:12px 22px;
+    display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  }
+  .topbar .brand{font-family:var(--font-mono);font-size:12.5px;color:var(--text-dim);}
+  .topbar .brand b{color:var(--primary);}
+  .topbar .progress-mini{font-family:var(--font-mono);font-size:12px;color:var(--text-faint);}
+
+  .wrap{max-width:880px;margin:0 auto;padding:36px 22px 80px;}
+
+  .hero{margin-bottom:44px;}
+  .hero .eyebrow{font-family:var(--font-mono);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);margin-bottom:12px;display:flex;align-items:center;gap:10px;}
+  .hero .eyebrow::before{content:'';width:22px;height:1px;background:var(--primary-dim);}
+  .hero h1{font-size:clamp(26px,4vw,38px);margin:0 0 14px;}
+  .hero p{color:var(--text-dim);font-size:16px;max-width:640px;margin:0;}
+  .hero .parts{display:flex;gap:14px;margin-top:22px;flex-wrap:wrap;}
+  .hero .part-chip{background:var(--bg-card);border:1px solid var(--line);border-radius:8px;padding:10px 16px;font-family:var(--font-mono);font-size:12.5px;color:var(--text-dim);}
+  .hero .part-chip b{color:var(--primary);}
+
+  .block{margin-bottom:52px;}
+  .block-num{font-family:var(--font-mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-faint);margin-bottom:8px;}
+  .block h2{font-size:22px;margin-bottom:10px;}
+  .block .intro{color:var(--text-dim);font-size:15px;max-width:680px;margin:0 0 20px;}
+
+  .part-divider{display:flex;align-items:center;gap:16px;margin:56px 0 32px;}
+  .part-divider .line{flex:1;height:1px;background:var(--line);}
+  .part-divider .label{font-family:var(--font-mono);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);white-space:nowrap;}
+
+  .cmd-card{background:var(--bg-card);border:1px solid var(--line);border-radius:12px;padding:20px 22px;margin-bottom:18px;}
+  .cmd-title{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  .step-badge{width:24px;height:24px;border-radius:50%;background:var(--primary);color:#fff;font-family:var(--font-mono);font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  code.big{font-size:15.5px;padding:4px 10px;}
+
+  .explain-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+  .explain-box{background:var(--bg-card-2);border:1px solid var(--line-soft);border-radius:8px;padding:12px 14px;}
+  .explain-box .lbl{font-family:var(--font-mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-faint);margin-bottom:5px;}
+  .explain-box p{margin:0;font-size:13.5px;color:var(--text-dim);}
+  @media (max-width:680px){.explain-grid{grid-template-columns:1fr;}}
+
+  .terminal-mini{background:var(--term-bg);border:1px solid var(--term-line);border-radius:8px;overflow:hidden;margin-bottom:12px;}
+  .terminal-mini .bar{background:var(--term-bg);padding:6px 10px;display:flex;gap:5px;}
+  .terminal-mini .bar span{width:8px;height:8px;border-radius:50%;background:var(--term-line);}
+  .terminal-mini .body{padding:14px 16px;font-family:var(--font-mono);font-size:13px;color:var(--term-dim);white-space:pre-wrap;line-height:1.55;}
+  .terminal-mini .prompt{color:var(--term-prompt);}
+  .terminal-mini .out{color:var(--term-dim);}
+  .terminal-mini .hi{color:var(--term-accent);}
+
+  details.tip{background:var(--bg-card-2);border:1px solid var(--line-soft);border-radius:8px;margin-top:8px;}
+  details.tip summary{padding:10px 14px;cursor:pointer;font-size:13.5px;color:var(--primary);font-family:var(--font-mono);}
+  details.tip .tip-body{padding:0 14px 14px;font-size:13.5px;color:var(--text-dim);}
+
+  .obs-note{font-size:13.5px;color:var(--text-dim);margin-top:2px;}
+  .obs-note b{color:var(--text);}
+
+  .example-pair{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0;}
+  .example-box{border-radius:8px;padding:14px 16px;font-size:13.5px;}
+  .example-box.weak{background:var(--alert-soft);border:1px solid var(--alert);}
+  .example-box.good{background:var(--secondary-soft);border:1px solid var(--secondary);}
+  .example-box .lbl{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;margin-bottom:6px;}
+  .example-box.weak .lbl{color:var(--alert);}
+  .example-box.good .lbl{color:var(--secondary);}
+  .example-box p{margin:0;color:var(--text-dim);font-style:italic;}
+  @media (max-width:680px){.example-pair{grid-template-columns:1fr;}}
+
+  .draft-box{margin-top:14px;}
+  .draft-box label{display:block;font-size:13.5px;color:var(--text-dim);margin-bottom:6px;}
+  .draft-box textarea{width:100%;min-height:90px;background:var(--bg-card-2);border:1px solid var(--line);border-radius:8px;color:var(--text);font-family:var(--font-body);font-size:14px;padding:10px 12px;resize:vertical;}
+  .draft-box textarea:focus{outline:none;border-color:var(--primary-dim);}
+  .char-count{font-family:var(--font-mono);font-size:11.5px;color:var(--text-faint);margin-top:5px;text-align:right;}
+  .char-count.ok{color:var(--secondary);}
+
+  .theory-link{background:var(--primary-soft);border:1px solid var(--primary-dim);border-radius:10px;padding:16px 18px;margin-top:20px;}
+  .theory-link .lbl{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;color:var(--primary);margin-bottom:6px;}
+  .theory-link p{margin:0;font-size:14px;color:var(--text-dim);}
+
+  .checklist{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px;}
+  .checklist li{display:flex;align-items:flex-start;gap:12px;background:var(--bg-card);border:1px solid var(--line);border-radius:8px;padding:12px 16px;font-size:14px;color:var(--text-dim);transition:.2s;}
+  .checklist li.checked{border-color:var(--secondary);background:var(--secondary-soft);color:var(--text);}
+  .checklist input[type=checkbox]{width:18px;height:18px;margin-top:1px;accent-color:var(--secondary);flex-shrink:0;}
+
+  .progress{position:sticky;bottom:0;background:rgba(251,250,245,.95);backdrop-filter:blur(6px);border-top:1px solid var(--line);padding:14px 22px;display:flex;align-items:center;gap:16px;justify-content:center;}
+  .progress #progtext{font-family:var(--font-mono);font-size:12.5px;color:var(--text-dim);white-space:nowrap;}
+  .progress .bar{flex:1;max-width:320px;height:6px;background:var(--line-soft);border-radius:3px;overflow:hidden;}
+  .progress .bar i{display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--primary),var(--secondary));transition:width .3s;}
+
+  footer{text-align:center;padding:30px 20px 90px;font-family:var(--font-mono);font-size:11.5px;color:var(--text-faint);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">Sistemas Operacionais · <b>ADS23</b></div>
+  <div class="progress-mini">Encontro 3 de 17 · Roteiro de Laboratório</div>
+</div>
+
+<div class="wrap">
+
+  <div class="hero">
+    <div class="eyebrow">Mão na massa · ~70 min</div>
+    <h1>Chamadas de sistema e contêiner x máquina virtual</h1>
+    <p>Hoje você vê, na tela, as chamadas de sistema que um programa faz por baixo dos panos — e compara na prática o que muda entre rodar algo numa máquina virtual e num contêiner Docker.</p>
+    <div class="parts">
+      <div class="part-chip"><b>Parte 1</b> · strace — chamadas de sistema em ação</div>
+      <div class="part-chip"><b>Parte 2</b> · Contêiner x máquina virtual</div>
+    </div>
+  </div>
+
+  <div class="part-divider"><div class="line"></div><div class="label">Parte 1 · strace</div><div class="line"></div></div>
+
+  <section class="block">
+    <div class="block-num">PASSO 1 DE 6</div>
+    <h2>Confirmando que o strace está disponível</h2>
+    <p class="intro">O <code>strace</code> "escuta" cada chamada de sistema que um programa faz e imprime na tela — é a ferramenta que transforma a teoria de hoje em algo visível.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">1</span> <code class="big">strace -V</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p>Pergunta ao sistema qual versão do <code>strace</code> está instalada, sem rodar nada de verdade ainda.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>Confirma que a ferramenta existe antes de você depender dela nos próximos passos.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="prompt">$</span> strace -V
+<span class="out">strace -- version 6.6</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> um número de versão na tela. Se aparecer "comando não encontrado", vá direto pra dica abaixo.</p>
+      <details class="tip">
+        <summary>Comando não encontrado</summary>
+        <div class="tip-body">
+          Instale com <code>sudo apt update &amp;&amp; sudo apt install strace</code>. Precisa de internet na VM — se estiver sem rede, avise o professor.
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">PASSO 2 DE 6</div>
+    <h2>Sua primeira chamada de sistema visível</h2>
+    <p class="intro">Vamos rodar um comando simples com <code>strace</code> na frente — ele intercepta e imprime cada syscall antes de deixar o comando original seguir.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">2</span> <code class="big">strace ls</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p><code>strace</code> executa o comando que vem depois (aqui, <code>ls</code>) e imprime, linha a linha, cada chamada de sistema feita.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>É a prova de que mesmo um comando "simples" como listar arquivos depende de várias idas ao núcleo.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="prompt">$</span> strace ls
+<span class="hi">execve("/usr/bin/ls", ["ls"], 0x7ffd...) = 0</span>
+<span class="out">openat(AT_FDCWD, "/etc/ld.so.cache", O_RDONLY) = 3</span>
+<span class="out">openat(AT_FDCWD, ".", O_RDONLY|O_DIRECTORY) = 3</span>
+<span class="hi">getdents64(3, /* 7 entries */, 32768)  = 208</span>
+<span class="hi">write(1, "arquivo1.txt  pasta\\n", 21)  = 21</span>
+arquivo1.txt  pasta
+<span class="out">close(3)                               = 0</span>
+<span class="out">exit_group(0)                          = ?</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> várias linhas técnicas <i>antes</i> da saída normal do <code>ls</code> aparecer no meio. Procure as chamadas destacadas: <code>execve</code> (inicia o programa), <code>openat</code> (abre algo), <code>getdents64</code> (lê o conteúdo de um diretório) e <code>write</code> (escreve o resultado na tela).</p>
+      <details class="tip">
+        <summary>Muita informação na tela, difícil de ler</summary>
+        <div class="tip-body">
+          Normal — <code>strace</code> imprime tudo por padrão. No próximo passo você vai usar uma versão resumida.
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">PASSO 3 DE 6</div>
+    <h2>O resumo por tipo de chamada</h2>
+    <p class="intro">Em vez de ler linha por linha, dá pra pedir só a contagem: quantas vezes cada chamada de sistema apareceu.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">3</span> <code class="big">strace -c cat Roteiro-Aluno_Encontro-03.html</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p>A flag <code>-c</code> troca o log linha a linha por uma tabela-resumo: chamada, quantas vezes, tempo gasto.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>É assim que, na vida real, alguém investiga qual chamada de sistema está consumindo mais tempo num programa lento.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="prompt">$</span> strace -c cat Roteiro-Aluno_Encontro-03.html &gt; /dev/null
+<span class="out">% time     seconds  usecs/call     calls    syscall
+------ ----------- ----------- --------- ----------------
+ 41.02    0.000089           8        11 read
+ 28.35    0.000062          15         4 mmap
+ 12.10    0.000026          26         1 openat
+  ...
+------ ----------- ----------- --------- ----------------
+100.00    0.000217                    23 total</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> o arquivo pode não existir ainda no seu diretório — troque pelo nome de qualquer arquivo de texto que você tenha à mão. O importante é ver a coluna <code>calls</code> (quantas vezes) e <code>syscall</code> (qual chamada).</p>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">PASSO 4 DE 6</div>
+    <h2>Comparando dois programas diferentes</h2>
+    <p class="intro">Programas diferentes usam conjuntos diferentes de chamadas de sistema — isso revela o que cada um realmente faz por dentro.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">4</span> <code class="big">strace -c date</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p>Repita o resumo do passo anterior, mas agora com o comando <code>date</code> (que só imprime a data/hora atual).</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p><code>date</code> não lê diretório nenhum — então <code>getdents64</code> não deve aparecer. Já <code>clock_gettime</code> deve aparecer, e não aparecia no <code>ls</code>.</p>
+        </div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> uma lista de chamadas diferente do <code>ls</code>. Anote pelo menos uma chamada que aparece num programa e não no outro.</p>
+      <details class="tip">
+        <summary>Não sei qual chamada procurar</summary>
+        <div class="tip-body">
+          Não precisa decorar nomes. Compare visualmente as duas tabelas de <code>strace -c</code> lado a lado e aponte qualquer linha que só existe em uma delas.
+        </div>
+      </details>
+    </div>
+
+    <div class="draft-box">
+      <label for="obs1">Rascunho da observação 1 — o que você percebeu comparando as chamadas de <code>ls</code>/<code>cat</code> com as de <code>date</code>?</label>
+      <textarea id="obs1" placeholder="Ex: quais chamadas apareceram só num dos dois programas, e por que isso faz sentido dado o que cada um faz..."></textarea>
+      <div class="char-count" data-for="obs1">0 caracteres (mínimo 40)</div>
+    </div>
+  </section>
+
+  <div class="part-divider"><div class="line"></div><div class="label">Parte 2 · Contêiner x Máquina Virtual</div><div class="line"></div></div>
+
+  <section class="block">
+    <div class="block-num">PASSO 5 DE 6</div>
+    <h2>Cronometrando um contêiner</h2>
+    <p class="intro">Agora saímos das chamadas individuais e vamos comparar duas formas de isolar um programa: o contêiner Docker (que vocês só ouviram falar até agora) e a máquina virtual (que vocês já usam desde a Semana 0).</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">5</span> <code class="big">time docker run --rm alpine echo "ola do container"</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p><code>docker run</code> sobe um contêiner baseado na imagem <code>alpine</code> (um Linux minúsculo), roda o <code>echo</code> e encerra. <code>--rm</code> descarta o contêiner ao final. <code>time</code> na frente cronometra tudo.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>É a mesma ideia da máquina virtual — isolar um ambiente — só que sem carregar um núcleo novo. O tempo total mostra essa diferença na prática.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="prompt">$</span> time docker run --rm alpine echo "ola do container"
+<span class="out">ola do container</span>
+<span class="hi">real    0m0.412s
+user    0m0.031s
+sys     0m0.028s</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> a linha <code>real</code> costuma ficar abaixo de 1 segundo (depois da primeira vez — a primeira execução baixa a imagem <code>alpine</code> da internet, o que demora mais). Rode de novo pra ver o tempo "aquecido".</p>
+      <details class="tip">
+        <summary>Comando docker não encontrado ou "permission denied"</summary>
+        <div class="tip-body">
+          Confirme que o Docker foi instalado na Semana 0 com <code>docker --version</code>. Se der "permission denied", tente <code>sudo docker run ...</code> — significa que seu usuário ainda não está no grupo <code>docker</code>.
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">PASSO 6 DE 6</div>
+    <h2>Comparando com a sua máquina virtual</h2>
+    <p class="intro">Agora o contraste: cronometrar (ainda que de forma aproximada) o tempo que a própria VM que vocês criaram na Semana 0 leva pra ficar pronta pra uso.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">6</span> Desligue e ligue a VM, cronometrando com o celular</div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p>Desligue a VM do zero (não suspender — desligar) e cronometre do clique em "Iniciar" até a tela de login do Ubuntu aparecer.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>É a comparação mais honesta possível entre "ligar um núcleo inteiro do zero" (VM) e "emprestar um pedaço do núcleo que já está rodando" (contêiner).</p>
+        </div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> a VM deve levar pelo menos alguns segundos a dezenas de segundos — ordens de grandeza mais lenta que o contêiner do passo anterior. Essa diferença é o ponto central da comparação.</p>
+      <details class="tip">
+        <summary>Não quero desligar a VM de verdade agora</summary>
+        <div class="tip-body">
+          Alternativa: compare a memória RAM reservada. Rode <code>docker stats --no-stream</code> num contêiner rodando e compare com os 4096 MB fixos que a VM reserva o tempo todo, ligada ou não fazendo nada.
+        </div>
+      </details>
+    </div>
+
+    <div class="draft-box">
+      <label for="obs2">Rascunho da observação 2 — o que mudou entre o tempo/recurso do contêiner e o da máquina virtual?</label>
+      <textarea id="obs2" placeholder="Ex: quantas vezes mais rápido (ou mais leve) foi o container, e por que isso bate com o que vimos na teoria sobre 'um núcleo compartilhado'..."></textarea>
+      <div class="char-count" data-for="obs2">0 caracteres (mínimo 40)</div>
+    </div>
+
+    <div class="draft-box">
+      <label for="obs3">Rascunho da observação 3 — livre: algo que te surpreendeu ou uma dúvida que sobrou de hoje</label>
+      <textarea id="obs3" placeholder="Ex: uma chamada de sistema que você não esperava ver, ou uma dúvida sobre quando usar VM em vez de container..."></textarea>
+      <div class="char-count" data-for="obs3">0 caracteres (mínimo 40)</div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2 style="font-size:18px;">Exemplo de observação forte x fraca</h2>
+    <div class="example-pair">
+      <div class="example-box weak">
+        <div class="lbl">Observação fraca</div>
+        <p>"O container foi mais rápido que a VM."</p>
+      </div>
+      <div class="example-box good">
+        <div class="lbl">Observação forte</div>
+        <p>"O container levou 0,4s pra rodar, a VM mais de 20s pra logar — bate com a teoria de que a VM precisa dar boot num núcleo inteiro, enquanto o container só usa namespaces do núcleo que já estava de pé."</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="theory-link">
+    <div class="lbl">Conexão com a teoria</div>
+    <p>Os passos 1–4 são a Chamada de Sistema em ação (Laureano p. 16–17; Tanenbaum p. 37–40). Os passos 5–6 são a distinção Máquina Virtual x Container do slide 8 — o mesmo "menos coisa isolada = mais rápido, mais coisa isolada = mais seguro" que vimos nas 4 arquiteturas do jigsaw.</p>
+  </div>
+
+  <section class="block" style="margin-top:48px;">
+    <h2 style="font-size:18px;">Checklist final</h2>
+    <ul class="checklist" id="checklist">
+      <li><input type="checkbox"><span>Rodei <code>strace ls</code> e identifiquei pelo menos 3 chamadas de sistema diferentes</span></li>
+      <li><input type="checkbox"><span>Rodei <code>strace -c</code> em dois programas diferentes e comparei os resumos</span></li>
+      <li><input type="checkbox"><span>Cronometrei um contêiner com <code>time docker run</code></span></li>
+      <li><input type="checkbox"><span>Comparei o tempo/recurso do contêiner com o da minha máquina virtual</span></li>
+      <li><input type="checkbox"><span>Preenchi as 3 observações acima (vou colar no quiz semanal)</span></li>
+    </ul>
+  </section>
+
+</div>
+
+<div class="progress">
+  <span id="progtext">0 / 5 verificados</span>
+  <div class="bar"><i id="progbar"></i></div>
+</div>
+
+<footer>Sistemas Operacionais · ADS23 · IFCE Campus Horizonte · Encontro 3 de 17</footer>
+
+<script>
+  const boxes = document.querySelectorAll('#checklist input[type=checkbox]');
+  const progtext = document.getElementById('progtext');
+  const progbar = document.getElementById('progbar');
+  function updateProgress(){
+    const total = boxes.length;
+    const done = [...boxes].filter(b=>b.checked).length;
+    progtext.textContent = done + ' / ' + total + ' verificados';
+    progbar.style.width = (done/total*100) + '%';
+  }
+  boxes.forEach(b=>{
+    b.addEventListener('change', ()=>{
+      b.closest('li').classList.toggle('checked', b.checked);
+      updateProgress();
+    });
+  });
+  updateProgress();
+
+  document.querySelectorAll('.draft-box textarea').forEach(ta=>{
+    const counter = document.querySelector('.char-count[data-for="'+ta.id+'"]');
+    ta.addEventListener('input', ()=>{
+      const len = ta.value.length;
+      counter.textContent = len + ' caracteres (mínimo 40)';
+      counter.classList.toggle('ok', len >= 40);
+    });
+  });
+</script>
+
+</body>
+</html>

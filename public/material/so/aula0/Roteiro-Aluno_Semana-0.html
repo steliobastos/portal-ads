@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Semana 0 · Preparando o Ambiente — Sistemas Operacionais ADS23</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* Paleta ✅ decidida na memória do projeto: fundo claro com cores do Manual da Marca IF.
+       Variáveis mantidas por nome (--amber/--cyan) para não reescrever cada seletor,
+       mas agora carregam: --amber = teal (primária) · --cyan = verde IF (secundária) · --red = vermelho IF (alerta). */
+    --bg:#fbfaf5;
+    --bg-panel:#f3f1e8;
+    --bg-card:#ffffff;
+    --bg-card-2:#f3f1e8;
+    --line:#ddd6c2;
+    --line-soft:#e8e2d1;
+    --amber:#1b878f;
+    --amber-dim:#9bcdd0;
+    --amber-glow:rgba(27,135,143,.20);
+    --cyan:#399b3f;
+    --green:#2f8f4e;
+    --red:#cd191e;
+    --text:#262a30;
+    --text-dim:#5b5f68;
+    --text-faint:#9296a0;
+    --code-bg:#10161f;
+    --code-line:#232b3a;
+    --code-text:#9be89f;
+    --font-display:'Space Grotesk',sans-serif;
+    --font-body:'IBM Plex Sans',sans-serif;
+    --font-mono:'IBM Plex Mono',monospace;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-body);line-height:1.65;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3{font-family:var(--font-display);font-weight:600;color:#181b20;letter-spacing:-.01em;}
+  a{color:var(--cyan);}
+  code{font-family:var(--font-mono);background:rgba(27,135,143,.1);color:var(--amber);padding:1px 6px;border-radius:4px;font-size:.92em;}
+  ::selection{background:var(--amber-glow);color:#0d2c2e;}
+
+  .topbar{position:sticky;top:0;z-index:30;background:rgba(251,250,245,.94);backdrop-filter:blur(6px);border-bottom:1px solid var(--line);padding:12px 22px;font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;color:var(--text-dim);display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;}
+  .topbar .tag{color:var(--amber);font-weight:600;}
+
+  .nav{position:sticky;top:37px;z-index:29;background:rgba(243,241,232,.96);border-bottom:1px solid var(--line-soft);overflow-x:auto;white-space:nowrap;padding:10px 22px;}
+  .nav a{font-family:var(--font-mono);font-size:12px;color:var(--text-dim);text-decoration:none;margin-right:18px;padding:4px 0;border-bottom:2px solid transparent;}
+  .nav a:hover{color:var(--text);}
+  .nav a.n{color:var(--amber);border-bottom-color:var(--amber);}
+
+  .doc{max-width:760px;margin:0 auto;padding:40px 22px 100px;}
+
+  .hero{margin-bottom:36px;}
+  .hero .kicker{font-family:var(--font-mono);font-size:12px;letter-spacing:.14em;color:var(--cyan);text-transform:uppercase;margin-bottom:10px;}
+  .hero h1{font-size:34px;margin:0 0 10px;}
+  .hero p.lead{color:var(--text-dim);font-size:16px;max-width:60ch;}
+  .badges{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;}
+  .badge{font-family:var(--font-mono);font-size:11.5px;padding:6px 12px;border-radius:20px;border:1px solid var(--line);color:var(--text-dim);background:#fff;}
+  .badge.b-amber{border-color:var(--amber-dim);color:var(--amber);}
+  .badge.b-cyan{border-color:#b7d9b8;color:var(--cyan);}
+
+  .panel{background:var(--bg-card);border:1px solid var(--line);border-radius:12px;padding:22px 24px;margin-bottom:22px;box-shadow:0 1px 3px rgba(20,23,28,.06);}
+  .panel.check{border-color:var(--amber-dim);background:linear-gradient(180deg,rgba(27,135,143,.07),#fff 60%);}
+  .panel h3{margin-top:0;}
+  .panel ul{margin:8px 0 0;padding-left:20px;}
+  .panel li{margin-bottom:6px;}
+
+  .step{margin:52px 0;}
+  .step-head{display:flex;align-items:center;gap:14px;margin-bottom:14px;}
+  .step-num{font-family:var(--font-display);font-size:20px;font-weight:700;color:#fff;background:var(--amber);width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .step-head h2{margin:0;font-size:23px;}
+  .step-time{font-family:var(--font-mono);font-size:11.5px;color:var(--text-faint);margin-left:auto;white-space:nowrap;}
+
+  .whatbox{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0 20px;}
+  @media(max-width:640px){.whatbox{grid-template-columns:1fr;}}
+  .whatbox .cell{background:var(--bg-card-2);border:1px solid var(--line-soft);border-radius:10px;padding:14px 16px;}
+  .whatbox .cell .lbl{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-faint);margin-bottom:6px;}
+  .whatbox .cell.what .lbl{color:var(--cyan);}
+  .whatbox .cell.why .lbl{color:var(--amber);}
+  .whatbox .cell p{margin:0;font-size:14px;color:var(--text-dim);}
+
+  .substep{margin:18px 0;padding-left:18px;border-left:2px solid var(--line);}
+  .substep .stitle{font-weight:600;color:#1c2126;margin-bottom:4px;}
+
+  .cmdwrap{position:relative;margin:12px 0;}
+  .cmd{background:var(--code-bg);border:1px solid var(--code-line);border-radius:8px;padding:14px 16px;font-family:var(--font-mono);font-size:13.5px;color:var(--code-text);overflow-x:auto;white-space:pre;}
+  .cmd .c1{color:#6b7688;}
+  .copybtn{position:absolute;top:8px;right:8px;background:#1a212c;border:1px solid var(--code-line);color:#aab0bd;font-family:var(--font-mono);font-size:10.5px;padding:4px 9px;border-radius:6px;cursor:pointer;}
+  .copybtn:hover{color:#6fd6d0;border-color:#6fd6d0;}
+  .copybtn.done{color:#9be89f;border-color:#9be89f;}
+
+  .expect{background:var(--bg-card-2);border-left:3px solid var(--cyan);border-radius:0 8px 8px 0;padding:12px 16px;margin:14px 0;font-size:14px;color:var(--text-dim);}
+  .expect .lbl{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--cyan);margin-bottom:4px;}
+
+  details.tip{background:var(--bg-card-2);border:1px solid var(--line-soft);border-radius:8px;margin:14px 0;}
+  details.tip summary{cursor:pointer;padding:11px 16px;font-size:13.5px;color:var(--text-dim);font-family:var(--font-mono);list-style:none;}
+  details.tip summary::-webkit-details-marker{display:none;}
+  details.tip summary::before{content:"▸ ";color:var(--red);}
+  details.tip[open] summary::before{content:"▾ ";}
+  details.tip .body{padding:0 16px 16px;font-size:14px;color:var(--text-dim);}
+  details.tip .body code{display:inline-block;margin-top:4px;}
+
+  .checklist{list-style:none;padding:0;margin:0;}
+  .checklist li{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--line-soft);font-size:14.5px;}
+  .checklist li:last-child{border-bottom:none;}
+  .checklist input{margin-top:3px;width:17px;height:17px;accent-color:var(--amber);flex-shrink:0;cursor:pointer;}
+  .checklist label{cursor:pointer;}
+  .checklist li.checked label{color:var(--text-faint);text-decoration:line-through;}
+
+  .progress{position:sticky;bottom:0;background:rgba(251,250,245,.95);border-top:1px solid var(--line);backdrop-filter:blur(6px);padding:10px 22px;font-family:var(--font-mono);font-size:11.5px;color:var(--text-dim);display:flex;align-items:center;gap:12px;z-index:25;}
+  .progress .bar{flex:1;height:5px;background:var(--line-soft);border-radius:3px;overflow:hidden;}
+  .progress .bar i{display:block;height:100%;background:var(--amber);width:0%;transition:width .3s;}
+
+  .homestretch{border:1px solid var(--amber-dim);background:linear-gradient(180deg,rgba(27,135,143,.09),#fff 60%);border-radius:12px;padding:20px 24px;margin:40px 0;}
+  .homestretch h3{color:var(--amber);margin-top:0;}
+
+  footer{text-align:center;padding:40px 22px;color:var(--text-faint);font-family:var(--font-mono);font-size:11.5px;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span><span class="tag">SEMANA 0</span> · Sistemas Operacionais · Onboarding de ambiente</span>
+  <span>Laboratório de informática</span>
+</div>
+
+<div class="nav">
+  <a href="#antes">Antes</a>
+  <a href="#p1" class="n">1 · Criar a VM</a>
+  <a href="#p2">2 · Instalar Ubuntu</a>
+  <a href="#p3">3 · Primeiro login</a>
+  <a href="#p4">4 · Instalar Docker</a>
+  <a href="#p5">5 · Verificação</a>
+  <a href="#semtempo">Sem tempo?</a>
+</div>
+
+<div class="doc">
+
+  <div class="hero">
+    <div class="kicker">Roteiro do aluno — mão na massa</div>
+    <h1>Preparando o ambiente</h1>
+    <p class="lead">Hoje você vai criar sua própria máquina virtual Linux e instalar o Docker nela. Esse ambiente vai te acompanhar no curso inteiro — vale a pena entender cada passo, não só clicar em "próximo".</p>
+    <div class="badges">
+      <span class="badge b-amber">⏱ ~120 min</span>
+      <span class="badge b-cyan">Ubuntu 24.04 LTS</span>
+      <span class="badge">VirtualBox</span>
+      <span class="badge">Docker</span>
+    </div>
+  </div>
+
+  <div class="panel check" id="antes">
+    <h3>Antes de começar</h3>
+    <p style="color:var(--text-dim);margin-top:0;">Confira os três itens abaixo. Se algum não estiver ok, chame o professor <strong>antes</strong> de tentar seguir — os dois primeiros não têm solução rápida em sala.</p>
+    <ul>
+      <li>O ícone do <strong>VirtualBox</strong> está disponível na sua máquina (já vem instalado pelo professor).</li>
+      <li>Você sabe onde está o arquivo <code>ubuntu-24.04-desktop-amd64.iso</code> nesta máquina (pergunte ao professor o caminho exato se não souber — provavelmente algo como <code>C:\SO-ADS23\</code>).</li>
+      <li>Tenha em mãos um nome de usuário e senha que você vai lembrar depois — você vai criá-los daqui a pouco, dentro da VM.</li>
+    </ul>
+  </div>
+
+  <!-- PASSO 1 -->
+  <div class="step" id="p1">
+    <div class="step-head">
+      <div class="step-num">1</div>
+      <h2>Criar a máquina virtual</h2>
+      <div class="step-time">~20 min</div>
+    </div>
+
+    <div class="whatbox">
+      <div class="cell what">
+        <div class="lbl">O que é</div>
+        <p>Uma <strong>máquina virtual (VM)</strong> é um computador simulado por software, rodando dentro do seu computador de verdade. Ela tem sua própria CPU virtual, memória e disco — isolada do Windows que está por baixo.</p>
+      </div>
+      <div class="cell why">
+        <div class="lbl">Por que importa</div>
+        <p>Você vai instalar, quebrar, reinstalar e mexer em configurações do Linux sem medo de estragar a máquina do laboratório. É seu laboratório pessoal dentro da máquina do IFCE.</p>
+      </div>
+    </div>
+
+    <div class="substep">
+      <div class="stitle">1.1 · Abrir o assistente</div>
+      Abra o VirtualBox e clique em <strong>Novo</strong> (ou <code>Ctrl+N</code>).
+    </div>
+
+    <div class="substep">
+      <div class="stitle">1.2 · Nome e tipo</div>
+      Nome: algo que te identifique, ex. <code>aluno-SO-seunome</code>. Tipo: <strong>Linux</strong>. Versão: <strong>Ubuntu (64-bit)</strong>.
+    </div>
+
+    <div class="substep">
+      <div class="stitle">1.3 · Selecionar a ISO</div>
+      Em "Imagem ISO", selecione o arquivo <code>ubuntu-24.04-desktop-amd64.iso</code> que o professor indicou.
+      <details class="tip">
+        <summary>Apareceu uma opção "Instalação sem Supervisão" com usuário/senha já preenchidos</summary>
+        <div class="body">Marque a caixa <strong>"Pular Instalação sem Supervisão"</strong>. Se você deixar essa opção ativa, o VirtualBox instala o Ubuntu sozinho, sem te mostrar as telas do instalador — e o objetivo aqui é você ver e controlar cada etapa.</div>
+      </details>
+    </div>
+
+    <div class="substep">
+      <div class="stitle">1.4 · Memória e processadores</div>
+      Memória principal: <strong>4096 MB</strong>. Processadores: <strong>2</strong>.
+    </div>
+
+    <div class="substep">
+      <div class="stitle">1.5 · Disco rígido virtual</div>
+      Criar um disco rígido virtual agora, tipo <strong>VDI</strong>, alocação <strong>dinâmica</strong>, tamanho <strong>25 GB</strong>.
+    </div>
+
+    <div class="substep">
+      <div class="stitle">1.6 · Finalizar</div>
+      Revise o resumo e clique em <strong>Finalizar</strong>. Sua VM aparece na lista à esquerda — ainda desligada.
+    </div>
+
+    <div class="expect">
+      <div class="lbl">O que esperar</div>
+      Uma entrada nova na lista do VirtualBox com o nome que você deu, status "Desligada". Ainda não tem Ubuntu instalado dentro — só a "caixa vazia" pronta pra receber o sistema.
+    </div>
+
+    <details class="tip">
+      <summary>Erro sobre virtualização (VT-x/AMD-V) ao tentar ligar a VM</summary>
+      <div class="body">Isso significa que a virtualização está desabilitada na BIOS desta máquina física — não é algo que você resolve sozinho. Chame o professor imediatamente; a solução é trocar de estação, não insistir tentando de novo.</div>
+    </details>
+  </div>
+
+  <!-- PASSO 2 -->
+  <div class="step" id="p2">
+    <div class="step-head">
+      <div class="step-num">2</div>
+      <h2>Instalar o Ubuntu</h2>
+      <div class="step-time">~25 min</div>
+    </div>
+
+    <div class="whatbox">
+      <div class="cell what">
+        <div class="lbl">O que é</div>
+        <p>O mesmo instalador gráfico que roda em qualquer notebook Linux — só que agora rodando dentro da sua VM, num "disco" que na verdade é um arquivo no Windows.</p>
+      </div>
+      <div class="cell why">
+        <div class="lbl">Por que importa</div>
+        <p>É seguro escolher "apagar o disco inteiro" aqui — o "disco" é o arquivo virtual de 25 GB que você acabou de criar, não o disco real da máquina do laboratório.</p>
+      </div>
+    </div>
+
+    <div class="substep">
+      <div class="stitle">2.1 · Ligar a VM</div>
+      Selecione sua VM e clique na seta verde <strong>Iniciar</strong>. Ela vai bootar a partir da ISO e abrir o instalador do Ubuntu.
+    </div>
+
+    <div class="substep">
+      <div class="stitle">2.2 · Idioma e teclado</div>
+      Escolha o idioma (Português ou English, tanto faz) e o layout de teclado (se tiver dúvida, deixe o padrão sugerido).
+    </div>
+
+    <div class="substep">
+      <div class="stitle">2.3 · Atualizações e outros programas</div>
+      Escolha <strong>Instalação Normal</strong>. <strong>Desmarque</strong> a opção "Baixar atualizações ao instalar o Ubuntu".
+      <details class="tip">
+        <summary>Por que desmarcar isso?</summary>
+        <div class="body">Baixar atualizações agora, com a internet do laboratório compartilhada entre a turma toda, pode deixar a instalação bem mais lenta. A gente atualiza depois, com calma, já logado no sistema.</div>
+      </details>
+    </div>
+
+    <div class="substep">
+      <div class="stitle">2.4 · Tipo de instalação</div>
+      Escolha <strong>"Apagar disco e instalar o Ubuntu"</strong>. Confirme quando ele perguntar — de novo, isso afeta só o disco virtual, não a máquina física.
+    </div>
+
+    <div class="substep">
+      <div class="stitle">2.5 · Fuso horário</div>
+      Selecione Fortaleza (ou o mapa vai sugerir automaticamente).
+    </div>
+
+    <div class="substep">
+      <div class="stitle">2.6 · Criar sua conta</div>
+      Preencha seu nome, nome da máquina (pode deixar o sugerido), <strong>nome de usuário</strong> e <strong>senha</strong>. Escolha "Exigir minha senha para entrar" — evite login automático.
+      <details class="tip">
+        <summary>Anote essa senha em algum lugar</summary>
+        <div class="body">Não existe "esqueci minha senha" fácil numa VM local. Se esquecer, o caminho é reinstalar. Vale escrever num papel ou no celular antes de continuar.</div>
+      </details>
+    </div>
+
+    <div class="substep">
+      <div class="stitle">2.7 · Aguardar</div>
+      Clique em instalar e espere. Essa parte demora — normal levar de 15 a 20 minutos.
+      <details class="tip">
+        <summary>Enquanto espera</summary>
+        <div class="body">Aproveite pra ler o passo 4 (Docker) mais abaixo, ou ajude quem está do seu lado. Não precisa ficar olhando a barra de progresso.</div>
+      </details>
+    </div>
+
+    <div class="substep">
+      <div class="stitle">2.8 · Reiniciar</div>
+      Ao terminar, clique em <strong>Reiniciar Agora</strong>. Se pedir para remover a mídia de instalação, pode apertar Enter — a VM cuida disso sozinha na maioria das vezes.
+    </div>
+
+    <div class="expect">
+      <div class="lbl">O que esperar</div>
+      Depois do reboot, uma tela de login gráfica do Ubuntu pedindo seu usuário e senha.
+    </div>
+
+    <details class="tip">
+      <summary>Tela preta ou travada depois de reiniciar</summary>
+      <div class="body">Vá em <strong>Dispositivos → Unidades de Óptico → Remover disco da unidade virtual</strong> no menu da janela da VM, depois <strong>Máquina → Redefinir</strong>. Isso costuma resolver quando a VM tenta bootar da ISO de novo em vez do disco instalado.</div>
+    </details>
+  </div>
+
+  <!-- PASSO 3 -->
+  <div class="step" id="p3">
+    <div class="step-head">
+      <div class="step-num">3</div>
+      <h2>Primeiro login e atualização</h2>
+      <div class="step-time">~10 min</div>
+    </div>
+
+    <div class="substep">
+      <div class="stitle">3.1 · Login</div>
+      Entre com o usuário e senha que você criou.
+    </div>
+
+    <div class="substep">
+      <div class="stitle">3.2 · Abrir o terminal</div>
+      Pressione <code>Ctrl+Alt+T</code>, ou clique em "Atividades" (canto superior esquerdo) e digite "Terminal".
+    </div>
+
+    <div class="substep">
+      <div class="stitle">3.3 · Atualizar o sistema</div>
+      <div class="cmdwrap">
+        <button class="copybtn" onclick="copyCmd(this)">copiar</button>
+        <div class="cmd">sudo apt update && sudo apt upgrade -y</div>
+      </div>
+      <div class="expect">
+        <div class="lbl">O que esperar</div>
+        Vai pedir sua senha (a mesma da conta — não aparece nada na tela enquanto você digita, é normal). Depois, uma lista de pacotes sendo baixados e atualizados. Pode levar alguns minutos.
+      </div>
+      <details class="tip">
+        <summary>Com pouco tempo? Pode pular esta etapa</summary>
+        <div class="body">Se o relógio estiver apertado, priorize o Docker (passo 4) e volte pra atualizar o sistema depois, em casa ou no próximo encontro. Não é bloqueante.</div>
+      </details>
+    </div>
+  </div>
+
+  <!-- PASSO 4 -->
+  <div class="step" id="p4">
+    <div class="step-head">
+      <div class="step-num">4</div>
+      <h2>Instalar o Docker</h2>
+      <div class="step-time">~20 min</div>
+    </div>
+
+    <div class="whatbox">
+      <div class="cell what">
+        <div class="lbl">O que é</div>
+        <p>Docker empacota uma aplicação com tudo que ela precisa pra rodar (bibliotecas, dependências, configuração) numa unidade isolada chamada <strong>container</strong>.</p>
+      </div>
+      <div class="cell why">
+        <div class="lbl">Por que importa</div>
+        <p>Container vai ser o eixo do curso inteiro — cada unidade (processos, memória, E/S) vai te fazer olhar de novo pra dentro de um container. Hoje é só a instalação; o conceito aprofunda a partir do Encontro 4.</p>
+      </div>
+    </div>
+
+    <div class="substep">
+      <div class="stitle">4.1 · Baixar e rodar o instalador oficial</div>
+      <div class="cmdwrap">
+        <button class="copybtn" onclick="copyCmd(this)">copiar</button>
+        <div class="cmd">curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh</div>
+      </div>
+      <div class="expect">
+        <div class="lbl">O que esperar</div>
+        Um bocado de texto passando na tela enquanto ele detecta seu sistema e instala os pacotes do Docker. Termina voltando pro prompt normal.
+      </div>
+      <details class="tip">
+        <summary>Isso é "o jeito certo" de instalar Docker?</summary>
+        <div class="body">É o método rápido, recomendado para aprendizado e testes — não é o que se usa num servidor de produção. Vamos ver o método "oficial" (repositório apt) mais adiante no curso, quando o foco for operação real.</div>
+      </details>
+    </div>
+
+    <div class="substep">
+      <div class="stitle">4.2 · Testar com sudo</div>
+      <div class="cmdwrap">
+        <button class="copybtn" onclick="copyCmd(this)">copiar</button>
+        <div class="cmd">sudo docker run hello-world</div>
+      </div>
+      <div class="expect">
+        <div class="lbl">O que esperar</div>
+        Uma mensagem começando com <code>Hello from Docker!</code> — isso confirma que o Docker está funcionando.
+      </div>
+    </div>
+
+    <div class="substep">
+      <div class="stitle">4.3 · Rodar sem sudo</div>
+      Digitar <code>sudo</code> toda vez é chato. Vamos liberar seu usuário:
+      <div class="cmdwrap">
+        <button class="copybtn" onclick="copyCmd(this)">copiar</button>
+        <div class="cmd">sudo usermod -aG docker $USER
+newgrp docker</div>
+      </div>
+      Agora teste de novo, sem <code>sudo</code>:
+      <div class="cmdwrap">
+        <button class="copybtn" onclick="copyCmd(this)">copiar</button>
+        <div class="cmd">docker run hello-world</div>
+      </div>
+      <details class="tip">
+        <summary>Erro "permission denied" mesmo depois do usermod</summary>
+        <div class="body">O <code>newgrp docker</code> às vezes não é suficiente. Faça logout e login de novo na sua conta do Ubuntu (não precisa desligar a VM) e tente novamente.</div>
+      </details>
+      <details class="tip">
+        <summary>"Cannot connect to the Docker daemon" ou sem internet</summary>
+        <div class="body">Confira se a VM tem internet abrindo o Firefox dentro dela. Se não tiver, avise o professor — o adaptador de rede da VM deve estar em modo NAT por padrão, geralmente não precisa mexer em nada.</div>
+      </details>
+    </div>
+  </div>
+
+  <!-- PASSO 5 -->
+  <div class="step" id="p5">
+    <div class="step-head">
+      <div class="step-num">5</div>
+      <h2>Verificação final</h2>
+      <div class="step-time">~15 min</div>
+    </div>
+
+    <p style="color:var(--text-dim);">Marque cada item conforme for confirmando. Isso não salva em lugar nenhum — é só pra você organizar a conferência.</p>
+
+    <ul class="checklist" id="checklist">
+      <li><input type="checkbox" id="c1"><label for="c1">A VM liga e mostra a tela de login do Ubuntu</label></li>
+      <li><input type="checkbox" id="c2"><label for="c2">Consigo fazer login com meu usuário e senha</label></li>
+      <li><input type="checkbox" id="c3"><label for="c3">O terminal abre com <code>Ctrl+Alt+T</code></label></li>
+      <li><input type="checkbox" id="c4"><label for="c4"><code>docker --version</code> mostra um número de versão</label></li>
+      <li><input type="checkbox" id="c5"><label for="c5"><code>docker run hello-world</code> funciona <strong>sem</strong> precisar de <code>sudo</code></label></li>
+      <li><input type="checkbox" id="c6"><label for="c6">Tirei um print da tela do terminal mostrando o <code>hello-world</code> funcionando</label></li>
+    </ul>
+
+    <div class="panel" style="margin-top:20px;">
+      <h3 style="margin-top:0;">Guarde esse print</h3>
+      <p style="color:var(--text-dim);margin-bottom:0;">Esse print (terminal + <code>hello-world</code> + seu usuário visível no prompt) é a evidência mínima de que o ambiente está pronto. Ele vai ser pedido junto com o primeiro instrumento semanal do curso — não precisa entregar agora, só não perca o arquivo.</p>
+    </div>
+  </div>
+
+  <div class="homestretch" id="semtempo">
+    <h3>Não deu tempo de terminar tudo?</h3>
+    <p style="color:var(--text-dim);margin-bottom:8px;">Sem problema. A ordem de prioridade, se o tempo apertar, é:</p>
+    <ol style="color:var(--text-dim);">
+      <li><strong>Essencial:</strong> VM criada, Ubuntu instalado, login funcionando.</li>
+      <li><strong>Importante:</strong> Docker instalado e testado com <code>sudo</code>.</li>
+      <li><strong>Complementar:</strong> Docker funcionando sem <code>sudo</code>, sistema atualizado.</li>
+    </ol>
+    <p style="color:var(--text-dim);margin-bottom:0;">O que faltar pode ser terminado em casa antes do Encontro 1, seguindo este mesmo roteiro a partir de onde você parou. Se travar em algo que não tem solução aqui (ex. erro de virtualização), anote o erro exato e traga a dúvida no Encontro 1.</p>
+  </div>
+
+</div>
+
+<div class="progress">
+  <span id="progtext">0 / 6 verificados</span>
+  <div class="bar"><i id="progbar"></i></div>
+</div>
+
+<footer>Sistemas Operacionais · ADS23 · IFCE Campus Horizonte · Semana 0</footer>
+
+<script>
+  const boxes = document.querySelectorAll('#checklist input[type=checkbox]');
+  const progtext = document.getElementById('progtext');
+  const progbar = document.getElementById('progbar');
+  function updateProgress(){
+    const total = boxes.length;
+    const done = [...boxes].filter(b=>b.checked).length;
+    progtext.textContent = done + ' / ' + total + ' verificados';
+    progbar.style.width = (done/total*100) + '%';
+  }
+  boxes.forEach(b=>{
+    b.addEventListener('change', ()=>{
+      b.closest('li').classList.toggle('checked', b.checked);
+      updateProgress();
+    });
+  });
+  updateProgress();
+
+  function copyCmd(btn){
+    const txt = btn.nextElementSibling.innerText;
+    navigator.clipboard.writeText(txt).then(()=>{
+      const old = btn.textContent;
+      btn.textContent = 'copiado!';
+      btn.classList.add('done');
+      setTimeout(()=>{ btn.textContent = old; btn.classList.remove('done'); }, 1500);
+    });
+  }
+</script>
+
+</body>
+</html>

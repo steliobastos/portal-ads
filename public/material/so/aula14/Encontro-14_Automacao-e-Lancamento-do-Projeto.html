@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Encontro 14 · Automação e lançamento do projeto final — Sistemas Operacionais ADS23</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#fbfaf5;
+    --bg-panel:#f3f1e8;
+    --bg-card:#ffffff;
+    --bg-card-2:#f3f1e8;
+    --line:#e2ddd0;
+    --line-soft:#ece8db;
+    --primary:#1b878f;
+    --primary-dim:#8fc7ca;
+    --primary-soft:rgba(27,135,143,.09);
+    --primary-glow:rgba(27,135,143,.35);
+    --secondary:#399b3f;
+    --secondary-dim:#a8d4ab;
+    --secondary-soft:rgba(57,155,63,.08);
+    --alert:#cd191e;
+    --alert-soft:rgba(205,25,30,.07);
+    --text:#20241f;
+    --text-dim:#5b6058;
+    --text-faint:#8b9088;
+    --font-display:'Space Grotesk',sans-serif;
+    --font-body:'IBM Plex Sans',sans-serif;
+    --font-mono:'IBM Plex Mono',monospace;
+    --term-bg:#10161f;
+    --term-line:#212b3a;
+    --term-dim:#8d96a8;
+    --term-prompt:#7ee787;
+    --term-accent:#5fd9d3;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-body);line-height:1.65;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3{font-family:var(--font-display);font-weight:600;color:var(--text);letter-spacing:-.01em;margin:0;}
+  a{color:var(--primary);}
+  code{font-family:var(--font-mono);background:var(--primary-soft);color:var(--primary);padding:1px 6px;border-radius:4px;font-size:.92em;}
+  ::selection{background:var(--primary-soft);color:var(--text);}
+
+  .topbar{
+    position:sticky;top:0;z-index:30;background:rgba(251,250,245,.94);backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);padding:12px 22px;
+    display:flex;align-items:center;justify-content:space-between;gap:14px;
+  }
+  .topbar .brand{font-family:var(--font-mono);font-size:12.5px;color:var(--text-dim);letter-spacing:.03em;}
+  .topbar .brand b{color:var(--primary);}
+  .progress-track{position:absolute;left:0;bottom:-1px;height:2px;width:100%;background:var(--line-soft);}
+  .progress-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--primary),var(--secondary));transition:width .15s linear;}
+
+  .dot-nav{position:fixed;right:18px;top:50%;transform:translateY(-50%);z-index:30;display:flex;flex-direction:column;gap:9px;}
+  .dot-nav a{width:9px;height:9px;border-radius:50%;background:var(--line);border:1px solid var(--line);display:block;transition:.2s;position:relative;}
+  .dot-nav a:hover{background:var(--text-faint);}
+  .dot-nav a.active{background:var(--primary);border-color:var(--primary);box-shadow:0 0 8px var(--primary-glow);}
+  .dot-nav a .tip{position:absolute;right:18px;top:50%;transform:translateY(-50%);white-space:nowrap;font-family:var(--font-mono);font-size:11px;color:var(--text-dim);background:var(--bg-panel);border:1px solid var(--line);padding:3px 8px;border-radius:5px;opacity:0;pointer-events:none;transition:.15s;}
+  .dot-nav a:hover .tip{opacity:1;}
+  @media (max-width:780px){.dot-nav{display:none;}}
+
+  .slide{min-height:100vh;display:flex;align-items:center;padding:70px 22px;border-bottom:1px solid var(--line-soft);position:relative;}
+  .slide-inner{max-width:920px;margin:0 auto;width:100%;}
+  .eyebrow{font-family:var(--font-mono);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+  .eyebrow::before{content:'';width:22px;height:1px;background:var(--primary-dim);}
+  .slide-title{font-size:clamp(24px,3.4vw,38px);margin-bottom:22px;}
+  .lead{font-size:17.5px;color:var(--text-dim);max-width:680px;}
+  .big{font-size:clamp(36px,6.4vw,64px);line-height:1.05;}
+  .glow{text-shadow:0 0 34px var(--primary-glow);}
+  .meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:26px;font-family:var(--font-mono);font-size:12.5px;color:var(--text-faint);}
+  .meta span{padding-left:16px;border-left:1px solid var(--line);}
+  .meta span:first-child{padding-left:0;border-left:none;}
+  .hint{margin-top:40px;font-family:var(--font-mono);font-size:11.5px;color:var(--text-faint);}
+
+  .fragment{opacity:0;transform:translateY(14px);transition:opacity .55s ease,transform .55s ease;}
+  .fragment.visible{opacity:1;transform:translateY(0);}
+  .fragment.d1{transition-delay:.08s;} .fragment.d2{transition-delay:.16s;} .fragment.d3{transition-delay:.24s;} .fragment.d4{transition-delay:.32s;}
+
+  .qmark{font-family:var(--font-mono);font-size:12.5px;letter-spacing:.1em;color:var(--primary);text-transform:uppercase;}
+  .question-wrap{text-align:left;}
+
+  .cards2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px;}
+  .card{background:var(--bg-card);border:1px solid var(--line);border-radius:12px;padding:22px 22px;}
+  .card.alt{border-color:var(--secondary-dim);}
+  .card .kicker{font-family:var(--font-mono);font-size:11.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+  .card h3{font-size:19px;margin-bottom:8px;}
+  .card p{color:var(--text-dim);font-size:14.5px;margin:0;}
+  @media (max-width:720px){.cards2{grid-template-columns:1fr;}}
+
+  .blist{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:12px;}
+  .blist li{display:flex;gap:12px;align-items:flex-start;font-size:15.5px;color:var(--text-dim);}
+  .blist .ico{font-family:var(--font-mono);color:var(--primary);flex-shrink:0;}
+
+  .arch-tag{display:inline-block;font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;background:var(--primary-soft);color:var(--primary);border:1px solid var(--primary-dim);border-radius:20px;padding:4px 12px;margin-bottom:16px;}
+  .arch-diagram{background:var(--bg-card-2);border:1px solid var(--line);border-radius:12px;padding:22px;margin:20px 0;font-family:var(--font-mono);font-size:13px;}
+  .arch-layer{padding:10px 14px;border-radius:6px;margin-bottom:6px;text-align:center;color:var(--text);}
+  .arch-layer:last-child{margin-bottom:0;}
+  .arch-layer.hw{background:var(--line-soft);color:var(--text-dim);}
+  .arch-layer.kernel{background:rgba(27,135,143,.15);border:1px solid var(--primary-dim);}
+  .arch-layer.user{background:rgba(57,155,63,.1);border:1px solid var(--secondary-dim);}
+  .arch-layer.alertline{background:var(--alert-soft);border:1px solid var(--alert);color:var(--alert);}
+  .arch-layer.split{display:flex;gap:6px;}
+  .arch-layer.split > div{flex:1;padding:8px;background:rgba(57,155,63,.1);border:1px solid var(--secondary-dim);border-radius:6px;text-align:center;font-size:12px;}
+  .arch-arrow{text-align:center;font-size:16px;color:var(--text-faint);margin:2px 0;}
+  .arch-facts{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px;}
+  .fact-box{background:var(--bg-card);border:1px solid var(--line);border-radius:10px;padding:16px;}
+  .fact-box .lbl{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-faint);margin-bottom:6px;}
+  .fact-box p{margin:0;font-size:14px;color:var(--text-dim);}
+  .fact-box.good .lbl{color:var(--secondary);}
+  .fact-box.bad .lbl{color:var(--alert);}
+
+  .compare-table{width:100%;border-collapse:collapse;margin-top:18px;font-size:14px;}
+  .compare-table th,.compare-table td{border:1px solid var(--line);padding:11px 13px;text-align:left;vertical-align:top;}
+  .compare-table th{background:var(--bg-card-2);font-family:var(--font-mono);font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-dim);}
+  .compare-table td{color:var(--text-dim);}
+  .compare-table td.hl{color:var(--text);}
+  .compare-table tr td:first-child{font-family:var(--font-mono);color:var(--primary);font-size:13px;white-space:nowrap;}
+  @media (max-width:780px){.compare-table{font-size:12.5px;} .compare-table th,.compare-table td{padding:8px;}}
+
+  .term{background:var(--term-bg);border:1px solid var(--term-line);border-radius:10px;overflow:hidden;margin-top:18px;}
+  .term .bar{background:var(--term-bg);padding:8px 12px;display:flex;gap:6px;border-bottom:1px solid var(--term-line);}
+  .term .bar .dot{width:9px;height:9px;border-radius:50%;background:var(--term-line);}
+  .term .bar .dot:nth-child(1){background:#e0605f;} .term .bar .dot:nth-child(2){background:#e0b25f;} .term .bar .dot:nth-child(3){background:#5fbf6b;}
+  .term-body{padding:16px 18px;font-family:var(--font-mono);font-size:13.5px;color:var(--term-dim);min-height:170px;white-space:pre-wrap;line-height:1.55;}
+  .term-body .prompt{color:var(--term-prompt);}
+  .term-body .sys{color:var(--term-accent);}
+  .term-body .ok{color:var(--term-prompt);}
+  .term-body .err{color:#e0605f;}
+
+  .plan-track{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap;}
+  .plan-step{flex:1;min-width:150px;background:var(--bg-card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;}
+  .plan-step.alt{border-color:var(--primary-dim);}
+  .plan-step .t{font-family:var(--font-mono);font-size:11px;color:var(--primary);margin-bottom:6px;}
+  .plan-step h4{margin:0 0 4px;font-family:var(--font-display);font-size:15px;color:var(--text);}
+  .plan-step p{margin:0;font-size:13px;color:var(--text-dim);}
+
+  .read-list{display:flex;flex-direction:column;gap:14px;margin-top:10px;}
+  .read-item{display:flex;gap:14px;align-items:flex-start;background:var(--bg-card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;}
+  .read-item .tag{font-size:20px;flex-shrink:0;}
+  .read-item h4{margin:0 0 4px;font-size:15.5px;font-family:var(--font-display);color:var(--text);}
+  .read-item p{margin:0;font-size:13.5px;color:var(--text-dim);}
+  .read-item .pages{font-family:var(--font-mono);font-size:12px;color:var(--primary);}
+  .read-item.excl{border-color:var(--alert);background:var(--alert-soft);}
+  .read-item.excl h4{color:var(--alert);}
+
+  footer.endnote{text-align:center;padding:40px 20px 60px;font-family:var(--font-mono);font-size:11.5px;color:var(--text-faint);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">Sistemas Operacionais · <b>ADS23</b></div>
+  <div class="brand" id="slideCounter">01 / 14</div>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+</div>
+
+<nav class="dot-nav" id="dotNav"></nav>
+
+<section class="slide active" id="slide-0">
+  <div class="slide-inner">
+    <div class="eyebrow">Encontro 14 de 17 · Lançamento do projeto final</div>
+    <h1 class="big glow">Automação:<br>deploy, backup<br>e monitoramento</h1>
+    <p class="lead">Os três scripts que toda equipe de operação tem — e que, juntos, formam o toolkit que vocês vão entregar como projeto final.</p>
+    <div class="meta">
+      <span>ADS23</span><span>IFCE Campus Horizonte</span><span>Prof. José Stelio Sampaio Bastos Neto</span>
+    </div>
+    <div class="hint">↓ role pra avançar · use os pontos à direita pra navegar direto</div>
+  </div>
+</section>
+
+<section class="slide" id="slide-1">
+  <div class="slide-inner">
+    <div class="eyebrow">De onde viemos</div>
+    <h2 class="slide-title">Vocês já têm todas as peças. Hoje elas viram um produto.</h2>
+    <div class="cards2">
+      <div class="card fragment">
+        <div class="kicker">Encontros 12 e 13</div>
+        <h3>Comandos e scripts</h3>
+        <p>Coringas, busca, redirecionamento, variáveis, condições, laços, funções e código de saída.</p>
+      </div>
+      <div class="card alt fragment d1">
+        <div class="kicker">Hoje</div>
+        <h3>Automação com propósito</h3>
+        <p>Aplicar tudo isso a três problemas reais de operação — e receber o enunciado do projeto final.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="slide-2">
+  <div class="slide-inner question-wrap">
+    <div class="qmark">Pergunta pra turma</div>
+    <h1 class="big" style="margin-top:18px;">O servidor caiu.<br>O backup existe, mas <span class="glow" style="color:var(--alert)">ninguém nunca testou restaurar</span>.<br>Vocês têm backup?</h1>
+    <p class="lead fragment" style="margin:20px auto 0;">Backup que nunca foi restaurado é só um arquivo ocupando espaço — e uma falsa sensação de segurança.</p>
+  </div>
+</section>
+
+<section class="slide" id="slide-3">
+  <div class="slide-inner">
+    <div class="arch-tag">Primeiro pilar</div>
+    <h2 class="slide-title">Deploy: subir uma nova versão sem quebrar o que funciona</h2>
+    <p class="lead">Deploy manual é uma sequência de passos que alguém executa de memória, sob pressão, às vezes de madrugada. Automatizar não é preguiça — é eliminar a chance de pular um passo.</p>
+    <ul class="blist">
+      <li class="fragment"><span class="ico">▸</span><span><b style="color:var(--text)">Verificar pré-condições:</b> a imagem existe? A porta está livre? Há espaço em disco?</span></li>
+      <li class="fragment d1"><span class="ico">▸</span><span><b style="color:var(--text)">Preservar o estado anterior:</b> guardar a versão atual antes de substituí-la.</span></li>
+      <li class="fragment d2"><span class="ico">▸</span><span><b style="color:var(--text)">Aplicar a mudança:</b> construir a imagem, derrubar o container antigo, subir o novo.</span></li>
+      <li class="fragment d3"><span class="ico">▸</span><span><b style="color:var(--text)">Verificar o resultado:</b> o serviço respondeu? Se não, avisar — e idealmente reverter.</span></li>
+    </ul>
+    <p class="lead fragment d4" style="margin-top:18px;font-size:14.5px;">Reparem: cada um desses itens é um <code>if</code> com um código de saída, exatamente o que vocês escreveram no Encontro 13.</p>
+  </div>
+</section>
+
+<section class="slide" id="slide-4">
+  <div class="slide-inner">
+    <div class="eyebrow">Segundo pilar</div>
+    <h2 class="slide-title">Backup: as três perguntas que definem se ele presta</h2>
+    <p class="lead">Todo mundo sabe que precisa de backup. O que separa um backup real de um teatro de backup são três perguntas simples.</p>
+    <table class="compare-table fragment">
+      <tr><th>Pergunta</th><th>O que ela revela</th></tr>
+      <tr><td>Com que frequência?</td><td class="hl">Quanto trabalho você aceita perder — se é diário, você aceita perder um dia</td></tr>
+      <tr><td>Onde fica guardado?</td><td class="hl">Backup no mesmo disco do original não protege contra falha de disco</td></tr>
+      <tr><td>Já foi restaurado?</td><td class="hl"><b style="color:var(--alert)">A mais importante — e a que quase ninguém responde</b></td></tr>
+    </table>
+    <p class="lead fragment d1" style="margin-top:18px;font-size:14.5px;">Era essa a resposta do slide 2: se nunca foi restaurado, você não tem backup — tem esperança.</p>
+  </div>
+</section>
+
+<section class="slide" id="slide-5">
+  <div class="slide-inner">
+    <div class="eyebrow">Terceiro pilar</div>
+    <h2 class="slide-title">Monitoramento: descobrir antes do usuário reclamar</h2>
+    <p class="lead">Vocês já construíram um monitor de disco no Encontro 13. Agora dá pra generalizar: monitorar é medir algo periodicamente, comparar com um limite e agir quando ele for ultrapassado.</p>
+    <div class="arch-diagram">
+      <div class="arch-layer user">Medir — coletar um número do sistema (disco, memória, estado do container)</div>
+      <div class="arch-arrow">↓</div>
+      <div class="arch-layer kernel">Comparar — o valor ultrapassou o limite aceitável?</div>
+      <div class="arch-arrow">↓</div>
+      <div class="arch-layer user">Registrar e alertar — gravar no log e sinalizar quem precisa saber</div>
+    </div>
+    <p class="lead fragment" style="margin-top:18px;font-size:14.5px;">Todas as métricas que interessam vocês já sabem coletar: <code>free</code>, <code>df</code>, <code>docker ps</code>, <code>docker stats</code> — Unidade IV inteira.</p>
+  </div>
+</section>
+
+<section class="slide" id="slide-6">
+  <div class="slide-inner">
+    <div class="eyebrow">A peça que faltava</div>
+    <h2 class="slide-title">Agendamento: o script que roda sem você</h2>
+    <p class="lead">Um script de monitoramento que você precisa lembrar de executar não monitora nada. O <code>cron</code> é o serviço do Linux que executa comandos em horários definidos.</p>
+    <table class="compare-table fragment">
+      <tr><th>Linha no crontab</th><th>Quando executa</th></tr>
+      <tr><td>0 3 * * *</td><td class="hl">Todo dia às 3h da manhã</td></tr>
+      <tr><td>*/15 * * * *</td><td class="hl">A cada 15 minutos</td></tr>
+      <tr><td>0 2 * * 0</td><td class="hl">Todo domingo às 2h</td></tr>
+    </table>
+    <p class="lead fragment d1" style="margin-top:18px;font-size:14.5px;">Os cinco campos são: minuto, hora, dia do mês, mês, dia da semana. Edita-se com <code>crontab -e</code> e lista-se com <code>crontab -l</code>.</p>
+  </div>
+</section>
+
+<section class="slide" id="slide-7">
+  <div class="slide-inner">
+    <div class="eyebrow">Cuidado necessário</div>
+    <h2 class="slide-title">Permissões: quem pode executar o quê</h2>
+    <p class="lead">Scripts de automação frequentemente precisam de privilégios — e é justamente por isso que merecem cuidado redobrado. Um script mal escrito rodando como root pode destruir um sistema.</p>
+    <div class="arch-facts">
+      <div class="fact-box bad">
+        <div class="lbl">Práticas de risco</div>
+        <p>Rodar tudo como root "porque é mais fácil"; dar permissão 777 a scripts; usar caminhos relativos em tarefas agendadas.</p>
+      </div>
+      <div class="fact-box good">
+        <div class="lbl">Práticas seguras</div>
+        <p>Menor privilégio necessário; caminhos absolutos no cron; validar variáveis antes de usá-las em <code>rm</code>; testar em ambiente descartável.</p>
+      </div>
+    </div>
+    <p class="lead fragment" style="margin-top:18px;font-size:14.5px;">O clássico <code>rm -rf "$DIR"/</code> com <code>$DIR</code> vazio apaga a raiz. Por isso a regra das aspas e da validação, do Encontro 13, não é preciosismo.</p>
+  </div>
+</section>
+
+<section class="slide" id="slide-8">
+  <div class="slide-inner">
+    <div class="eyebrow">Eixo do curso</div>
+    <h2 class="slide-title">O toolkit opera sobre container — e é aí que tudo se encontra</h2>
+    <p class="lead">Container é o objeto ideal para automatizar: ele nasce, morre e renasce de forma previsível. Todos os conceitos do semestre convergem aqui.</p>
+    <div class="cards2">
+      <div class="card fragment">
+        <div class="kicker">O que o toolkit faz</div>
+        <h3>Constrói, sobe, verifica, salva</h3>
+        <p><code>docker build</code>, <code>docker run</code>, <code>docker ps</code>, <code>docker stats</code> e volumes — tudo já praticado.</p>
+      </div>
+      <div class="card alt fragment d1">
+        <div class="kicker">O que vocês já dominam</div>
+        <h3>Processo, memória, E/S e shell</h3>
+        <p>Diagnosticar o que o container consome, onde grava, e por que às vezes morre — Unidades III e IV.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="slide-9">
+  <div class="slide-inner">
+    <div class="eyebrow">Projeto final</div>
+    <h2 class="slide-title">Etapa 2 — "Automação e operação"</h2>
+    <p class="lead">A partir de hoje, o trabalho de vocês é construir um <b>toolkit de automação</b> que opere um serviço em container: deploy, backup e monitoramento, com scripts próprios e documentação.</p>
+    <div class="plan-track">
+      <div class="plan-step fragment">
+        <div class="t">ENTREGA</div>
+        <h4>Toolkit + documentação</h4>
+        <p>Scripts funcionais, um <code>README</code> explicando o uso, e o container que eles operam.</p>
+      </div>
+      <div class="plan-step alt fragment d1">
+        <div class="t">DEFESA</div>
+        <h4>Apresentação ao vivo</h4>
+        <p>Timebox de ~10 minutos por equipe, com demonstração real do toolkit funcionando.</p>
+      </div>
+    </div>
+    <p class="lead fragment d2" style="margin-top:22px;font-size:14.5px;">O enunciado completo, com requisitos e critérios, está no documento próprio do projeto — leiam com atenção ainda esta semana.</p>
+  </div>
+</section>
+
+<section class="slide" id="slide-10">
+  <div class="slide-inner">
+    <div class="eyebrow">Como chegar lá</div>
+    <h2 class="slide-title">O caminho até a entrega</h2>
+    <table class="compare-table fragment">
+      <tr><th>Encontro</th><th>O que acontece</th></tr>
+      <tr><td>14 (hoje)</td><td class="hl">Lançamento, formação das equipes e início do desenvolvimento</td></tr>
+      <tr><td>15</td><td class="hl">Desenvolvimento em aula, com o professor circulando como mentor</td></tr>
+      <tr><td>16</td><td class="hl">Finalização e ensaio da apresentação — também é o encontro amortecedor</td></tr>
+      <tr><td>17</td><td class="hl"><b style="color:var(--primary)">Apresentação final — N2 da 2ª etapa</b></td></tr>
+    </table>
+    <p class="lead fragment d1" style="margin-top:18px;font-size:14.5px;">São três encontros de trabalho antes da entrega. Equipes que começarem só no Encontro 16 não terão tempo suficiente.</p>
+  </div>
+</section>
+
+<section class="slide" id="slide-11" data-anim="autodemo">
+  <div class="slide-inner">
+    <div class="eyebrow">Prévia da prática</div>
+    <h2 class="slide-title">Um backup que roda sozinho toda madrugada</h2>
+    <p class="lead">Script com log, compactação, destino separado — e agendado no cron para executar sem ninguém presente.</p>
+    <div class="term">
+      <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+      <div class="term-body" id="autoBody"></div>
+    </div>
+    <p class="lead" style="margin-top:16px;font-size:14px;">Cada uma dessas linhas vira um passo do roteiro de laboratório de hoje.</p>
+  </div>
+</section>
+
+<section class="slide" id="slide-12">
+  <div class="slide-inner">
+    <div class="eyebrow">Mão na massa</div>
+    <h2 class="slide-title">Construir o embrião do seu toolkit</h2>
+    <div class="plan-track">
+      <div class="plan-step fragment">
+        <div class="t">AUTOMAÇÃO</div>
+        <h4>Backup, restauração e agendamento</h4>
+        <p>Script de backup com log, teste de restauração, e agendamento no cron.</p>
+      </div>
+      <div class="plan-step alt fragment d1">
+        <div class="t">PROJETO</div>
+        <h4>Formar equipe e planejar</h4>
+        <p>Definir o serviço que será operado e dividir as responsabilidades do toolkit.</p>
+      </div>
+    </div>
+    <p class="lead fragment d2" style="margin-top:22px;">O que vocês construírem hoje pode ser aproveitado diretamente no projeto final.</p>
+  </div>
+</section>
+
+<section class="slide" id="slide-13">
+  <div class="slide-inner">
+    <div class="eyebrow">Para ler</div>
+    <h2 class="slide-title">Leitura da semana</h2>
+    <div class="read-list">
+      <div class="read-item fragment">
+        <div class="tag">🟢</div>
+        <div>
+          <h4>Laureano — Permissões em arquivos + Administração de Usuários</h4>
+          <p>Referência direta para os scripts do toolkit — o conteúdo do slide 7. <span class="pages">p. 62–69 e 81–89</span></p>
+        </div>
+      </div>
+      <div class="read-item fragment d1">
+        <div class="tag">🟢</div>
+        <div>
+          <h4>Enunciado do Projeto Integrador — Etapa 2</h4>
+          <p>Documento próprio, com requisitos, entregáveis e critérios. Leitura obrigatória para todas as equipes.</p>
+        </div>
+      </div>
+      <div class="read-item fragment d2">
+        <div class="tag">⚪</div>
+        <div>
+          <h4>Tanenbaum — Arquivos e Diretórios</h4>
+          <p>Aprofundamento sobre a organização do sistema de arquivos. <span class="pages">p. 182–197</span></p>
+        </div>
+      </div>
+    </div>
+    <p class="lead" style="margin-top:22px;font-size:14px;">O quiz da semana verifica essa leitura e recolhe suas observações da prática — tudo no mesmo instrumento.</p>
+  </div>
+</section>
+
+<footer class="endnote">Sistemas Operacionais · ADS23 · IFCE Campus Horizonte · Encontro 14 de 17</footer>
+
+<script>
+(function(){
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const dotNav = document.getElementById('dotNav');
+  const counter = document.getElementById('slideCounter');
+  const progressFill = document.getElementById('progressFill');
+  const total = slides.length;
+
+  slides.forEach((s,i)=>{
+    const a = document.createElement('a');
+    a.href = '#'+s.id;
+    const tip = document.createElement('span');
+    tip.className = 'tip';
+    tip.textContent = String(i+1).padStart(2,'0');
+    a.appendChild(tip);
+    dotNav.appendChild(a);
+  });
+  const dots = Array.from(dotNav.querySelectorAll('a'));
+
+  function setActive(idx){
+    dots.forEach((d,i)=>d.classList.toggle('active', i===idx));
+    counter.textContent = String(idx+1).padStart(2,'0') + ' / ' + String(total).padStart(2,'0');
+  }
+
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      const idx = slides.indexOf(entry.target);
+      if(entry.isIntersecting){
+        if(entry.intersectionRatio > 0.5) setActive(idx);
+        entry.target.querySelectorAll('.fragment').forEach(f=>f.classList.add('visible'));
+      }
+    });
+  }, {threshold:[0,0.5,1]});
+  slides.forEach(s=>io.observe(s));
+
+  window.addEventListener('scroll', ()=>{
+    const scrolled = window.scrollY;
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    progressFill.style.width = (max>0 ? (scrolled/max*100) : 0) + '%';
+  });
+
+  document.addEventListener('keydown', (e)=>{
+    const activeIdx = dots.findIndex(d=>d.classList.contains('active'));
+    if(e.key === 'ArrowDown' || e.key === ' '){
+      e.preventDefault();
+      slides[Math.min(activeIdx+1, total-1)].scrollIntoView({behavior:'smooth'});
+    } else if(e.key === 'ArrowUp'){
+      e.preventDefault();
+      slides[Math.max(activeIdx-1, 0)].scrollIntoView({behavior:'smooth'});
+    }
+  });
+
+  setActive(0);
+
+  const demoLines = [
+    ['$ ./backup.sh', 'prompt'],
+    ['[2026-11-13 03:00:12] backup iniciado', 'sys'],
+    ['[2026-11-13 03:00:14] 42 arquivos compactados', 'ok'],
+    ['[2026-11-13 03:00:14] enviado para /backups', 'ok'],
+    ['$ crontab -l', 'prompt'],
+    ['0 3 * * * /home/aluno/backup.sh', 'sys'],
+    ['$ ls -l /backups', 'prompt'],
+    ['backup_2026-11-13.tar.gz', 'ok'],
+  ];
+  const autoBody = document.getElementById('autoBody');
+  let demoStarted = false;
+  function typeLine(i){
+    if(i >= demoLines.length) return;
+    const [txt, cls] = demoLines[i];
+    const span = document.createElement('div');
+    span.className = cls;
+    autoBody.appendChild(span);
+    let c = 0;
+    const iv = setInterval(()=>{
+      span.textContent = txt.slice(0, c+1);
+      c++;
+      if(c >= txt.length){
+        clearInterval(iv);
+        setTimeout(()=>typeLine(i+1), 110);
+      }
+    }, 14);
+  }
+  const demoIo = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      if(entry.isIntersecting && !demoStarted){
+        demoStarted = true;
+        typeLine(0);
+      }
+    });
+  }, {threshold:0.4});
+  demoIo.observe(document.getElementById('slide-11'));
+})();
+</script>
+
+</body>
+</html>

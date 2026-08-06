@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roteiro de Laboratório — Encontro 6 · Sistemas Operacionais ADS23</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#fbfaf5;
+    --bg-card:#ffffff;
+    --bg-card-2:#f3f1e8;
+    --line:#e2ddd0;
+    --line-soft:#ece8db;
+    --primary:#1b878f;
+    --primary-dim:#8fc7ca;
+    --primary-soft:rgba(27,135,143,.09);
+    --secondary:#399b3f;
+    --secondary-soft:rgba(57,155,63,.08);
+    --alert:#cd191e;
+    --alert-soft:rgba(205,25,30,.07);
+    --text:#20241f;
+    --text-dim:#5b6058;
+    --text-faint:#8b9088;
+    --font-display:'Space Grotesk',sans-serif;
+    --font-body:'IBM Plex Sans',sans-serif;
+    --font-mono:'IBM Plex Mono',monospace;
+    /* sub-paleta escura reservada — blocos de terminal permanecem escuros */
+    --term-bg:#10161f;
+    --term-line:#212b3a;
+    --term-dim:#8d96a8;
+    --term-prompt:#7ee787;
+    --term-accent:#5fd9d3;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-body);line-height:1.6;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3,h4{font-family:var(--font-display);font-weight:600;color:var(--text);letter-spacing:-.01em;}
+  code{font-family:var(--font-mono);background:var(--primary-soft);color:var(--primary);padding:1px 6px;border-radius:4px;font-size:.92em;}
+  ::selection{background:var(--primary-soft);color:var(--text);}
+
+  .topbar{
+    position:sticky;top:0;z-index:20;background:rgba(251,250,245,.92);backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);padding:12px 22px;
+    display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  }
+  .topbar .brand{font-family:var(--font-mono);font-size:12.5px;color:var(--text-dim);}
+  .topbar .brand b{color:var(--primary);}
+  .topbar .progress-mini{font-family:var(--font-mono);font-size:12px;color:var(--text-faint);}
+
+  .wrap{max-width:880px;margin:0 auto;padding:36px 22px 80px;}
+
+  .hero{margin-bottom:32px;}
+  .hero .eyebrow{font-family:var(--font-mono);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);margin-bottom:12px;display:flex;align-items:center;gap:10px;}
+  .hero .eyebrow::before{content:'';width:22px;height:1px;background:var(--primary-dim);}
+  .hero h1{font-size:clamp(26px,4vw,38px);margin:0 0 14px;}
+  .hero p{color:var(--text-dim);font-size:16px;max-width:640px;margin:0;}
+  .hero .parts{display:flex;gap:14px;margin-top:22px;flex-wrap:wrap;}
+  .hero .part-chip{background:var(--bg-card);border:1px solid var(--line);border-radius:8px;padding:10px 16px;font-family:var(--font-mono);font-size:12.5px;color:var(--text-dim);}
+  .hero .part-chip b{color:var(--primary);}
+
+  .n1-card{background:var(--primary-soft);border:1px solid var(--primary-dim);border-radius:12px;padding:18px 22px;margin-bottom:44px;}
+  .n1-card .lbl{font-family:var(--font-mono);font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--primary);margin-bottom:8px;}
+  .n1-card p{margin:0 0 8px;font-size:14.5px;color:var(--text-dim);}
+  .n1-card p:last-child{margin-bottom:0;}
+  .n1-card ul{margin:8px 0 0;padding-left:20px;font-size:14px;color:var(--text-dim);}
+  .n1-card li{margin-bottom:4px;}
+
+  .block{margin-bottom:52px;}
+  .block-num{font-family:var(--font-mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-faint);margin-bottom:8px;}
+  .block h2{font-size:22px;margin-bottom:10px;}
+  .block .intro{color:var(--text-dim);font-size:15px;max-width:680px;margin:0 0 20px;}
+
+  .part-divider{display:flex;align-items:center;gap:16px;margin:56px 0 32px;}
+  .part-divider .line{flex:1;height:1px;background:var(--line);}
+  .part-divider .label{font-family:var(--font-mono);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);white-space:nowrap;}
+
+  .cmd-card{background:var(--bg-card);border:1px solid var(--line);border-radius:12px;padding:20px 22px;margin-bottom:18px;}
+  .cmd-title{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+  .step-badge{width:24px;height:24px;border-radius:50%;background:var(--primary);color:#fff;font-family:var(--font-mono);font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  code.big{font-size:15px;padding:4px 10px;}
+
+  .explain-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+  .explain-box{background:var(--bg-card-2);border:1px solid var(--line-soft);border-radius:8px;padding:12px 14px;}
+  .explain-box .lbl{font-family:var(--font-mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-faint);margin-bottom:5px;}
+  .explain-box p{margin:0;font-size:13.5px;color:var(--text-dim);}
+  @media (max-width:680px){.explain-grid{grid-template-columns:1fr;}}
+
+  .terminal-mini{background:var(--term-bg);border:1px solid var(--term-line);border-radius:8px;overflow:hidden;margin-bottom:12px;}
+  .terminal-mini .bar{background:var(--term-bg);padding:6px 10px;display:flex;gap:5px;}
+  .terminal-mini .bar span{width:8px;height:8px;border-radius:50%;background:var(--term-line);}
+  .terminal-mini .body{padding:14px 16px;font-family:var(--font-mono);font-size:13px;color:var(--term-dim);white-space:pre-wrap;line-height:1.55;}
+  .terminal-mini .prompt{color:var(--term-prompt);}
+  .terminal-mini .out{color:var(--term-dim);}
+  .terminal-mini .hi{color:var(--term-accent);}
+
+  details.tip{background:var(--bg-card-2);border:1px solid var(--line-soft);border-radius:8px;margin-top:8px;}
+  details.tip summary{padding:10px 14px;cursor:pointer;font-size:13.5px;color:var(--primary);font-family:var(--font-mono);}
+  details.tip .tip-body{padding:0 14px 14px;font-size:13.5px;color:var(--text-dim);}
+
+  .obs-note{font-size:13.5px;color:var(--text-dim);margin-top:2px;}
+  .obs-note b{color:var(--text);}
+
+  .example-pair{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0;}
+  .example-box{border-radius:8px;padding:14px 16px;font-size:13.5px;}
+  .example-box.weak{background:var(--alert-soft);border:1px solid var(--alert);}
+  .example-box.good{background:var(--secondary-soft);border:1px solid var(--secondary);}
+  .example-box .lbl{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;margin-bottom:6px;}
+  .example-box.weak .lbl{color:var(--alert);}
+  .example-box.good .lbl{color:var(--secondary);}
+  .example-box p{margin:0;color:var(--text-dim);font-style:italic;}
+  @media (max-width:680px){.example-pair{grid-template-columns:1fr;}}
+
+  .draft-box{margin-top:14px;}
+  .draft-box label{display:block;font-size:13.5px;color:var(--text-dim);margin-bottom:6px;}
+  .draft-box textarea{width:100%;min-height:90px;background:var(--bg-card-2);border:1px solid var(--line);border-radius:8px;color:var(--text);font-family:var(--font-body);font-size:14px;padding:10px 12px;resize:vertical;}
+  .draft-box textarea:focus{outline:none;border-color:var(--primary-dim);}
+  .char-count{font-family:var(--font-mono);font-size:11.5px;color:var(--text-faint);margin-top:5px;text-align:right;}
+  .char-count.ok{color:var(--secondary);}
+
+  .theory-link{background:var(--primary-soft);border:1px solid var(--primary-dim);border-radius:10px;padding:16px 18px;margin-top:20px;}
+  .theory-link .lbl{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;color:var(--primary);margin-bottom:6px;}
+  .theory-link p{margin:0;font-size:14px;color:var(--text-dim);}
+
+  .checklist{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px;}
+  .checklist li{display:flex;align-items:flex-start;gap:12px;background:var(--bg-card);border:1px solid var(--line);border-radius:8px;padding:12px 16px;font-size:14px;color:var(--text-dim);transition:.2s;}
+  .checklist li.checked{border-color:var(--secondary);background:var(--secondary-soft);color:var(--text);}
+  .checklist input[type=checkbox]{width:18px;height:18px;margin-top:1px;accent-color:var(--secondary);flex-shrink:0;}
+
+  .progress{position:sticky;bottom:0;background:rgba(251,250,245,.95);backdrop-filter:blur(6px);border-top:1px solid var(--line);padding:14px 22px;display:flex;align-items:center;gap:16px;justify-content:center;}
+  .progress #progtext{font-family:var(--font-mono);font-size:12.5px;color:var(--text-dim);white-space:nowrap;}
+  .progress .bar{flex:1;max-width:320px;height:6px;background:var(--line-soft);border-radius:3px;overflow:hidden;}
+  .progress .bar i{display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--primary),var(--secondary));transition:width .3s;}
+
+  footer{text-align:center;padding:30px 20px 90px;font-family:var(--font-mono);font-size:11.5px;color:var(--text-faint);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">Sistemas Operacionais · <b>ADS23</b></div>
+  <div class="progress-mini">Encontro 6 de 17 · Roteiro de Laboratório</div>
+</div>
+
+<div class="wrap">
+
+  <div class="hero">
+    <div class="eyebrow">Mão na massa · ~41 min</div>
+    <h1>CPU-bound × I/O-bound na prática — e o consumo de um container ao vivo</h1>
+    <p>Hoje você provoca, de propósito, um processo CPU-bound e um I/O-bound pra ver a diferença no <code>top</code>, separa stdout de stderr, encadeia processos com pipes, e fecha com o reforço Docker: acompanhar o consumo de um container em tempo real.</p>
+    <div class="parts">
+      <div class="part-chip"><b>Passos 1–4</b> · CPU-bound, I/O-bound, stderr e pipes</div>
+      <div class="part-chip"><b>Passos 5–6</b> · Reforço Docker: docker stats</div>
+    </div>
+  </div>
+
+  <div class="n1-card">
+    <div class="lbl">📋 Hoje também é dia de entrega — N1 da 1ª etapa</div>
+    <p>Além da prática de hoje, é dia de <b>entrega parcial do relatório de diagnóstico</b> (o que você já investigou do SO real desde o Encontro 1) junto com o <b>portfólio</b> acumulado até aqui.</p>
+    <ul>
+      <li>Confira com o professor o formato e o prazo exato de envio combinados em sala.</li>
+      <li>O portfólio inclui as observações e quizzes dos Encontros 1 a 6 — revise se todos foram enviados.</li>
+      <li>As observações e o quiz de <b>hoje</b> (Encontro 6) também compõem essa entrega — não pare a prática antes de preenchê-los.</li>
+    </ul>
+  </div>
+
+  <section class="block">
+    <div class="block-num">PASSO 1 DE 6</div>
+    <h2>Provocando um processo CPU-bound</h2>
+    <p class="intro">Vamos criar, de propósito, um processo que só calcula sem parar — sem nunca esperar por disco ou rede.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">1</span> <code class="big">yes &gt; /dev/null &amp;</code> <span style="color:var(--text-faint);font-family:var(--font-mono);font-size:12.5px;">depois</span> <code class="big">top</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p><code>yes</code> imprime "y" infinitamente. O <code>&gt; /dev/null</code> descarta a saída (senão lotaria a tela), e o <code>&amp;</code> manda rodar em segundo plano.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>É o exemplo mais simples de processo CPU-bound: nunca bloqueia esperando E/S, só usa CPU sem parar.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="prompt">$</span> yes &gt; /dev/null &amp;
+<span class="out">[1] 5231</span>
+<span class="prompt">$</span> top
+<span class="out">%Cpu(s): 99.7 us
+  PID  USER  %CPU  %MEM COMMAND
+ 5231  aluno 99.3   0.0  yes</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> no <code>top</code>, o processo <code>yes</code> deve aparecer perto de 100% de CPU (de um núcleo), sozinho no topo da lista. Aperte <code>q</code> pra sair do <code>top</code> — o <code>yes</code> continua rodando em segundo plano.</p>
+      <details class="tip">
+        <summary>Como eu paro o yes depois?</summary>
+        <div class="tip-body">
+          Rode <code>kill %1</code> (usa o número de "job" que apareceu entre colchetes) ou descubra o PID com <code>ps aux | grep yes</code> e rode <code>kill &lt;PID&gt;</code>. Não esqueça — ele fica consumindo CPU até você matá-lo ou fechar o terminal.
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">PASSO 2 DE 6</div>
+    <h2>Provocando um processo I/O-bound</h2>
+    <p class="intro">Agora um processo que mexe bastante com disco, mas usa pouca CPU — a espera é do disco, não do processador.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">2</span> <code class="big">dd if=/dev/zero of=arquivo_grande bs=1M count=1000; sync</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p><code>dd</code> copia 1000 blocos de 1 MB cheios de zeros pra um arquivo novo — cria ~1 GB de dado gravado em disco. <code>sync</code> garante que tudo foi realmente escrito.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>Processo claramente I/O-bound: o gargalo é a velocidade do disco, não da CPU — por isso o consumo de CPU fica baixo mesmo "trabalhando".</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="prompt">$</span> dd if=/dev/zero of=arquivo_grande bs=1M count=1000; sync
+<span class="out">1000+0 registros de entrada
+1000+0 registros de saída
+1048576000 bytes (1,0 GB) copiados</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> se você rodar <code>top</code> em outro terminal enquanto o <code>dd</code> executa, o processo aparece consumindo bem menos CPU que o <code>yes</code> do passo 1 — mesmo movendo 1 GB de dado.</p>
+      <details class="tip">
+        <summary>Não deu tempo de ver o dd rodando no top</summary>
+        <div class="tip-body">
+          Normal em discos rápidos (SSD) — o <code>dd</code> pode terminar rápido demais. Aumente <code>count=1000</code> pra <code>count=3000</code> e tente de novo, observando o <code>top</code> em paralelo.
+        </div>
+      </details>
+    </div>
+
+    <div class="draft-box">
+      <label for="obs1">Rascunho da observação 1 — compare o que você viu no top entre o yes (passo 1) e o dd (passo 2). Qual consumiu mais CPU, e por quê?</label>
+      <textarea id="obs1" placeholder="Ex: o yes ficou perto de 100% porque..., já o dd..."></textarea>
+      <div class="char-count" data-for="obs1">0 caracteres (mínimo 40)</div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">PASSO 3 DE 6</div>
+    <h2>Separando saída normal de erro</h2>
+    <p class="intro">Vamos provocar um erro de propósito e confirmar que stdout e stderr são, de fato, dois canais separados.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">3</span> <code class="big">ls arquivo_inexistente 2&gt; erro.txt; cat erro.txt</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p><code>2&gt;</code> redireciona só o canal 2 (stderr) pro arquivo <code>erro.txt</code>. A mensagem de erro do <code>ls</code> vai pro arquivo, não pra tela.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>Prova, na prática, que stdout (1) e stderr (2) são canais independentes — por isso dá pra guardar só os erros de um comando sem perder a saída normal.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="prompt">$</span> ls arquivo_inexistente 2&gt; erro.txt; cat erro.txt
+<span class="out">ls: não é possível acessar 'arquivo_inexistente': Arquivo ou diretório inexistente</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> nada aparece na tela quando você roda o <code>ls</code> (o erro foi direto pro arquivo) — só o <code>cat erro.txt</code> seguinte mostra a mensagem.</p>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">PASSO 4 DE 6</div>
+    <h2>Encadeando processos com pipes</h2>
+    <p class="intro">Vamos contar quantos processos existem, e depois filtrar antes de contar — dois pipelines curtos.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">4</span> <code class="big">ps aux | wc -l</code> <span style="color:var(--text-faint);font-family:var(--font-mono);font-size:12.5px;">e</span> <code class="big">ps aux | grep bash | wc -l</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p><code>wc -l</code> conta linhas. O primeiro pipe conta todos os processos; o segundo filtra só os que têm "bash" antes de contar.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>Mostra um pipeline de três processos encadeados de uma vez — exatamente o que o slide de hoje explicou por dentro.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="prompt">$</span> ps aux | wc -l
+<span class="out">87</span>
+<span class="prompt">$</span> ps aux | grep bash | wc -l
+<span class="out">2</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> o primeiro número deve ser bem maior que o segundo. O "2" do segundo comando inclui o seu terminal bash <b>e</b> o próprio processo <code>grep bash</code> que acabou de rodar (o mesmo efeito visto no Encontro 5).</p>
+    </div>
+  </section>
+
+  <div class="part-divider"><div class="line"></div><div class="label">Reforço Docker · docker stats</div><div class="line"></div></div>
+
+  <section class="block">
+    <div class="block-num">PASSO 5 DE 6</div>
+    <h2>Vendo o consumo de um container ao vivo</h2>
+    <p class="intro">Depois de tanto observar processos comuns, vamos ver o mesmo tipo de informação, só que organizada por container.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">5</span> <code class="big">docker run -d --name statsdemo alpine sleep 300</code> <span style="color:var(--text-faint);font-family:var(--font-mono);font-size:12.5px;">depois</span> <code class="big">docker stats --no-stream</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p>Sobe um container ocioso (só <code>sleep</code>), e <code>docker stats --no-stream</code> tira uma "fotografia" única do consumo de todos os containers rodando.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>É o <code>top</code>/<code>ps</code> do mundo Docker — mas organizado por container, não por processo do sistema inteiro.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="prompt">$</span> docker run -d --name statsdemo alpine sleep 300
+<span class="out">a13f0e9c7d21...</span>
+<span class="prompt">$</span> docker stats --no-stream
+<span class="out">NAME       CPU %   MEM USAGE / LIMIT   NET I/O
+statsdemo  0.00%   1.2MiB / 3.8GiB    906B / 0B</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> o <code>statsdemo</code> deve aparecer com CPU próxima de 0% — ele só está dormindo (<code>sleep</code>), sem nenhum trabalho de verdade pra fazer.</p>
+      <details class="tip">
+        <summary>Quero comparar com um container "ocupado"</summary>
+        <div class="tip-body">
+          Se sobrar tempo, tente <code>docker run -d --name cpudemo alpine sh -c "yes > /dev/null"</code> e rode <code>docker stats --no-stream</code> de novo — agora deve aparecer um container consumindo bem mais CPU, do mesmo jeito que o <code>yes</code> do passo 1.
+        </div>
+      </details>
+    </div>
+
+    <div class="draft-box">
+      <label for="obs2">Rascunho da observação 2 — o que o docker stats mostrou sobre o statsdemo? Compare com o que você esperava de um processo I/O-bound quase parado.</label>
+      <textarea id="obs2" placeholder="Ex: o statsdemo apareceu com CPU perto de 0% porque..."></textarea>
+      <div class="char-count" data-for="obs2">0 caracteres (mínimo 40)</div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">PASSO 6 DE 6</div>
+    <h2>Encerrando e limpando</h2>
+    <p class="intro">Antes de fechar, pare e remova o container criado neste roteiro (e o processo yes do passo 1, se ainda estiver rodando).</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">6</span> <code class="big">docker stop statsdemo &amp;&amp; docker rm statsdemo</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p><code>docker stop</code> encerra o container, <code>docker rm</code> remove o registro dele. Confira também se o <code>yes</code> do passo 1 já foi encerrado.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>Boa prática básica: não deixar processos ou containers de teste "esquecidos" consumindo recursos depois da aula.</p>
+        </div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> o nome <code>statsdemo</code> impresso duas vezes, confirmando parada e remoção. Rode <code>ps aux | grep yes</code> pra garantir que nenhum <code>yes</code> ficou pra trás.</p>
+    </div>
+
+    <div class="draft-box">
+      <label for="obs3">Rascunho da observação 3 — livre: algo que te surpreendeu ou uma dúvida que sobrou de hoje</label>
+      <textarea id="obs3" placeholder="Ex: uma dúvida sobre pipes, ou algo do docker stats que não esperava..."></textarea>
+      <div class="char-count" data-for="obs3">0 caracteres (mínimo 40)</div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2 style="font-size:18px;">Exemplo de observação forte x fraca</h2>
+    <div class="example-pair">
+      <div class="example-box weak">
+        <div class="lbl">Observação fraca</div>
+        <p>"O yes usou mais CPU que o dd."</p>
+      </div>
+      <div class="example-box good">
+        <div class="lbl">Observação forte</div>
+        <p>"O yes ficou perto de 100% de CPU porque é puramente CPU-bound — só calcula e imprime, sem nunca parar pra esperar nada. Já o dd, mesmo movendo 1 GB pro disco, ficou com CPU baixa, porque o gargalo real era a velocidade de escrita do disco, não o processamento."</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="theory-link">
+    <div class="lbl">Conexão com a teoria</div>
+    <p>Os passos 1–2 são CPU-bound × I/O-bound do slide 3 (Laureano p. 106–108) e o porquê do escalonador do slide 4/6 (Tanenbaum p. 103–107). Os passos 3–4 são E/S padrão e pipes dos slides 7–9 (Laureano p. 120–126). O passo 5 é o gancho Docker do slide 10 — a mesma lógica do <code>top</code>, agora por container.</p>
+  </div>
+
+  <section class="block" style="margin-top:48px;">
+    <h2 style="font-size:18px;">Checklist final</h2>
+    <ul class="checklist" id="checklist">
+      <li><input type="checkbox"><span>Rodei o <code>yes</code> em segundo plano e vi ~100% de CPU no <code>top</code></span></li>
+      <li><input type="checkbox"><span>Rodei o <code>dd</code> e comparei o consumo de CPU com o <code>yes</code></span></li>
+      <li><input type="checkbox"><span>Separei stdout de stderr com <code>2&gt;</code></span></li>
+      <li><input type="checkbox"><span>Rodei os dois pipelines com <code>ps aux | wc -l</code> e <code>| grep | wc -l</code></span></li>
+      <li><input type="checkbox"><span>Subi um container e observei o consumo com <code>docker stats --no-stream</code></span></li>
+      <li><input type="checkbox"><span>Parei e removi o container, e matei qualquer <code>yes</code> esquecido</span></li>
+      <li><input type="checkbox"><span>Preenchi as 3 observações acima (vou colar no quiz semanal)</span></li>
+      <li><input type="checkbox"><span>Conferi a entrega de N1 (relatório parcial + portfólio) com o professor</span></li>
+    </ul>
+  </section>
+
+</div>
+
+<div class="progress">
+  <span id="progtext">0 / 8 verificados</span>
+  <div class="bar"><i id="progbar"></i></div>
+</div>
+
+<footer>Sistemas Operacionais · ADS23 · IFCE Campus Horizonte · Encontro 6 de 17</footer>
+
+<script>
+  const boxes = document.querySelectorAll('#checklist input[type=checkbox]');
+  const progtext = document.getElementById('progtext');
+  const progbar = document.getElementById('progbar');
+  function updateProgress(){
+    const total = boxes.length;
+    const done = [...boxes].filter(b=>b.checked).length;
+    progtext.textContent = done + ' / ' + total + ' verificados';
+    progbar.style.width = (done/total*100) + '%';
+  }
+  boxes.forEach(b=>{
+    b.addEventListener('change', ()=>{
+      b.closest('li').classList.toggle('checked', b.checked);
+      updateProgress();
+    });
+  });
+  updateProgress();
+
+  document.querySelectorAll('.draft-box textarea').forEach(ta=>{
+    const counter = document.querySelector('.char-count[data-for="'+ta.id+'"]');
+    ta.addEventListener('input', ()=>{
+      const len = ta.value.length;
+      counter.textContent = len + ' caracteres (mínimo 40)';
+      counter.classList.toggle('ok', len >= 40);
+    });
+  });
+</script>
+
+</body>
+</html>

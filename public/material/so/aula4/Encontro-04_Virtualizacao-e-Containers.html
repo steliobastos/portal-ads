@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Encontro 4 · Da Virtualização aos Containers — Sistemas Operacionais ADS23</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* paleta clara institucional (IFCE) — ver "Paleta visual dos materiais HTML" na memória do curso */
+    --bg:#fbfaf5;
+    --bg-panel:#f3f1e8;
+    --bg-card:#ffffff;
+    --bg-card-2:#f3f1e8;
+    --line:#e2ddd0;
+    --line-soft:#ece8db;
+    --primary:#1b878f;        /* teal — títulos, badges, destaques */
+    --primary-dim:#8fc7ca;    /* teal claro — bordas/divisores sutis */
+    --primary-soft:rgba(27,135,143,.09);
+    --primary-glow:rgba(27,135,143,.35);
+    --secondary:#399b3f;      /* verde IF — apoio técnico */
+    --secondary-dim:#a8d4ab;
+    --secondary-soft:rgba(57,155,63,.08);
+    --alert:#cd191e;          /* vermelho IF — alerta pontual */
+    --text:#20241f;
+    --text-dim:#5b6058;
+    --text-faint:#8b9088;
+    --font-display:'Space Grotesk',sans-serif;
+    --font-body:'IBM Plex Sans',sans-serif;
+    --font-mono:'IBM Plex Mono',monospace;
+    /* sub-paleta escura reservada — blocos de código/terminal permanecem escuros por contraste técnico */
+    --term-bg:#10161f;
+    --term-line:#212b3a;
+    --term-dim:#8d96a8;
+    --term-prompt:#7ee787;
+    --term-accent:#5fd9d3;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-body);line-height:1.65;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3{font-family:var(--font-display);font-weight:600;color:var(--text);letter-spacing:-.01em;margin:0;}
+  a{color:var(--primary);}
+  code{font-family:var(--font-mono);background:var(--primary-soft);color:var(--primary);padding:1px 6px;border-radius:4px;font-size:.92em;}
+  ::selection{background:var(--primary-soft);color:var(--text);}
+
+  .topbar{
+    position:sticky;top:0;z-index:30;background:rgba(251,250,245,.94);backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);padding:12px 22px;
+    display:flex;align-items:center;justify-content:space-between;gap:14px;
+  }
+  .topbar .brand{font-family:var(--font-mono);font-size:12.5px;color:var(--text-dim);letter-spacing:.03em;}
+  .topbar .brand b{color:var(--primary);}
+  .progress-track{position:absolute;left:0;bottom:-1px;height:2px;width:100%;background:var(--line-soft);}
+  .progress-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--primary),var(--secondary));transition:width .15s linear;}
+
+  .dot-nav{position:fixed;right:18px;top:50%;transform:translateY(-50%);z-index:30;display:flex;flex-direction:column;gap:9px;}
+  .dot-nav a{width:9px;height:9px;border-radius:50%;background:var(--line);border:1px solid var(--line);display:block;transition:.2s;position:relative;}
+  .dot-nav a:hover{background:var(--text-faint);}
+  .dot-nav a.active{background:var(--primary);border-color:var(--primary);box-shadow:0 0 8px var(--primary-glow);}
+  .dot-nav a .tip{position:absolute;right:18px;top:50%;transform:translateY(-50%);white-space:nowrap;font-family:var(--font-mono);font-size:11px;color:var(--text-dim);background:var(--bg-panel);border:1px solid var(--line);padding:3px 8px;border-radius:5px;opacity:0;pointer-events:none;transition:.15s;}
+  .dot-nav a:hover .tip{opacity:1;}
+  @media (max-width:780px){.dot-nav{display:none;}}
+
+  .slide{min-height:100vh;display:flex;align-items:center;padding:70px 22px;border-bottom:1px solid var(--line-soft);position:relative;}
+  .slide-inner{max-width:920px;margin:0 auto;width:100%;}
+  .eyebrow{font-family:var(--font-mono);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+  .eyebrow::before{content:'';width:22px;height:1px;background:var(--primary-dim);}
+  .slide-title{font-size:clamp(24px,3.4vw,38px);margin-bottom:22px;}
+  .lead{font-size:17.5px;color:var(--text-dim);max-width:680px;}
+  .big{font-size:clamp(36px,6.4vw,64px);line-height:1.05;}
+  .glow{text-shadow:0 0 34px var(--primary-glow);}
+  .meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:26px;font-family:var(--font-mono);font-size:12.5px;color:var(--text-faint);}
+  .meta span{padding-left:16px;border-left:1px solid var(--line);}
+  .meta span:first-child{padding-left:0;border-left:none;}
+  .hint{margin-top:40px;font-family:var(--font-mono);font-size:11.5px;color:var(--text-faint);}
+
+  .fragment{opacity:0;transform:translateY(14px);transition:opacity .55s ease,transform .55s ease;}
+  .fragment.visible{opacity:1;transform:translateY(0);}
+  .fragment.d1{transition-delay:.08s;} .fragment.d2{transition-delay:.16s;} .fragment.d3{transition-delay:.24s;} .fragment.d4{transition-delay:.32s;}
+
+  .qmark{font-family:var(--font-mono);font-size:12.5px;letter-spacing:.1em;color:var(--primary);text-transform:uppercase;}
+  .question-wrap{text-align:left;}
+
+  .cards2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px;}
+  .card{background:var(--bg-card);border:1px solid var(--line);border-radius:12px;padding:22px 22px;}
+  .card.alt{border-color:var(--secondary-dim);}
+  .card .kicker{font-family:var(--font-mono);font-size:11.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+  .card h3{font-size:19px;margin-bottom:8px;}
+  .card p{color:var(--text-dim);font-size:14.5px;margin:0;}
+  @media (max-width:720px){.cards2{grid-template-columns:1fr;}}
+
+  .blist{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:12px;}
+  .blist li{display:flex;gap:12px;align-items:flex-start;font-size:15.5px;color:var(--text-dim);}
+  .blist .ico{font-family:var(--font-mono);color:var(--primary);flex-shrink:0;}
+
+  /* diagramas de camadas (hipervisor / imagem→container) */
+  .arch-tag{display:inline-block;font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;background:var(--primary-soft);color:var(--primary);border:1px solid var(--primary-dim);border-radius:20px;padding:4px 12px;margin-bottom:16px;}
+  .arch-diagram{background:var(--bg-card-2);border:1px solid var(--line);border-radius:12px;padding:22px;margin:20px 0;font-family:var(--font-mono);font-size:13px;}
+  .arch-layer{padding:10px 14px;border-radius:6px;margin-bottom:6px;text-align:center;color:var(--text);}
+  .arch-layer:last-child{margin-bottom:0;}
+  .arch-layer.hw{background:var(--line-soft);color:var(--text-dim);}
+  .arch-layer.kernel{background:rgba(27,135,143,.15);border:1px solid var(--primary-dim);}
+  .arch-layer.user{background:rgba(57,155,63,.1);border:1px solid var(--secondary-dim);}
+  .arch-layer.split{display:flex;gap:6px;}
+  .arch-layer.split > div{flex:1;padding:8px;background:rgba(57,155,63,.1);border:1px solid var(--secondary-dim);border-radius:6px;text-align:center;font-size:12px;}
+  .arch-facts{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px;}
+  .fact-box{background:var(--bg-card);border:1px solid var(--line);border-radius:10px;padding:16px;}
+  .fact-box .lbl{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-faint);margin-bottom:6px;}
+  .fact-box p{margin:0;font-size:14px;color:var(--text-dim);}
+  .fact-box.good .lbl{color:var(--secondary);}
+  .fact-box.bad .lbl{color:var(--alert);}
+
+  /* tabelas de comparação / comandos */
+  .compare-table{width:100%;border-collapse:collapse;margin-top:18px;font-size:14px;}
+  .compare-table th,.compare-table td{border:1px solid var(--line);padding:11px 13px;text-align:left;vertical-align:top;}
+  .compare-table th{background:var(--bg-card-2);font-family:var(--font-mono);font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-dim);}
+  .compare-table td{color:var(--text-dim);}
+  .compare-table td.hl{color:var(--text);}
+  .compare-table tr td:first-child{font-family:var(--font-mono);color:var(--primary);font-size:13px;white-space:nowrap;}
+  @media (max-width:780px){.compare-table{font-size:12.5px;} .compare-table th,.compare-table td{padding:8px;}}
+
+  /* dockerfile */
+  .dockerfile{background:var(--term-bg);border:1px solid var(--term-line);border-radius:10px;padding:18px 20px;margin-top:18px;font-family:var(--font-mono);font-size:13.5px;line-height:1.9;}
+  .dockerfile .ln{color:var(--term-dim);}
+  .dockerfile .kw{color:var(--term-accent);}
+  .dockerfile .cm{color:var(--term-dim);opacity:.6;font-style:italic;}
+
+  .term{background:var(--term-bg);border:1px solid var(--term-line);border-radius:10px;overflow:hidden;margin-top:18px;}
+  .term .bar{background:var(--term-bg);padding:8px 12px;display:flex;gap:6px;border-bottom:1px solid var(--term-line);}
+  .term .bar .dot{width:9px;height:9px;border-radius:50%;background:var(--term-line);}
+  .term .bar .dot:nth-child(1){background:#e0605f;} .term .bar .dot:nth-child(2){background:#e0b25f;} .term .bar .dot:nth-child(3){background:#5fbf6b;}
+  .term-body{padding:16px 18px;font-family:var(--font-mono);font-size:13.5px;color:var(--term-dim);min-height:170px;white-space:pre-wrap;line-height:1.55;}
+  .term-body .prompt{color:var(--term-prompt);}
+  .term-body .sys{color:var(--term-accent);}
+  .term-body .ok{color:var(--term-prompt);}
+
+  .plan-track{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap;}
+  .plan-step{flex:1;min-width:150px;background:var(--bg-card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;}
+  .plan-step .t{font-family:var(--font-mono);font-size:11px;color:var(--primary);margin-bottom:6px;}
+  .plan-step h4{margin:0 0 4px;font-family:var(--font-display);font-size:15px;color:var(--text);}
+  .plan-step p{margin:0;font-size:13px;color:var(--text-dim);}
+
+  .read-list{display:flex;flex-direction:column;gap:14px;margin-top:10px;}
+  .read-item{display:flex;gap:14px;align-items:flex-start;background:var(--bg-card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;}
+  .read-item .tag{font-size:20px;flex-shrink:0;}
+  .read-item h4{margin:0 0 4px;font-size:15.5px;font-family:var(--font-display);color:var(--text);}
+  .read-item p{margin:0;font-size:13.5px;color:var(--text-dim);}
+  .read-item .pages{font-family:var(--font-mono);font-size:12px;color:var(--primary);}
+
+  footer.endnote{text-align:center;padding:40px 20px 60px;font-family:var(--font-mono);font-size:11.5px;color:var(--text-faint);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">Sistemas Operacionais · <b>ADS23</b></div>
+  <div class="brand" id="slideCounter">01 / 14</div>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+</div>
+
+<nav class="dot-nav" id="dotNav"></nav>
+
+<!-- 0. CAPA -->
+<section class="slide active" id="slide-0">
+  <div class="slide-inner">
+    <div class="eyebrow">Encontro 4 de 17</div>
+    <h1 class="big glow">Da Virtualização<br>aos Containers</h1>
+    <p class="lead">Como uma máquina física vira várias máquinas isoladas — e por que, no fim das contas, o mercado trocou VMs inteiras por containers sempre que dá.</p>
+    <div class="meta">
+      <span>ADS23</span><span>IFCE Campus Horizonte</span><span>Prof. José Stelio Sampaio Bastos Neto</span>
+    </div>
+    <div class="hint">↓ role pra avançar · use os pontos à direita pra navegar direto</div>
+  </div>
+</section>
+
+<!-- 1. RECAP -->
+<section class="slide" id="slide-1">
+  <div class="slide-inner">
+    <div class="eyebrow">De onde viemos</div>
+    <h2 class="slide-title">Três encontros de teoria — e um "spoiler" que ainda não veio de verdade</h2>
+    <div class="cards2">
+      <div class="card fragment">
+        <div class="kicker">Encontro 3</div>
+        <h3>Máquina virtual apareceu no jigsaw</h3>
+        <p>Uma das 4 arquiteturas: um hipervisor finge, pra cada SO convidado, que ele tem hardware inteiro só pra si.</p>
+      </div>
+      <div class="card alt fragment d1">
+        <div class="kicker">Encontro 3 (prática)</div>
+        <h3>Vocês já rodaram <code>docker run --rm alpine</code></h3>
+        <p>E cronometraram: container sobe em milissegundos, VM leva segundos. Mas ainda não vimos <b>por dentro</b> de nenhum dos dois.</p>
+      </div>
+    </div>
+    <p class="lead fragment d2" style="margin-top:26px;">Hoje a gente para de espiar de longe: vira o assunto principal da aula, com Docker de verdade — imagem, <code>Dockerfile</code>, comandos que vocês vão usar centenas de vezes no curso e na profissão.</p>
+  </div>
+</section>
+
+<!-- 2. PERGUNTA MOTIVADORA -->
+<section class="slide" id="slide-2">
+  <div class="slide-inner question-wrap">
+    <div class="qmark">Pergunta pra turma</div>
+    <h1 class="big" style="margin-top:18px;">Uma empresa precisa rodar <span class="glow" style="color:var(--primary)">50 sites diferentes</span>,<br>de 50 clientes diferentes, numa única sala de servidores.</h1>
+    <p class="lead fragment" style="margin:20px auto 0;">Ela não pode comprar 50 computadores físicos — caro, e a maioria ficaria ocioso a maior parte do tempo. Como isolar 50 ambientes diferentes dentro de poucas máquinas físicas?</p>
+    <p class="lead fragment d1" style="margin-top:14px;">É exatamente o problema que a virtualização resolve — e é o motivo dela ter nascido décadas antes do Docker existir.</p>
+  </div>
+</section>
+
+<!-- 3. O QUE É VIRTUALIZAÇÃO -->
+<section class="slide" id="slide-3">
+  <div class="slide-inner">
+    <div class="arch-tag">Conceito</div>
+    <h2 class="slide-title">Virtualização: um hardware, vários sistemas operacionais</h2>
+    <p class="lead">Um programa especial — o <b>monitor de máquina virtual</b>, ou <b>hipervisor</b> — cria, sobre um único computador físico, várias máquinas <i>virtuais</i> independentes. Cada uma roda seu próprio SO convidado, sem saber que está compartilhando hardware com outras.</p>
+    <div class="arch-facts">
+      <div class="fact-box good">
+        <div class="lbl">Por que surgiu</div>
+        <p>Consolidar servidores caros e subutilizados, isolar ambientes de clientes diferentes, e testar vários sistemas operacionais sem comprar uma máquina pra cada um.</p>
+      </div>
+      <div class="fact-box bad">
+        <div class="lbl">O preço disso</div>
+        <p>Cada VM carrega um núcleo inteiro — memória, disco e tempo de boot multiplicados por quantas VMs existirem na máquina física.</p>
+      </div>
+    </div>
+    <p class="lead" style="margin-top:18px;font-size:14.5px;">Reconhece essa ideia? É o mesmo <b style="color:var(--primary)">VirtualBox</b> que vocês instalaram na Semana 0 — só que rodando numa escala de data center, não no notebook de vocês.</p>
+  </div>
+</section>
+
+<!-- 4. HIPERVISOR TIPO 1 x TIPO 2 -->
+<section class="slide" id="slide-4">
+  <div class="slide-inner">
+    <div class="eyebrow">Dois jeitos de virtualizar</div>
+    <h2 class="slide-title">Hipervisor tipo 1 (bare-metal) x tipo 2 (hospedado)</h2>
+    <div class="cards2">
+      <div class="card fragment">
+        <div class="kicker">Tipo 1 · Bare-metal</div>
+        <h3>Roda direto no hardware</h3>
+        <p>Não existe um "SO anfitrião" por baixo — o próprio hipervisor é a camada mais baixa. Usado em data centers: VMware ESXi, Microsoft Hyper-V, Xen.</p>
+      </div>
+      <div class="card alt fragment d1">
+        <div class="kicker">Tipo 2 · Hospedado</div>
+        <h3>Roda como um programa comum</h3>
+        <p>Existe um SO anfitrião normal (o Windows do laboratório, por exemplo) e o hipervisor roda como mais um aplicativo dentro dele. É o caso do <b style="color:var(--text)">VirtualBox</b> que vocês usam.</p>
+      </div>
+    </div>
+    <div class="arch-diagram">
+      <div class="arch-layer split"><div>VM 1</div><div>VM 2</div><div>VM 3</div></div>
+      <div class="arch-layer kernel">Hipervisor (tipo 1: direto no hardware · tipo 2: dentro de um SO anfitrião)</div>
+      <div class="arch-layer hw">Hardware físico</div>
+    </div>
+    <p class="lead fragment d2" style="margin-top:18px;font-size:14.5px;">Na prática do mercado: <b style="color:var(--text)">tipo 1</b> pra servidores de produção que precisam de desempenho máximo; <b style="color:var(--text)">tipo 2</b> pra desenvolvimento e testes no computador de cada pessoa.</p>
+  </div>
+</section>
+
+<!-- 5. NUVEM EM 2 MINUTOS -->
+<section class="slide" id="slide-5">
+  <div class="slide-inner">
+    <div class="eyebrow">Rapidamente</div>
+    <h2 class="slide-title">A "nuvem" é virtualização em escala industrial</h2>
+    <p class="lead">Quando você aluga um servidor na AWS, Azure ou Google Cloud, o que você recebe de verdade é <b>uma máquina virtual</b> rodando dentro do data center de outra empresa — provisionada em segundos por um hipervisor tipo 1.</p>
+    <div class="blist" style="margin-top:20px;">
+      <li class="fragment"><span class="ico">▸</span><span><b style="color:var(--text)">IaaS</b> (infraestrutura): você aluga a VM crua e instala tudo — o mais parecido com o VirtualBox de vocês.</span></li>
+      <li class="fragment d1"><span class="ico">▸</span><span><b style="color:var(--text)">PaaS</b> (plataforma): a nuvem já cuida do SO e do runtime — você só entrega o código.</span></li>
+      <li class="fragment d2"><span class="ico">▸</span><span><b style="color:var(--text)">SaaS</b> (software): você nem vê a infraestrutura — usa um produto pronto (e-mail, planilha online).</span></li>
+    </div>
+    <p class="lead fragment d3" style="margin-top:20px;font-size:14.5px;">Não vamos aprofundar nuvem neste curso — é só pra vocês reconhecerem o vocabulário quando ele aparecer numa vaga de emprego ou numa reunião.</p>
+  </div>
+</section>
+
+<!-- 6. RETOMANDO PESADO x LEVE -->
+<section class="slide" id="slide-6">
+  <div class="slide-inner">
+    <div class="eyebrow">Eixo do curso</div>
+    <h2 class="slide-title">Container não é uma VM menor — é outra ideia</h2>
+    <p class="lead">Vocês já sentiram isso na pele no Encontro 3: um container Docker sobe em milissegundos, uma VM leva segundos ou minutos. A razão não é o container ser "uma VM otimizada" — é que ele resolve o isolamento de um jeito completamente diferente.</p>
+    <table class="compare-table fragment">
+      <tr><th></th><th>Máquina virtual</th><th>Container</th></tr>
+      <tr><td>Kernel</td><td class="hl">Um núcleo completo por VM</td><td class="hl">Compartilha o núcleo do host</td></tr>
+      <tr><td>Isolamento</td><td class="hl">Hipervisor emula hardware</td><td class="hl"><code>namespaces</code> + <code>cgroups</code> do próprio kernel</td></tr>
+      <tr><td>Peso</td><td class="hl">GBs de disco, minutos de boot</td><td class="hl">MBs de disco, milissegundos de boot</td></tr>
+      <tr><td>Isolamento entre "vizinhos"</td><td class="hl">Total — núcleos nem se enxergam</td><td class="hl">Parcial — todos usam o mesmo núcleo por baixo</td></tr>
+    </table>
+    <p class="lead fragment d1" style="margin-top:20px;font-size:14.5px;">É a mesma lição do jigsaw: <b style="color:var(--primary)">menos isolamento arquitetural custa menos recurso</b> — o segredo é saber quando cada um vale o preço.</p>
+  </div>
+</section>
+
+<!-- 7. IMAGEM x CONTAINER -->
+<section class="slide" id="slide-7">
+  <div class="slide-inner">
+    <div class="eyebrow">Agora Docker de verdade</div>
+    <h2 class="slide-title">Imagem é a receita. Container é o prato pronto.</h2>
+    <p class="lead">Uma <b>imagem</b> é um pacote read-only com tudo que uma aplicação precisa: sistema de arquivos mínimo, bibliotecas, o binário da aplicação, e instruções de como rodar. Um <b>container</b> é uma instância em execução dessa imagem — como um objeto é uma instância de uma classe.</p>
+    <div class="arch-diagram">
+      <div class="arch-layer user">Imagem (alpine, nginx, ubuntu…) — só leitura, guardada em disco</div>
+      <div class="arch-layer split"><div>Container A</div><div>Container B</div><div>Container C</div></div>
+      <div class="arch-layer kernel">Cada container: a mesma imagem + uma camada de escrita própria + processo isolado</div>
+    </div>
+    <p class="lead" style="margin-top:18px;font-size:14.5px;">Você pode rodar <b style="color:var(--text)">vários containers da mesma imagem</b> ao mesmo tempo — cada um isolado, cada um achando que é o único processo na máquina.</p>
+  </div>
+</section>
+
+<!-- 8. DOCKER HUB / REGISTRY -->
+<section class="slide" id="slide-8">
+  <div class="slide-inner">
+    <div class="eyebrow">De onde vêm as imagens</div>
+    <h2 class="slide-title">Docker Hub: o "GitHub" das imagens prontas</h2>
+    <p class="lead">Assim como vocês baixaram a imagem <code>alpine</code> no Encontro 3 sem construir nada, existe um repositório público — o <b>Docker Hub</b> — cheio de imagens prontas: <code>nginx</code>, <code>postgres</code>, <code>python</code>, <code>node</code>, e milhares de outras.</p>
+    <div class="blist" style="margin-top:20px;">
+      <li class="fragment"><span class="ico">▸</span><span><code>docker pull &lt;imagem&gt;</code> baixa uma imagem do Hub pro seu computador, sem rodar nada ainda.</span></li>
+      <li class="fragment d1"><span class="ico">▸</span><span><code>docker run &lt;imagem&gt;</code> baixa (se precisar) <i>e</i> já sobe um container a partir dela.</span></li>
+      <li class="fragment d2"><span class="ico">▸</span><span>Quando a imagem que existe não serve, você escreve a sua própria — é o próximo slide.</span></li>
+    </div>
+  </div>
+</section>
+
+<!-- 9. ANATOMIA DE UM DOCKERFILE -->
+<section class="slide" id="slide-9">
+  <div class="slide-inner">
+    <div class="eyebrow">Construindo sua própria imagem</div>
+    <h2 class="slide-title">Dockerfile: a receita escrita em texto</h2>
+    <p class="lead">Um <code>Dockerfile</code> é um roteiro simples, linha por linha, de como montar uma imagem a partir de uma imagem-base.</p>
+    <div class="dockerfile fragment">
+<span class="ln"><span class="kw">FROM</span> alpine:3.20         <span class="cm"># imagem-base: um Linux mínimo</span></span>
+<span class="ln"><span class="kw">COPY</span> ola.sh /ola.sh        <span class="cm"># copia um arquivo seu pra dentro da imagem</span></span>
+<span class="ln"><span class="kw">RUN</span> chmod +x /ola.sh       <span class="cm"># roda um comando DURANTE a construção</span></span>
+<span class="ln"><span class="kw">CMD</span> ["/ola.sh"]            <span class="cm"># comando padrão QUANDO o container inicia</span></span>
+    </div>
+    <p class="lead fragment d1" style="margin-top:18px;font-size:14.5px;">Reparem a diferença entre <code>RUN</code> (acontece uma vez, na hora de <i>construir</i> a imagem) e <code>CMD</code> (acontece toda vez que um container <i>novo</i> nasce dessa imagem).</p>
+  </div>
+</section>
+
+<!-- 10. COMANDOS ESSENCIAIS -->
+<section class="slide" id="slide-10">
+  <div class="slide-inner">
+    <div class="eyebrow">O vocabulário do dia a dia</div>
+    <h2 class="slide-title">Os comandos que vocês vão digitar toda semana</h2>
+    <table class="compare-table fragment">
+      <tr><th>Comando</th><th>O que faz</th></tr>
+      <tr><td><code>docker pull &lt;img&gt;</code></td><td class="hl">Baixa uma imagem do Docker Hub</td></tr>
+      <tr><td><code>docker images</code></td><td class="hl">Lista as imagens já baixadas/construídas localmente</td></tr>
+      <tr><td><code>docker build -t nome .</code></td><td class="hl">Constrói uma imagem a partir de um Dockerfile na pasta atual</td></tr>
+      <tr><td><code>docker run</code></td><td class="hl">Cria e inicia um container a partir de uma imagem</td></tr>
+      <tr><td><code>docker ps</code> / <code>docker ps -a</code></td><td class="hl">Lista containers rodando / todos (incluindo parados)</td></tr>
+      <tr><td><code>docker logs &lt;id&gt;</code></td><td class="hl">Mostra a saída que o container produziu</td></tr>
+      <tr><td><code>docker stop</code> / <code>docker rm</code></td><td class="hl">Para um container / remove um container parado</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- 11. TERMINAL SIMULADO -->
+<section class="slide" id="slide-11" data-anim="dockerdemo">
+  <div class="slide-inner">
+    <div class="eyebrow">Prévia da prática</div>
+    <h2 class="slide-title">Do zero até um container próprio, ao vivo</h2>
+    <p class="lead">Uma sequência real: confirmar o Docker, baixar uma imagem, construir a própria, e rodar.</p>
+    <div class="term">
+      <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+      <div class="term-body" id="dockerBody"></div>
+    </div>
+    <p class="lead" style="margin-top:16px;font-size:14px;">Cada uma dessas linhas vira um passo do roteiro de laboratório de hoje — vocês vão rodar isso de verdade, na própria VM.</p>
+  </div>
+</section>
+
+<!-- 12. MAPA DA PRÁTICA -->
+<section class="slide" id="slide-12">
+  <div class="slide-inner">
+    <div class="eyebrow">Mão na massa</div>
+    <h2 class="slide-title">De usuário de imagens prontas a autor da sua própria</h2>
+    <div class="plan-track">
+      <div class="plan-step fragment">
+        <div class="t">PARTE 1</div>
+        <h4>Imagens prontas</h4>
+        <p><code>docker pull</code>, <code>docker images</code>, <code>docker run</code> com uma imagem pronta do Hub.</p>
+      </div>
+      <div class="plan-step alt fragment d1" style="border-color:var(--primary-dim);">
+        <div class="t">PARTE 2</div>
+        <h4>Sua primeira imagem</h4>
+        <p>Escrever um <code>Dockerfile</code> mínimo, rodar <code>docker build</code>, e subir um container a partir dele.</p>
+      </div>
+    </div>
+    <p class="lead fragment d2" style="margin-top:22px;">O roteiro de laboratório detalha os dois passo a passo, com dicas se algo travar. Todas as observações vão pro instrumento semanal (quiz) no fim.</p>
+  </div>
+</section>
+
+<!-- 13. LEITURA -->
+<section class="slide" id="slide-13">
+  <div class="slide-inner">
+    <div class="eyebrow">Para ler</div>
+    <h2 class="slide-title">Leitura da semana</h2>
+    <div class="read-list">
+      <div class="read-item fragment">
+        <div class="tag">🟢</div>
+        <div>
+          <h4>Laureano — Máquinas Virtuais</h4>
+          <p>Por que existem, tipos e estratégias de virtualização — a base teórica de hoje. <span class="pages">p. 70–77</span></p>
+        </div>
+      </div>
+      <div class="read-item fragment d1">
+        <div class="tag">🔵</div>
+        <div>
+          <h4>Tanenbaum — Hipervisores tipo 1 e tipo 2 · Nuvens</h4>
+          <p>O vocabulário que o mercado usa todo dia, direto da fonte. <span class="pages">p. 329–330 e 342–344</span></p>
+        </div>
+      </div>
+      <div class="read-item fragment d2">
+        <div class="tag">⚪</div>
+        <div>
+          <h4>Tanenbaum — Virtualização e a nuvem (capítulo completo)</h4>
+          <p>Pra quem quer se aprofundar além do que cai no quiz. <span class="pages">p. 327–357</span></p>
+        </div>
+      </div>
+    </div>
+    <p class="lead" style="margin-top:22px;font-size:14px;">O quiz da semana verifica essa leitura e recolhe suas observações da prática — tudo no mesmo instrumento.</p>
+  </div>
+</section>
+
+<footer class="endnote">Sistemas Operacionais · ADS23 · IFCE Campus Horizonte · Encontro 4 de 17</footer>
+
+<script>
+(function(){
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const dotNav = document.getElementById('dotNav');
+  const counter = document.getElementById('slideCounter');
+  const progressFill = document.getElementById('progressFill');
+  const total = slides.length;
+
+  slides.forEach((s,i)=>{
+    const a = document.createElement('a');
+    a.href = '#'+s.id;
+    const tip = document.createElement('span');
+    tip.className = 'tip';
+    tip.textContent = String(i+1).padStart(2,'0');
+    a.appendChild(tip);
+    dotNav.appendChild(a);
+  });
+  const dots = Array.from(dotNav.querySelectorAll('a'));
+
+  function setActive(idx){
+    dots.forEach((d,i)=>d.classList.toggle('active', i===idx));
+    counter.textContent = String(idx+1).padStart(2,'0') + ' / ' + String(total).padStart(2,'0');
+  }
+
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      const idx = slides.indexOf(entry.target);
+      if(entry.isIntersecting){
+        if(entry.intersectionRatio > 0.5) setActive(idx);
+        entry.target.querySelectorAll('.fragment').forEach(f=>f.classList.add('visible'));
+      }
+    });
+  }, {threshold:[0,0.5,1]});
+  slides.forEach(s=>io.observe(s));
+
+  window.addEventListener('scroll', ()=>{
+    const scrolled = window.scrollY;
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    progressFill.style.width = (max>0 ? (scrolled/max*100) : 0) + '%';
+  });
+
+  document.addEventListener('keydown', (e)=>{
+    const activeIdx = dots.findIndex(d=>d.classList.contains('active'));
+    if(e.key === 'ArrowDown' || e.key === ' '){
+      e.preventDefault();
+      const next = slides[Math.min(activeIdx+1, total-1)];
+      next.scrollIntoView({behavior:'smooth'});
+    } else if(e.key === 'ArrowUp'){
+      e.preventDefault();
+      const prev = slides[Math.max(activeIdx-1, 0)];
+      prev.scrollIntoView({behavior:'smooth'});
+    }
+  });
+
+  setActive(0);
+
+  // docker demo preview animation
+  const dockerLines = [
+    ['$ docker --version', 'prompt'],
+    ['Docker version 26.1.0, build ...', 'sys'],
+    ['$ docker pull alpine', 'prompt'],
+    ['Status: Downloaded newer image for alpine:latest', 'ok'],
+    ['$ docker build -t meu-ola .', 'prompt'],
+    ['Successfully tagged meu-ola:latest', 'ok'],
+    ['$ docker run meu-ola', 'prompt'],
+    ['Ola do meu primeiro container!', 'ok'],
+  ];
+  const dockerBody = document.getElementById('dockerBody');
+  let dockerStarted = false;
+  function typeLine(i){
+    if(i >= dockerLines.length) return;
+    const [txt, cls] = dockerLines[i];
+    const span = document.createElement('div');
+    span.className = cls;
+    dockerBody.appendChild(span);
+    let c = 0;
+    const iv = setInterval(()=>{
+      span.textContent = txt.slice(0, c+1);
+      c++;
+      if(c >= txt.length){
+        clearInterval(iv);
+        setTimeout(()=>typeLine(i+1), 110);
+      }
+    }, 14);
+  }
+  const dockerSlide = document.getElementById('slide-11');
+  const dockerIo = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      if(entry.isIntersecting && !dockerStarted){
+        dockerStarted = true;
+        typeLine(0);
+      }
+    });
+  }, {threshold:0.4});
+  dockerIo.observe(dockerSlide);
+})();
+</script>
+
+</body>
+</html>

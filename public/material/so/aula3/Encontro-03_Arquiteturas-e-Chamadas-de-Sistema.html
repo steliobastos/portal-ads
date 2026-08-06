@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Encontro 3 · Arquiteturas de SO e Chamadas de Sistema — Sistemas Operacionais ADS23</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* paleta clara institucional (IFCE) — ver "Paleta visual dos materiais HTML" na memória do curso */
+    --bg:#fbfaf5;
+    --bg-panel:#f3f1e8;
+    --bg-card:#ffffff;
+    --bg-card-2:#f3f1e8;
+    --line:#e2ddd0;
+    --line-soft:#ece8db;
+    --primary:#1b878f;        /* teal — títulos, badges, destaques */
+    --primary-dim:#8fc7ca;    /* teal claro — bordas/divisores sutis */
+    --primary-soft:rgba(27,135,143,.09);
+    --primary-glow:rgba(27,135,143,.35);
+    --secondary:#399b3f;      /* verde IF — apoio técnico */
+    --secondary-dim:#a8d4ab;
+    --secondary-soft:rgba(57,155,63,.08);
+    --alert:#cd191e;          /* vermelho IF — alerta pontual */
+    --text:#20241f;
+    --text-dim:#5b6058;
+    --text-faint:#8b9088;
+    --font-display:'Space Grotesk',sans-serif;
+    --font-body:'IBM Plex Sans',sans-serif;
+    --font-mono:'IBM Plex Mono',monospace;
+    /* sub-paleta escura reservada — blocos de código/terminal permanecem escuros por contraste técnico */
+    --term-bg:#10161f;
+    --term-line:#212b3a;
+    --term-dim:#8d96a8;
+    --term-prompt:#7ee787;
+    --term-accent:#5fd9d3;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-body);line-height:1.65;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3{font-family:var(--font-display);font-weight:600;color:var(--text);letter-spacing:-.01em;margin:0;}
+  a{color:var(--primary);}
+  code{font-family:var(--font-mono);background:var(--primary-soft);color:var(--primary);padding:1px 6px;border-radius:4px;font-size:.92em;}
+  ::selection{background:var(--primary-soft);color:var(--text);}
+
+  .topbar{
+    position:sticky;top:0;z-index:30;background:rgba(251,250,245,.94);backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);padding:12px 22px;
+    display:flex;align-items:center;justify-content:space-between;gap:14px;
+  }
+  .topbar .brand{font-family:var(--font-mono);font-size:12.5px;color:var(--text-dim);letter-spacing:.03em;}
+  .topbar .brand b{color:var(--primary);}
+  .progress-track{position:absolute;left:0;bottom:-1px;height:2px;width:100%;background:var(--line-soft);}
+  .progress-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--primary),var(--secondary));transition:width .15s linear;}
+
+  .dot-nav{position:fixed;right:18px;top:50%;transform:translateY(-50%);z-index:30;display:flex;flex-direction:column;gap:9px;}
+  .dot-nav a{width:9px;height:9px;border-radius:50%;background:var(--line);border:1px solid var(--line);display:block;transition:.2s;position:relative;}
+  .dot-nav a:hover{background:var(--text-faint);}
+  .dot-nav a.active{background:var(--primary);border-color:var(--primary);box-shadow:0 0 8px var(--primary-glow);}
+  .dot-nav a .tip{position:absolute;right:18px;top:50%;transform:translateY(-50%);white-space:nowrap;font-family:var(--font-mono);font-size:11px;color:var(--text-dim);background:var(--bg-panel);border:1px solid var(--line);padding:3px 8px;border-radius:5px;opacity:0;pointer-events:none;transition:.15s;}
+  .dot-nav a:hover .tip{opacity:1;}
+  @media (max-width:780px){.dot-nav{display:none;}}
+
+  .slide{min-height:100vh;display:flex;align-items:center;padding:70px 22px;border-bottom:1px solid var(--line-soft);position:relative;}
+  .slide-inner{max-width:920px;margin:0 auto;width:100%;}
+  .eyebrow{font-family:var(--font-mono);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+  .eyebrow::before{content:'';width:22px;height:1px;background:var(--primary-dim);}
+  .slide-title{font-size:clamp(24px,3.4vw,38px);margin-bottom:22px;}
+  .lead{font-size:17.5px;color:var(--text-dim);max-width:680px;}
+  .big{font-size:clamp(36px,6.4vw,64px);line-height:1.05;}
+  .glow{text-shadow:0 0 34px var(--primary-glow);}
+  .meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:26px;font-family:var(--font-mono);font-size:12.5px;color:var(--text-faint);}
+  .meta span{padding-left:16px;border-left:1px solid var(--line);}
+  .meta span:first-child{padding-left:0;border-left:none;}
+  .hint{margin-top:40px;font-family:var(--font-mono);font-size:11.5px;color:var(--text-faint);}
+
+  .fragment{opacity:0;transform:translateY(14px);transition:opacity .55s ease,transform .55s ease;}
+  .fragment.visible{opacity:1;transform:translateY(0);}
+  .fragment.d1{transition-delay:.08s;} .fragment.d2{transition-delay:.16s;} .fragment.d3{transition-delay:.24s;} .fragment.d4{transition-delay:.32s;}
+
+  .qmark{font-family:var(--font-mono);font-size:12.5px;letter-spacing:.1em;color:var(--primary);text-transform:uppercase;}
+  .question-wrap{text-align:left;}
+
+  .cards2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px;}
+  .card{background:var(--bg-card);border:1px solid var(--line);border-radius:12px;padding:22px 22px;}
+  .card.alt{border-color:var(--secondary-dim);}
+  .card .kicker{font-family:var(--font-mono);font-size:11.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+  .card h3{font-size:19px;margin-bottom:8px;}
+  .card p{color:var(--text-dim);font-size:14.5px;margin:0;}
+  @media (max-width:720px){.cards2{grid-template-columns:1fr;}}
+
+  .blist{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:12px;}
+  .blist li{display:flex;gap:12px;align-items:flex-start;font-size:15.5px;color:var(--text-dim);}
+  .blist .ico{font-family:var(--font-mono);color:var(--primary);flex-shrink:0;}
+
+  /* jigsaw group setup */
+  .jigsaw-groups{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:20px;}
+  .jgroup{background:var(--bg-card);border:1px solid var(--line);border-radius:10px;padding:16px;text-align:center;}
+  .jgroup .num{font-family:var(--font-mono);font-size:11px;color:var(--text-faint);}
+  .jgroup .name{font-family:var(--font-display);font-weight:600;color:var(--text);font-size:15px;margin-top:4px;}
+  @media (max-width:780px){.jigsaw-groups{grid-template-columns:1fr 1fr;}}
+  .timer-box{margin-top:22px;display:inline-flex;align-items:center;gap:10px;background:var(--bg-card-2);border:1px solid var(--secondary-dim);border-radius:8px;padding:10px 16px;font-family:var(--font-mono);font-size:13px;color:var(--secondary);}
+
+  /* architecture cards (jigsaw expert content) */
+  .arch-tag{display:inline-block;font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;background:var(--primary-soft);color:var(--primary);border:1px solid var(--primary-dim);border-radius:20px;padding:4px 12px;margin-bottom:16px;}
+  .arch-diagram{background:var(--bg-card-2);border:1px solid var(--line);border-radius:12px;padding:22px;margin:20px 0;font-family:var(--font-mono);font-size:13px;}
+  .arch-layer{padding:10px 14px;border-radius:6px;margin-bottom:6px;text-align:center;color:var(--text);}
+  .arch-layer:last-child{margin-bottom:0;}
+  .arch-layer.hw{background:var(--line-soft);color:var(--text-dim);}
+  .arch-layer.kernel{background:rgba(27,135,143,.15);border:1px solid var(--primary-dim);}
+  .arch-layer.user{background:rgba(57,155,63,.1);border:1px solid var(--secondary-dim);}
+  .arch-layer.split{display:flex;gap:6px;}
+  .arch-layer.split > div{flex:1;padding:8px;background:rgba(57,155,63,.1);border:1px solid var(--secondary-dim);border-radius:6px;text-align:center;font-size:12px;}
+  .arch-facts{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px;}
+  .fact-box{background:var(--bg-card);border:1px solid var(--line);border-radius:10px;padding:16px;}
+  .fact-box .lbl{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-faint);margin-bottom:6px;}
+  .fact-box p{margin:0;font-size:14px;color:var(--text-dim);}
+  .fact-box.good .lbl{color:var(--secondary);}
+  .fact-box.bad .lbl{color:var(--alert);}
+
+  /* comparison table */
+  .compare-table{width:100%;border-collapse:collapse;margin-top:18px;font-size:14px;}
+  .compare-table th,.compare-table td{border:1px solid var(--line);padding:11px 13px;text-align:left;vertical-align:top;}
+  .compare-table th{background:var(--bg-card-2);font-family:var(--font-mono);font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-dim);}
+  .compare-table td{color:var(--text-dim);}
+  .compare-table td.hl{color:var(--text);}
+  .compare-table tr td:first-child{font-family:var(--font-mono);color:var(--primary);font-size:13px;white-space:nowrap;}
+  @media (max-width:780px){.compare-table{font-size:12.5px;} .compare-table th,.compare-table td{padding:8px;}}
+
+  /* syscall / usermode diagram */
+  .mode-diagram{display:flex;gap:0;margin:22px 0;border-radius:12px;overflow:hidden;border:1px solid var(--line);}
+  .mode-col{flex:1;padding:20px;}
+  .mode-col.user{background:var(--bg-card);}
+  .mode-col.kernel{background:rgba(27,135,143,.08);}
+  .mode-col .tag{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;}
+  .mode-col.user .tag{color:var(--secondary);}
+  .mode-col.kernel .tag{color:var(--primary);}
+  .mode-col ul{margin:0;padding-left:18px;font-size:13.5px;color:var(--text-dim);}
+  .mode-arrow{display:flex;align-items:center;justify-content:center;width:64px;background:var(--bg-card-2);font-family:var(--font-mono);font-size:11px;color:var(--text-faint);text-align:center;line-height:1.3;padding:6px;}
+  @media (max-width:720px){.mode-diagram{flex-direction:column;} .mode-arrow{width:100%;height:40px;}}
+
+  .syscall-table{width:100%;border-collapse:collapse;margin-top:16px;font-size:14px;}
+  .syscall-table th,.syscall-table td{border:1px solid var(--line);padding:10px 12px;text-align:left;}
+  .syscall-table th{background:var(--bg-card-2);font-family:var(--font-mono);font-size:11px;text-transform:uppercase;color:var(--text-dim);}
+  .syscall-table code{font-size:.95em;}
+  .syscall-table td.grp{color:var(--text-faint);font-family:var(--font-mono);font-size:12px;}
+
+  .term{background:var(--term-bg);border:1px solid var(--term-line);border-radius:10px;overflow:hidden;margin-top:18px;}
+  .term .bar{background:var(--term-bg);padding:8px 12px;display:flex;gap:6px;border-bottom:1px solid var(--term-line);}
+  .term .bar .dot{width:9px;height:9px;border-radius:50%;background:var(--term-line);}
+  .term .bar .dot:nth-child(1){background:#e0605f;} .term .bar .dot:nth-child(2){background:#e0b25f;} .term .bar .dot:nth-child(3){background:#5fbf6b;}
+  .term-body{padding:16px 18px;font-family:var(--font-mono);font-size:13.5px;color:var(--term-dim);min-height:170px;white-space:pre-wrap;line-height:1.55;}
+  .term-body .prompt{color:var(--term-prompt);}
+  .term-body .sys{color:var(--term-accent);}
+  .term-body .ok{color:var(--term-prompt);}
+
+  .plan-track{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap;}
+  .plan-step{flex:1;min-width:150px;background:var(--bg-card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;}
+  .plan-step .t{font-family:var(--font-mono);font-size:11px;color:var(--primary);margin-bottom:6px;}
+  .plan-step h4{margin:0 0 4px;font-family:var(--font-display);font-size:15px;color:var(--text);}
+  .plan-step p{margin:0;font-size:13px;color:var(--text-dim);}
+
+  .read-list{display:flex;flex-direction:column;gap:14px;margin-top:10px;}
+  .read-item{display:flex;gap:14px;align-items:flex-start;background:var(--bg-card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;}
+  .read-item .tag{font-size:20px;flex-shrink:0;}
+  .read-item h4{margin:0 0 4px;font-size:15.5px;font-family:var(--font-display);color:var(--text);}
+  .read-item p{margin:0;font-size:13.5px;color:var(--text-dim);}
+  .read-item .pages{font-family:var(--font-mono);font-size:12px;color:var(--primary);}
+
+  footer.endnote{text-align:center;padding:40px 20px 60px;font-family:var(--font-mono);font-size:11.5px;color:var(--text-faint);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">Sistemas Operacionais · <b>ADS23</b></div>
+  <div class="brand" id="slideCounter">01 / 14</div>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+</div>
+
+<nav class="dot-nav" id="dotNav"></nav>
+
+<!-- 0. CAPA -->
+<section class="slide active" id="slide-0">
+  <div class="slide-inner">
+    <div class="eyebrow">Encontro 3 de 17</div>
+    <h1 class="big glow">Arquiteturas de SO<br>e Chamadas de Sistema</h1>
+    <p class="lead">Como o sistema operacional é construído por dentro — e como ele conversa com os programas que rodam nele.</p>
+    <div class="meta">
+      <span>ADS23</span><span>IFCE Campus Horizonte</span><span>Prof. José Stelio Sampaio Bastos Neto</span>
+    </div>
+    <div class="hint">↓ role pra avançar · use os pontos à direita pra navegar direto</div>
+  </div>
+</section>
+
+<!-- 1. RECAP -->
+<section class="slide" id="slide-1">
+  <div class="slide-inner">
+    <div class="eyebrow">De onde viemos</div>
+    <h2 class="slide-title">Duas aulas atrás abrimos o SO por fora. Hoje abrimos por dentro.</h2>
+    <div class="cards2">
+      <div class="card fragment">
+        <div class="kicker">Encontro 1</div>
+        <h3>As duas lentes do SO</h3>
+        <p>Máquina estendida (esconde o hardware) + gerenciador de recursos (organiza a fila entre processos).</p>
+      </div>
+      <div class="card alt fragment d1">
+        <div class="kicker">Encontro 2</div>
+        <h3>Hardware essencial + /proc</h3>
+        <p>CPU, memória, disco — e como o Linux expõe tudo isso em arquivos que você pode ler com <code>cat</code>.</p>
+      </div>
+    </div>
+    <p class="lead fragment d2" style="margin-top:26px;">Hoje: o SO não é uma caixa-preta única — existem <b style="color:var(--primary)">jeitos diferentes de organizar</b> essa caixa por dentro, e um <b style="color:var(--secondary)">protocolo fixo</b> pra qualquer programa pedir ajuda a ela.</p>
+  </div>
+</section>
+
+<!-- 2. PERGUNTA + SETUP JIGSAW -->
+<section class="slide" id="slide-2">
+  <div class="slide-inner question-wrap">
+    <div class="qmark">Pergunta pra turma</div>
+    <h1 class="big" style="margin-top:18px;">O gerenciador de recursos do Encontro 1 é <span class="glow" style="color:var(--primary)">um bloco só</span>,<br>ou dá pra separar em pedaços?</h1>
+    <p class="lead fragment" style="margin:20px auto 0;">Depende do sistema operacional. Existem pelo menos 4 respostas diferentes pra essa pergunta — e vocês vão descobrir cada uma em grupo.</p>
+    <div class="jigsaw-groups fragment d1">
+      <div class="jgroup"><div class="num">Grupo 1</div><div class="name">Monolítico</div></div>
+      <div class="jgroup"><div class="num">Grupo 2</div><div class="name">Em camadas</div></div>
+      <div class="jgroup"><div class="num">Grupo 3</div><div class="name">Micronúcleo</div></div>
+      <div class="jgroup"><div class="num">Grupo 4</div><div class="name">Máquina virtual</div></div>
+    </div>
+    <div class="timer-box fragment d2">⏱ cada grupo lê <b>só o seu card</b> (próximos 4 slides) — 6 min de leitura + 4 min preparando como vão explicar pros outros</div>
+  </div>
+</section>
+
+<!-- 3. CARD MONOLÍTICO -->
+<section class="slide" id="slide-3">
+  <div class="slide-inner">
+    <div class="arch-tag">Grupo 1 · seu card</div>
+    <h2 class="slide-title">Núcleo monolítico</h2>
+    <p class="lead">Tudo — processos, memória, arquivos, drivers — roda dentro de um único bloco de código, no mesmo espaço de endereçamento e com privilégios máximos.</p>
+    <div class="arch-diagram">
+      <div class="arch-layer split"><div>Aplicação</div><div>Aplicação</div></div>
+      <div class="arch-layer kernel">Núcleo (processos + memória + arquivos + drivers, tudo junto)</div>
+      <div class="arch-layer hw">Hardware</div>
+    </div>
+    <div class="arch-facts">
+      <div class="fact-box good">
+        <div class="lbl">A favor</div>
+        <p>Rápido: um módulo chama o outro direto, sem burocracia de mensagens entre processos separados.</p>
+      </div>
+      <div class="fact-box bad">
+        <div class="lbl">Contra</div>
+        <p>Frágil: um driver de dispositivo com defeito roda com privilégio total e pode derrubar o sistema inteiro.</p>
+      </div>
+    </div>
+    <p class="lead" style="margin-top:18px;font-size:14.5px;">Exemplos: <b style="color:var(--text)">Linux e Windows</b> são, na essência, monolíticos — mesmo sendo os SOs mais usados do planeta.</p>
+  </div>
+</section>
+
+<!-- 4. CARD EM CAMADAS -->
+<section class="slide" id="slide-4">
+  <div class="slide-inner">
+    <div class="arch-tag">Grupo 2 · seu card</div>
+    <h2 class="slide-title">Sistema em camadas</h2>
+    <p class="lead">O mesmo trabalho do monolítico, mas organizado em níveis empilhados: cada camada só enxerga e usa a camada logo abaixo dela.</p>
+    <div class="arch-diagram">
+      <div class="arch-layer user">Camada 4 — programas do usuário</div>
+      <div class="arch-layer" style="background:rgba(27,135,143,.1);border:1px solid var(--primary-dim);">Camada 3 — E/S de dispositivos</div>
+      <div class="arch-layer" style="background:rgba(27,135,143,.16);border:1px solid var(--primary-dim);">Camada 2 — comunicação entre processos</div>
+      <div class="arch-layer kernel">Camada 1 — memória e escalonamento</div>
+      <div class="arch-layer hw">Camada 0 — hardware</div>
+    </div>
+    <div class="arch-facts">
+      <div class="fact-box good">
+        <div class="lbl">A favor</div>
+        <p>Mais fácil de entender e depurar: cada camada tem uma responsabilidade clara e uma "fronteira" definida.</p>
+      </div>
+      <div class="fact-box bad">
+        <div class="lbl">Contra</div>
+        <p>Definir onde cada função entra é difícil, e forçar tudo a passar camada por camada custa desempenho.</p>
+      </div>
+    </div>
+    <p class="lead" style="margin-top:18px;font-size:14.5px;">Pioneiro: o <b style="color:var(--text)">sistema THE</b> de Dijkstra (1968) — a ideia inspirou como pensamos em SOs até hoje, mesmo quando o código real não é tão limpo assim.</p>
+  </div>
+</section>
+
+<!-- 5. CARD MICRONÚCLEO -->
+<section class="slide" id="slide-5">
+  <div class="slide-inner">
+    <div class="arch-tag">Grupo 3 · seu card</div>
+    <h2 class="slide-title">Micronúcleo</h2>
+    <p class="lead">Só o essencial fica dentro do núcleo (com privilégio total). Tudo o resto — driver de disco, sistema de arquivos, driver de rede — vira processo comum, rodando no espaço do usuário.</p>
+    <div class="arch-diagram">
+      <div class="arch-layer split"><div>App</div><div>Driver de disco</div><div>Sist. de arquivos</div></div>
+      <div class="arch-layer kernel" style="max-width:220px;margin:0 auto;">micronúcleo</div>
+      <div class="arch-layer hw">Hardware</div>
+    </div>
+    <div class="arch-facts">
+      <div class="fact-box good">
+        <div class="lbl">A favor</div>
+        <p>Muito mais confiável: se o driver de áudio travar, ele derruba só o áudio — não o sistema inteiro.</p>
+      </div>
+      <div class="fact-box bad">
+        <div class="lbl">Contra</div>
+        <p>Mais lento (processos precisam trocar mensagens entre si) e mais difícil de manter no dia a dia.</p>
+      </div>
+    </div>
+    <p class="lead" style="margin-top:18px;font-size:14.5px;">Onde importa de verdade: sistemas de <b style="color:var(--text)">missão crítica</b> — controle industrial, aviônica, o QNX que roda em caças e usinas.</p>
+  </div>
+</section>
+
+<!-- 6. CARD MÁQUINA VIRTUAL -->
+<section class="slide" id="slide-6">
+  <div class="slide-inner">
+    <div class="arch-tag">Grupo 4 · seu card</div>
+    <h2 class="slide-title">Máquina virtual</h2>
+    <p class="lead">Em vez de dividir o núcleo, um programa especial (o <b>monitor/hipervisor</b>) finge, pra cada sistema operacional "convidado", que ele tem um hardware inteiro só pra si.</p>
+    <div class="arch-diagram">
+      <div class="arch-layer split"><div>App</div><div>App</div><div>App</div></div>
+      <div class="arch-layer split"><div>Núcleo convidado A</div><div>Núcleo convidado B</div></div>
+      <div class="arch-layer kernel">Monitor de máquina virtual (hipervisor)</div>
+      <div class="arch-layer hw">Hardware</div>
+    </div>
+    <div class="arch-facts">
+      <div class="fact-box good">
+        <div class="lbl">A favor</div>
+        <p>Isolamento forte entre sistemas — cada VM tem seu próprio núcleo completo, sem enxergar as outras.</p>
+      </div>
+      <div class="fact-box bad">
+        <div class="lbl">Contra</div>
+        <p>Pesado: cada VM carrega um SO inteiro (o seu, e o de todo mundo do lado). Gasta RAM, disco e tempo de boot.</p>
+      </div>
+    </div>
+    <p class="lead" style="margin-top:18px;font-size:14.5px;">Exemplos: <b style="color:var(--text)">VirtualBox</b> (o que vocês já usam desde a Semana 0) e VMware. Guardem esse "pesado" — ele volta em 3 slides.</p>
+  </div>
+</section>
+
+<!-- 7. SÍNTESE / PLENÁRIA -->
+<section class="slide" id="slide-7">
+  <div class="slide-inner">
+    <div class="eyebrow">Agora em plenária</div>
+    <h2 class="slide-title">As 4 arquiteturas, lado a lado</h2>
+    <p class="lead">Cada grupo apresenta seu card em 1 minuto. Preencham juntos o que falta na tabela.</p>
+    <table class="compare-table fragment">
+      <tr><th>Arquitetura</th><th>Onde vive o código</th><th>Se um driver quebrar…</th><th>Exemplo</th></tr>
+      <tr><td>Monolítico</td><td class="hl">Tudo no núcleo</td><td class="hl">Sistema inteiro pode cair</td><td class="hl">Linux, Windows</td></tr>
+      <tr><td>Em camadas</td><td class="hl">Núcleo organizado em níveis</td><td class="hl">Depende da camada, mas ainda é núcleo</td><td class="hl">THE (histórico)</td></tr>
+      <tr><td>Micronúcleo</td><td class="hl">Só o essencial no núcleo</td><td class="hl">Só aquele serviço cai</td><td class="hl">QNX, MINIX 3</td></tr>
+      <tr><td>Máquina virtual</td><td class="hl">Um núcleo inteiro por convidado</td><td class="hl">Só aquela VM é afetada</td><td class="hl">VirtualBox, VMware</td></tr>
+    </table>
+    <p class="lead fragment d1" style="margin-top:22px;">Percebam o padrão: <b style="color:var(--primary)">menos coisa dentro do núcleo = mais seguro, mas geralmente mais lento.</b> Não existe arquitetura perfeita — existe a escolha certa pro problema.</p>
+  </div>
+</section>
+
+<!-- 8. ONDE ENTRA O DOCKER -->
+<section class="slide" id="slide-8">
+  <div class="slide-inner">
+    <div class="eyebrow">Eixo do curso</div>
+    <h2 class="slide-title">Onde entra o Docker nessa história?</h2>
+    <p class="lead">Pegadinha: um <b>container não é uma 5ª arquitetura</b>. Ele não tem núcleo próprio — todos os containers de uma máquina compartilham o mesmo núcleo Linux (normalmente monolítico) por baixo.</p>
+    <div class="cards2" style="margin-top:20px;">
+      <div class="card fragment">
+        <div class="kicker">Máquina virtual</div>
+        <h3>Núcleo completo por convidado</h3>
+        <p>VirtualBox roda um Linux inteiro (kernel, drivers, tudo) dentro de outro Linux. Pesado, mas isolado por completo.</p>
+      </div>
+      <div class="card alt fragment d1">
+        <div class="kicker">Container</div>
+        <h3>Um núcleo, processos isolados</h3>
+        <p>Docker usa <i>namespaces</i> e <i>cgroups</i> do próprio núcleo Linux pra fazer um processo <b>achar</b> que está sozinho na máquina — sem carregar um SO novo.</p>
+      </div>
+    </div>
+    <p class="lead fragment d2" style="margin-top:22px;">É por isso que um container sobe em milissegundos e uma VM leva segundos ou minutos: o container não faz boot de núcleo nenhum — o núcleo já está rodando, ele só empresta um pedaço isolado dele.</p>
+  </div>
+</section>
+
+<!-- 9. CHAMADA DE SISTEMA: O QUE É -->
+<section class="slide" id="slide-9">
+  <div class="slide-inner">
+    <div class="eyebrow">Segunda metade do encontro</div>
+    <h2 class="slide-title">Como um programa pede ajuda ao SO</h2>
+    <p class="lead">Não importa a arquitetura escolhida: todo SO precisa de um jeito controlado de deixar um programa comum acessar recursos protegidos (disco, rede, outros processos). Esse jeito se chama <b style="color:var(--primary)">chamada de sistema</b> (system call).</p>
+    <div class="mode-diagram fragment">
+      <div class="mode-col user">
+        <div class="tag">Modo usuário</div>
+        <ul>
+          <li>Onde seu programa roda normalmente</li>
+          <li>Acesso restrito — não pode mexer direto no disco ou na rede</li>
+          <li>Se travar, não derruba o sistema</li>
+        </ul>
+      </div>
+      <div class="mode-arrow">syscall<br>→<br>trap</div>
+      <div class="mode-col kernel">
+        <div class="tag">Modo privilegiado (núcleo)</div>
+        <ul>
+          <li>Acesso irrestrito a todo o hardware</li>
+          <li>Só o núcleo do SO roda aqui</li>
+          <li>Executa a chamada e devolve o controle</li>
+        </ul>
+      </div>
+    </div>
+    <p class="lead fragment d1" style="font-size:14.5px;">Pense na chamada de sistema como uma <b style="color:var(--secondary)">campainha</b>: seu programa toca a campainha (a syscall), o núcleo atende, faz o trabalho perigoso por você, e devolve a resposta.</p>
+  </div>
+</section>
+
+<!-- 10. EXEMPLOS DE SYSCALLS -->
+<section class="slide" id="slide-10">
+  <div class="slide-inner">
+    <div class="eyebrow">Do abstrato pro concreto</div>
+    <h2 class="slide-title">Chamadas de sistema que você já usa sem saber</h2>
+    <p class="lead">Toda vez que um programa abre um arquivo, lê teclado ou cria outro processo, ele está, por baixo dos panos, chamando uma dessas.</p>
+    <table class="syscall-table fragment">
+      <tr><th>Chamada</th><th>O que faz</th><th>Grupo</th></tr>
+      <tr><td><code>fork</code></td><td>Cria um processo novo, cópia do atual</td><td class="grp">processos</td></tr>
+      <tr><td><code>exec</code></td><td>Substitui o programa do processo atual por outro</td><td class="grp">processos</td></tr>
+      <tr><td><code>wait</code></td><td>Espera um processo filho terminar</td><td class="grp">processos</td></tr>
+      <tr><td><code>open</code></td><td>Abre um arquivo e devolve um descritor pra usá-lo</td><td class="grp">arquivos</td></tr>
+      <tr><td><code>read</code></td><td>Lê bytes de um arquivo ou dispositivo já aberto</td><td class="grp">arquivos</td></tr>
+      <tr><td><code>write</code></td><td>Escreve bytes em um arquivo ou dispositivo já aberto</td><td class="grp">arquivos</td></tr>
+      <tr><td><code>close</code></td><td>Libera o descritor de um arquivo aberto</td><td class="grp">arquivos</td></tr>
+    </table>
+    <p class="lead fragment d1" style="margin-top:20px;">O conjunto de chamadas que um núcleo oferece define sua <b style="color:var(--primary)">API</b>. No Linux/Unix, esse padrão se chama <b style="color:var(--text)">POSIX</b>. No Windows, é o <b style="color:var(--text)">Win32</b>.</p>
+  </div>
+</section>
+
+<!-- 11. TERMINAL SIMULADO: STRACE PREVIEW -->
+<section class="slide" id="slide-11" data-anim="strace">
+  <div class="slide-inner">
+    <div class="eyebrow">Prévia da prática</div>
+    <h2 class="slide-title">Dá pra ver uma chamada de sistema acontecendo</h2>
+    <p class="lead">Existe um comando que "escuta" toda vez que um programa toca a campainha do núcleo, e imprime cada chamada na tela: <code>strace</code>.</p>
+    <div class="term">
+      <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+      <div class="term-body" id="straceBody"></div>
+    </div>
+    <p class="lead" style="margin-top:16px;font-size:14px;">Cada linha acima é uma chamada de sistema de verdade, na ordem em que o programa <code>ls</code> as executou. Vocês vão rodar isso — com programas diferentes — na prática de hoje.</p>
+  </div>
+</section>
+
+<!-- 12. MAPA DA PRÁTICA -->
+<section class="slide" id="slide-12">
+  <div class="slide-inner">
+    <div class="eyebrow">Mão na massa</div>
+    <h2 class="slide-title">Duas paradas no terminal hoje</h2>
+    <div class="plan-track">
+      <div class="plan-step fragment">
+        <div class="t">PARTE 1</div>
+        <h4>Chamadas de sistema com strace</h4>
+        <p>Rodar <code>strace</code> em comandos simples, identificar syscalls conhecidas, comparar programas diferentes.</p>
+      </div>
+      <div class="plan-step alt fragment d1" style="border-color:var(--primary-dim);">
+        <div class="t">PARTE 2</div>
+        <h4>Contêiner x máquina virtual</h4>
+        <p>Comparar na prática o tempo de subida e o consumo de um container Docker contra a VM que vocês já usam.</p>
+      </div>
+    </div>
+    <p class="lead fragment d2" style="margin-top:22px;">O roteiro de laboratório detalha os dois passo a passo, com dicas se algo travar. Todas as observações vão pro instrumento semanal (quiz) no fim.</p>
+  </div>
+</section>
+
+<!-- 13. LEITURA -->
+<section class="slide" id="slide-13">
+  <div class="slide-inner">
+    <div class="eyebrow">Para ler</div>
+    <h2 class="slide-title">Leitura da semana</h2>
+    <div class="read-list">
+      <div class="read-item fragment">
+        <div class="tag">🟢</div>
+        <div>
+          <h4>Laureano — Arquitetura de Sistemas Operacionais</h4>
+          <p>Monolítico, micronúcleo e máquina virtual, com os mesmos diagramas que vimos hoje. <span class="pages">p. 12–13</span></p>
+        </div>
+      </div>
+      <div class="read-item fragment d1">
+        <div class="tag">🟢</div>
+        <div>
+          <h4>Laureano — Chamada de Sistema (System Call)</h4>
+          <p>Modo usuário x privilegiado e o conceito de API, explicado de forma direta. <span class="pages">p. 16–17</span></p>
+        </div>
+      </div>
+      <div class="read-item fragment d2">
+        <div class="tag">🔵</div>
+        <div>
+          <h4>Tanenbaum — Chamadas de sistema (processos e arquivos)</h4>
+          <p>As chamadas com nome de verdade (fork, exec, open, read...) — a base do que vocês vão ver no strace. <span class="pages">p. 37–40</span></p>
+        </div>
+      </div>
+    </div>
+    <p class="lead" style="margin-top:22px;font-size:14px;">O quiz da semana verifica essa leitura e recolhe suas observações da prática — tudo no mesmo instrumento.</p>
+  </div>
+</section>
+
+<footer class="endnote">Sistemas Operacionais · ADS23 · IFCE Campus Horizonte · Encontro 3 de 17</footer>
+
+<script>
+(function(){
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const dotNav = document.getElementById('dotNav');
+  const counter = document.getElementById('slideCounter');
+  const progressFill = document.getElementById('progressFill');
+  const total = slides.length;
+
+  slides.forEach((s,i)=>{
+    const a = document.createElement('a');
+    a.href = '#'+s.id;
+    const tip = document.createElement('span');
+    tip.className = 'tip';
+    tip.textContent = String(i+1).padStart(2,'0');
+    a.appendChild(tip);
+    dotNav.appendChild(a);
+  });
+  const dots = Array.from(dotNav.querySelectorAll('a'));
+
+  function setActive(idx){
+    dots.forEach((d,i)=>d.classList.toggle('active', i===idx));
+    counter.textContent = String(idx+1).padStart(2,'0') + ' / ' + String(total).padStart(2,'0');
+  }
+
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      const idx = slides.indexOf(entry.target);
+      if(entry.isIntersecting){
+        if(entry.intersectionRatio > 0.5) setActive(idx);
+        entry.target.querySelectorAll('.fragment').forEach(f=>f.classList.add('visible'));
+      }
+    });
+  }, {threshold:[0,0.5,1]});
+  slides.forEach(s=>io.observe(s));
+
+  window.addEventListener('scroll', ()=>{
+    const scrolled = window.scrollY;
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    progressFill.style.width = (max>0 ? (scrolled/max*100) : 0) + '%';
+  });
+
+  document.addEventListener('keydown', (e)=>{
+    const activeIdx = dots.findIndex(d=>d.classList.contains('active'));
+    if(e.key === 'ArrowDown' || e.key === ' '){
+      e.preventDefault();
+      const next = slides[Math.min(activeIdx+1, total-1)];
+      next.scrollIntoView({behavior:'smooth'});
+    } else if(e.key === 'ArrowUp'){
+      e.preventDefault();
+      const prev = slides[Math.max(activeIdx-1, 0)];
+      prev.scrollIntoView({behavior:'smooth'});
+    }
+  });
+
+  setActive(0);
+
+  // strace preview animation
+  const straceLines = [
+    ['$ strace ls', 'prompt'],
+    ['execve("/usr/bin/ls", ["ls"], 0x7ffd...)  = 0', 'sys'],
+    ['openat(AT_FDCWD, "/etc/ld.so.cache", O_RDONLY) = 3', 'sys'],
+    ['fstat(3, {st_mode=S_IFREG, st_size=68432}) = 0', 'sys'],
+    ['mmap(NULL, 68432, PROT_READ, MAP_PRIVATE, 3, 0) = 0x7f...', 'sys'],
+    ['close(3)                                = 0', 'sys'],
+    ['openat(AT_FDCWD, ".", O_RDONLY|O_DIRECTORY) = 3', 'sys'],
+    ['getdents64(3, /* 7 entries */, 32768)   = 208', 'sys'],
+    ['write(1, "Encontro-03.html  Roteiro...\\n", 34) = 34', 'ok'],
+    ['close(3)                                = 0', 'sys'],
+    ['exit_group(0)                           = ?', 'sys'],
+  ];
+  const straceBody = document.getElementById('straceBody');
+  let straceStarted = false;
+  function typeLine(i){
+    if(i >= straceLines.length) return;
+    const [txt, cls] = straceLines[i];
+    const span = document.createElement('div');
+    span.className = cls;
+    straceBody.appendChild(span);
+    let c = 0;
+    const iv = setInterval(()=>{
+      span.textContent = txt.slice(0, c+1);
+      c++;
+      if(c >= txt.length){
+        clearInterval(iv);
+        setTimeout(()=>typeLine(i+1), 90);
+      }
+    }, 14);
+  }
+  const straceSlide = document.getElementById('slide-11');
+  const straceIo = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      if(entry.isIntersecting && !straceStarted){
+        straceStarted = true;
+        typeLine(0);
+      }
+    });
+  }, {threshold:0.4});
+  straceIo.observe(straceSlide);
+})();
+</script>
+
+</body>
+</html>

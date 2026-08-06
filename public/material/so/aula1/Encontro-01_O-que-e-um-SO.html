@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Encontro 1 · O que é um SO — Sistemas Operacionais ADS23</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* paleta clara institucional (IFCE) — ver "Paleta visual dos materiais HTML" na memória do curso */
+    --bg:#fbfaf5;
+    --bg-panel:#f3f1e8;
+    --bg-card:#ffffff;
+    --line:#e2ddd0;
+    --line-soft:#ece8db;
+    --primary:#1b878f;        /* teal — títulos, badges, destaques, respostas corretas */
+    --primary-dim:#8fc7ca;    /* teal claro — bordas/divisores sutis */
+    --primary-soft:rgba(27,135,143,.09);
+    --primary-glow:rgba(27,135,143,.35);
+    --secondary:#399b3f;      /* verde IF — apoio técnico */
+    --alert:#cd191e;          /* vermelho IF — alerta pontual */
+    --text:#20241f;
+    --text-dim:#5b6058;
+    --text-faint:#8b9088;
+    --font-display:'Space Grotesk',sans-serif;
+    --font-body:'IBM Plex Sans',sans-serif;
+    --font-mono:'IBM Plex Mono',monospace;
+    /* sub-paleta escura reservada — blocos de código/terminal permanecem escuros por contraste técnico */
+    --term-bg:#10161f;
+    --term-line:#212b3a;
+    --term-dot:#2a3242;
+    --term-text:#c9d1d9;
+    --term-dim:#8d96a8;
+    --term-faint:#4d5566;
+    --term-prompt:#7ee787;
+    --term-accent:#5fd9d3;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--font-body);
+    overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:var(--primary-soft);color:var(--text);}
+
+  /* barra superior */
+  .topbar{
+    position:fixed;top:0;left:0;right:0;height:44px;z-index:20;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 22px;
+    font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;
+    color:var(--text-faint);
+    background:linear-gradient(var(--bg) 60%, transparent);
+  }
+  .topbar .tag{color:var(--text-dim);}
+  .topbar .right{display:flex;align-items:center;gap:16px;}
+  .topbar .counter{color:var(--primary);}
+
+  /* deck / slides */
+  .deck{position:relative;height:100vh;width:100vw;}
+  .slide{
+    position:absolute;inset:0;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:90px 8vw 90px;
+    opacity:0;pointer-events:none;
+    transform:translateY(14px);
+    transition:opacity .5s ease, transform .5s ease;
+  }
+  .slide.active{opacity:1;pointer-events:auto;transform:translateY(0);}
+  .slide-inner{max-width:1080px;width:100%;}
+
+  .eyebrow{
+    font-family:var(--font-mono);font-size:12px;letter-spacing:.14em;
+    color:var(--primary);text-transform:uppercase;margin:0 0 14px;
+    display:flex;align-items:center;gap:10px;
+  }
+  .eyebrow::before{content:"";width:22px;height:1px;background:var(--primary-dim);}
+
+  h1.big{
+    font-family:var(--font-display);font-weight:700;
+    font-size:clamp(30px,4.4vw,58px);line-height:1.06;margin:0 0 18px;
+    letter-spacing:-.01em;
+  }
+  h2.slide-title{
+    font-family:var(--font-display);font-weight:600;
+    font-size:clamp(24px,3vw,38px);line-height:1.15;margin:0 0 22px;
+  }
+  p.lead{font-size:clamp(15px,1.5vw,19px);color:var(--text-dim);line-height:1.6;max-width:760px;}
+
+  /* fragmentos */
+  .fragment{opacity:0;transform:translateY(8px);transition:opacity .45s ease, transform .45s ease;}
+  .fragment.visible{opacity:1;transform:translateY(0);}
+
+  /* capa */
+  #slide-0 .meta{
+    font-family:var(--font-mono);font-size:13px;color:var(--text-dim);
+    display:flex;flex-wrap:wrap;gap:6px 10px;margin-top:22px;
+  }
+  #slide-0 .meta span{white-space:nowrap;}
+  #slide-0 .meta span:not(:last-child)::after{content:"·";margin-left:10px;color:var(--text-faint);}
+  #slide-0 .hint{margin-top:56px;font-family:var(--font-mono);font-size:12px;color:var(--text-faint);}
+
+  /* contrato pedagógico */
+  .contract-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:16px;}
+  .contract-list li{
+    display:flex;gap:16px;align-items:flex-start;
+    font-size:clamp(15px,1.6vw,18px);line-height:1.5;color:var(--text);
+  }
+  .contract-list .ico{
+    font-family:var(--font-mono);color:var(--primary);font-size:14px;
+    border:1px solid var(--primary-dim);border-radius:6px;
+    width:30px;height:30px;flex:none;display:flex;align-items:center;justify-content:center;
+  }
+  .contract-list b{color:var(--primary);font-weight:600;}
+
+  /* pergunta motivadora */
+  .question-wrap{text-align:center;}
+  .question-wrap .qmark{font-family:var(--font-mono);color:var(--primary);font-size:14px;letter-spacing:.1em;}
+
+  /* terminal / boot — permanece escuro por contraste técnico */
+  .term{
+    background:var(--term-bg);border:1px solid var(--term-line);border-radius:10px;
+    box-shadow:0 30px 80px -30px rgba(20,20,15,.25), inset 0 0 40px rgba(27,135,143,.03);
+    font-family:var(--font-mono);font-size:14px;line-height:1.65;
+    padding:20px 22px;max-height:44vh;overflow:hidden;
+  }
+  .term .bar{display:flex;gap:6px;margin-bottom:14px;}
+  .term .dot{width:9px;height:9px;border-radius:50%;background:var(--term-dot);}
+  .term-body{min-height:200px;}
+  .term-body .ln{color:var(--term-dim);white-space:pre-wrap;word-break:break-word;}
+  .term-body .ln .t{color:var(--term-faint);}
+  .term-body .ln.kern{color:var(--term-accent);}
+  .term-body .ln.ok{color:var(--term-prompt);}
+  .term-body .prompt{color:var(--term-prompt);}
+  .term-body .cmd{color:var(--term-text);}
+  .term-body .out{color:var(--term-dim);}
+  .cursor{display:inline-block;width:8px;height:16px;background:var(--term-prompt);margin-left:2px;vertical-align:middle;animation:blink 1s steps(1) infinite;}
+  @keyframes blink{50%{opacity:0;}}
+  .replay-hint{margin-top:14px;font-family:var(--font-mono);font-size:12px;color:var(--text-faint);}
+  .replay-hint kbd{border:1px solid var(--line);border-radius:4px;padding:1px 6px;color:var(--primary);}
+
+  /* duas ideias-chave */
+  .cards2{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:8px;}
+  @media (max-width:800px){.cards2{grid-template-columns:1fr;}}
+  .card{
+    background:var(--bg-card);border:1px solid var(--line);border-radius:12px;padding:26px 24px;
+    box-shadow:0 2px 10px rgba(30,30,20,.04);
+  }
+  .card .kicker{font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;color:var(--primary);text-transform:uppercase;}
+  .card h3{font-family:var(--font-display);font-size:22px;margin:8px 0 12px;font-weight:600;}
+  .card p{color:var(--text-dim);font-size:15px;line-height:1.6;margin:0;}
+  .card.alt .kicker{color:var(--secondary);}
+  .foot-line{margin-top:24px;font-size:15px;color:var(--text-dim);border-left:2px solid var(--primary-dim);padding-left:14px;}
+
+  /* timeline histórico */
+  .timeline{display:flex;justify-content:space-between;align-items:flex-start;margin-top:30px;position:relative;}
+  .timeline::before{content:"";position:absolute;top:7px;left:0;right:0;height:1px;background:var(--line);}
+  .tnode{flex:1;text-align:center;padding:0 4px;position:relative;}
+  .tnode .dot{width:14px;height:14px;border-radius:50%;background:var(--bg);border:2px solid var(--primary-dim);margin:0 auto 14px;position:relative;z-index:2;}
+  .tnode.visible .dot{border-color:var(--primary);box-shadow:0 0 12px var(--primary-glow);}
+  .tnode .yr{font-family:var(--font-mono);font-size:12px;color:var(--primary);margin-bottom:6px;}
+  .tnode .lb{font-size:13px;color:var(--text-dim);line-height:1.4;}
+  @media (max-width:900px){.timeline{flex-direction:column;gap:18px;}.timeline::before{display:none;}.tnode{display:flex;align-items:center;gap:14px;text-align:left;}.tnode .dot{margin:0;}}
+
+  /* bullets genéricos */
+  .blist{list-style:none;margin:18px 0 0;padding:0;display:flex;flex-direction:column;gap:14px;}
+  .blist li{display:flex;gap:12px;font-size:clamp(15px,1.5vw,17px);color:var(--text);line-height:1.55;}
+  .blist li::before{content:"▸";color:var(--primary);flex:none;}
+  .contrast-chip{
+    display:inline-flex;align-items:center;gap:10px;margin-top:10px;
+    font-family:var(--font-mono);font-size:13.5px;flex-wrap:wrap;
+  }
+  .chip-out{color:var(--text-faint);text-decoration:line-through;}
+  .chip-arrow{color:var(--primary);}
+  .chip-in{
+    color:var(--primary);font-weight:600;background:var(--primary-soft);
+    padding:3px 12px;border-radius:20px;border:1px solid var(--primary-dim);
+  }
+
+  /* atividade prática */
+  .cmdbox{
+    font-family:var(--font-mono);font-size:15px;background:var(--bg-card);
+    border:1px solid var(--line);border-radius:10px;padding:18px 20px;margin-top:18px;
+  }
+  .cmdbox div{padding:4px 0;color:var(--text);}
+  .cmdbox div span{color:var(--secondary);}
+
+  /* leitura / fechamento */
+  .readrow{display:flex;gap:14px;align-items:flex-start;padding:14px 0;border-bottom:1px solid var(--line-soft);}
+  .readrow:last-of-type{border-bottom:none;}
+  .readrow .badge{font-size:20px;flex:none;}
+  .readrow .rtitle{font-weight:600;font-size:15.5px;}
+  .readrow .rsub{color:var(--text-dim);font-size:14px;margin-top:2px;}
+  .nextprev{margin-top:26px;font-family:var(--font-mono);font-size:13px;color:var(--primary);}
+
+  /* dots de progresso */
+  .dots{
+    position:fixed;bottom:22px;left:50%;transform:translateX(-50%);
+    display:flex;gap:9px;z-index:20;
+  }
+  .dots button{
+    width:8px;height:8px;border-radius:50%;border:none;background:var(--line);cursor:pointer;padding:0;
+    transition:background .2s, transform .2s;
+  }
+  .dots button.active{background:var(--primary);transform:scale(1.3);}
+  .dots button:focus-visible{outline:2px solid var(--primary);outline-offset:3px;}
+
+  .hintbar{
+    position:fixed;bottom:22px;left:26px;z-index:20;
+    font-family:var(--font-mono);font-size:11px;color:var(--text-faint);
+  }
+  .hintbar kbd{border:1px solid var(--line);border-radius:4px;padding:1px 5px;margin:0 2px;color:var(--text-dim);}
+
+  @media (prefers-reduced-motion: reduce){
+    .slide, .fragment{transition:none !important;}
+    .cursor{animation:none;}
+  }
+</style>
+</head>
+<body>
+
+
+<div class="topbar">
+  <div class="tag">SISTEMAS OPERACIONAIS · ADS23 · IFCE HORIZONTE</div>
+  <div class="right">
+    <span class="counter"><span id="cur">1</span> / <span id="total">10</span></span>
+  </div>
+</div>
+
+<div class="deck" id="deck">
+
+  <!-- 0. CAPA -->
+  <section class="slide active" id="slide-0">
+    <div class="slide-inner">
+      <div class="eyebrow">Encontro 1 de 17</div>
+      <h1 class="big">Sistemas<br>Operacionais</h1>
+      <p class="lead">O que é um SO — e primeiro contato com o terminal.</p>
+      <div class="meta">
+        <span>ADS23</span><span>IFCE Campus Horizonte</span><span>Prof. José Stelio Sampaio Bastos Neto</span>
+      </div>
+      <div class="hint">→ / espaço avança · ← volta · N modo professor</div>
+    </div>
+  </section>
+
+  <!-- 1. CONTRATO PEDAGÓGICO -->
+  <section class="slide" id="slide-1">
+    <div class="slide-inner">
+      <div class="eyebrow">Antes de começar</div>
+      <h2 class="slide-title">Como esta disciplina funciona</h2>
+      <ul class="contract-list">
+        <li class="fragment"><span class="ico">✕</span><span><b>Sem prova tradicional</b> — a nota nasce de um projeto em 2 etapas + portfólio.</span></li>
+        <li class="fragment"><span class="ico">▣</span><span><b>Eixo do curso: containers (Docker)</b> — aparecem em quase todo encontro, ligando processo, memória e E/S.</span></li>
+        <li class="fragment"><span class="ico">▤</span><span><b>Leitura semanal curta</b> com quiz de verificação — alimenta o portfólio (N1).</span></li>
+        <li class="fragment"><span class="ico">%</span><span><b>Frequência mínima 75%</b> — combinado desde já.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 2. PERGUNTA MOTIVADORA -->
+  <section class="slide" id="slide-2">
+    <div class="slide-inner question-wrap">
+      <div class="qmark">PERGUNTA PRA TURMA</div>
+      <h1 class="big" style="margin-top:18px;">O que acontece entre você apertar o <span style="color:var(--primary)">power</span><br>e ver a tela de login?</h1>
+      <p class="lead" style="margin:20px auto 0;">Chutem. Não tem resposta errada ainda.</p>
+    </div>
+  </section>
+
+  <!-- 3. BOOT SEQUENCE -->
+  <section class="slide" id="slide-3" data-anim="boot">
+    <div class="slide-inner">
+      <div class="eyebrow">A resposta, em câmera lenta</div>
+      <h2 class="slide-title">Sequência de boot</h2>
+      <div class="term">
+        <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+        <div class="term-body" id="bootBody"></div>
+      </div>
+      <div class="replay-hint">tudo isso acontece antes de qualquer programa seu abrir · <kbd>R</kbd> repete a animação</div>
+    </div>
+  </section>
+
+  <!-- 4. DUAS IDEIAS-CHAVE -->
+  <section class="slide" id="slide-4">
+    <div class="slide-inner">
+      <div class="eyebrow">Definição que fica pro semestre inteiro</div>
+      <h2 class="slide-title">Duas coisas que o SO faz ao mesmo tempo</h2>
+      <div class="cards2">
+        <div class="card">
+          <div class="kicker">Ideia 1</div>
+          <h3>Máquina estendida</h3>
+          <p>O SO te entrega uma versão mais simples do hardware. Você escreve <code>open("arquivo.txt")</code> no código — não precisa saber como a cabeça de leitura do disco se move ou como os bits são gravados fisicamente. O SO cuida disso por trás.</p>
+        </div>
+        <div class="card alt">
+          <div class="kicker">Ideia 2</div>
+          <h3>Gerenciador de recursos</h3>
+          <p>O SO organiza a fila: quem usa a CPU agora, quanto de memória cada programa recebe, quem acessa o disco primeiro. Pense nos computadores do laboratório rodando vários programas ao mesmo tempo sem nenhum travar o do lado.</p>
+        </div>
+      </div>
+      <div class="foot-line fragment">Essas duas ideias voltam o semestre inteiro — especialmente quando chegarmos no eixo do curso: <b style="color:var(--primary)">containers</b>.</div>
+    </div>
+  </section>
+
+  <!-- 5. HISTÓRICO RELÂMPAGO -->
+  <section class="slide" id="slide-5">
+    <div class="slide-inner">
+      <div class="eyebrow">Sem decorar datas</div>
+      <h2 class="slide-title">Cada hardware novo forçou o SO a se reinventar</h2>
+      <div class="timeline" id="timeline">
+        <div class="tnode fragment"><div class="dot"></div><div class="yr">1945</div><div class="lb">Válvulas — sem SO, um programa por vez</div></div>
+        <div class="tnode fragment"><div class="dot"></div><div class="yr">1955</div><div class="lb">Transistores — sistemas em lote (batch)</div></div>
+        <div class="tnode fragment"><div class="dot"></div><div class="yr">1965</div><div class="lb">CIs — multiprogramação, nasce o UNIX</div></div>
+        <div class="tnode fragment"><div class="dot"></div><div class="yr">1980</div><div class="lb">PCs — SO pessoal, interface gráfica</div></div>
+        <div class="tnode fragment"><div class="dot"></div><div class="yr">2000s</div><div class="lb">Internet — Linux domina servidores</div></div>
+        <div class="tnode fragment"><div class="dot"></div><div class="yr">2013+</div><div class="lb">Containers — nosso eixo do curso</div></div>
+      </div>
+      <p class="lead fragment" style="margin-top:26px;">Leitura opcional pra aprofundar: Tanenbaum, 1.2 (p. 5–14).</p>
+    </div>
+  </section>
+
+  <!-- 6. POR QUE IMPORTA PRO ADS -->
+  <section class="slide" id="slide-6">
+    <div class="slide-inner">
+      <div class="eyebrow">A pergunta que sustenta o curso</div>
+      <h2 class="slide-title">Por que isso importa pra você, tecnólogo em ADS</h2>
+      <ul class="blist">
+        <li class="fragment">Aplicação lenta, travando ou consumindo memória demais? Na prática, é o SO arbitrando CPU, memória, disco ou rede.</li>
+        <li class="fragment"><span>O foco não é profundidade de <i>engenharia de kernel</i>.
+          <span class="contrast-chip"><span class="chip-out">teoria de kernel</span><span class="chip-arrow">→</span><span class="chip-in">diagnóstico e operação</span></span>
+        </span></li>
+        <li class="fragment">Container é o eixo do curso porque empacota processo + memória + E/S numa unidade só — exatamente como o mercado empacota e roda software hoje.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 7. PONTE PRO TERMINAL -->
+  <section class="slide" id="slide-7" data-anim="terminal">
+    <div class="slide-inner">
+      <div class="eyebrow">O terminal deixa de ser tela preta assustadora</div>
+      <h2 class="slide-title">O SO contando sobre si mesmo</h2>
+      <div class="term">
+        <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+        <div class="term-body" id="termBody"></div>
+      </div>
+      <div class="replay-hint">o que vocês vão ver simulado, vocês vão fazer de verdade a seguir · <kbd>R</kbd> repete</div>
+    </div>
+  </section>
+
+  <!-- 8. ATIVIDADE PRÁTICA -->
+  <section class="slide" id="slide-8">
+    <div class="slide-inner">
+      <div class="eyebrow">Agora é com vocês</div>
+      <h2 class="slide-title">Mão na massa: primeiro contato com o terminal</h2>
+      <div class="cmdbox">
+        <div><span>$</span> whoami</div>
+        <div><span>$</span> uname -a</div>
+        <div><span>$</span> hostname</div>
+        <div><span>$</span> ps aux | head -5</div>
+        <div><span>$</span> ls -la /</div>
+      </div>
+      <ul class="blist" style="margin-top:22px;">
+        <li>Rodem os 5 comandos acima e leiam a saída em voz alta com o colega do lado.</li>
+        <li>Anotem <b style="color:var(--primary)">3 coisas</b> que estranharam ou acharam interessante — vai pro portfólio.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 9. FECHAMENTO / PARA LER -->
+  <section class="slide" id="slide-9">
+    <div class="slide-inner">
+      <div class="eyebrow">Antes de ir embora</div>
+      <h2 class="slide-title">Para ler até o próximo encontro</h2>
+      <div>
+        <div class="readrow"><div class="badge">🟢</div><div><div class="rtitle">LAUREANO — Cap. 1, Introdução</div><div class="rsub">p. 9–17 · obrigatório · quiz na próxima aula</div></div></div>
+        <div class="readrow"><div class="badge">🔵</div><div><div class="rtitle">TANENBAUM — 1.1, O que é um sistema operacional?</div><div class="rsub">p. 3–5 · obrigatório · quiz na próxima aula</div></div></div>
+        <div class="readrow"><div class="badge">⚪</div><div><div class="rtitle">TANENBAUM — 1.2, História dos sistemas operacionais</div><div class="rsub">p. 5–14 · opcional, aprofundamento</div></div></div>
+      </div>
+      <div class="nextprev">→ Encontro 2: hardware de verdade — lscpu, free e /procfs</div>
+    </div>
+  </section>
+
+</div>
+
+<div class="dots" id="dots"></div>
+<div class="hintbar"><kbd>→</kbd>avança <kbd>←</kbd>volta <kbd>R</kbd>repete animação</div>
+
+<script>
+(function(){
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var total = slides.length;
+  var cur = 0;
+  var played = {};
+
+  document.getElementById('total').textContent = total;
+
+  // ---------- navegação ----------
+  function fragmentsOf(idx){ return slides[idx].querySelectorAll('.fragment'); }
+
+  function revealNextFragment(idx){
+    var frags = fragmentsOf(idx);
+    for (var i=0;i<frags.length;i++){
+      if (!frags[i].classList.contains('visible')){
+        frags[i].classList.add('visible');
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function revealAllFragments(idx){
+    var frags = fragmentsOf(idx);
+    for (var i=0;i<frags.length;i++){ frags[i].classList.add('visible'); }
+  }
+
+  function goTo(idx, skipFragReveal){
+    if (idx<0 || idx>=total) return;
+    slides[cur].classList.remove('active');
+    cur = idx;
+    slides[cur].classList.add('active');
+    if (skipFragReveal) revealAllFragments(cur);
+    updateUI();
+    maybeAutoplay();
+  }
+
+  function nextStep(){
+    if (revealNextFragment(cur)) return;
+    goTo(cur+1);
+  }
+  function prevStep(){
+    goTo(cur-1, true);
+  }
+
+  function updateUI(){
+    document.getElementById('cur').textContent = cur+1;
+    var dots = document.querySelectorAll('.dots button');
+    dots.forEach(function(d,i){ d.classList.toggle('active', i===cur); });
+  }
+
+  // dots
+  var dotsWrap = document.getElementById('dots');
+  for (var i=0;i<total;i++){
+    (function(i){
+      var b = document.createElement('button');
+      b.setAttribute('aria-label','Ir para slide '+(i+1));
+      b.addEventListener('click', function(){ goTo(i, true); });
+      dotsWrap.appendChild(b);
+    })(i);
+  }
+
+  document.addEventListener('keydown', function(e){
+    var k = e.key;
+    if (k==='ArrowRight' || k===' ' || k==='PageDown'){ e.preventDefault(); nextStep(); }
+    else if (k==='ArrowLeft' || k==='PageUp'){ e.preventDefault(); prevStep(); }
+    else if (k==='Home'){ goTo(0,true); }
+    else if (k==='End'){ goTo(total-1,true); }
+    else if (k.toLowerCase()==='r'){ replayAnim(); }
+  });
+
+  // ---------- animações: boot e terminal ----------
+  function typeLine(container, html, plain){
+    var div = document.createElement('div');
+    div.className = 'ln';
+    container.appendChild(div);
+    if (reduceMotion){ div.innerHTML = html; return Promise.resolve(); }
+    div.style.opacity = 0;
+    div.innerHTML = html;
+    requestAnimationFrame(function(){
+      div.style.transition = 'opacity .25s ease';
+      div.style.opacity = 1;
+    });
+    return new Promise(function(res){ setTimeout(res, 60); });
+  }
+
+  var bootLines = [
+    '<span class="t">[0.000000]</span> POST — verificação de hardware (BIOS/UEFI)',
+    '<span class="t">[0.482103]</span> Bootloader localizado <span class="kern">(GRUB)</span>',
+    '<span class="t">[0.812445]</span> Carregando kernel Linux 6.x...',
+    '<span class="t">[1.203009]</span> <span class="kern">Kernel:</span> inicializando gerenciador de memória',
+    '<span class="t">[1.501220]</span> <span class="kern">Kernel:</span> inicializando escalonador de processos',
+    '<span class="t">[1.809774]</span> Montando sistemas de arquivos (/, /home, /proc)',
+    '<span class="t">[2.114500]</span> init / systemd: iniciando serviços',
+    '<span class="ok">[2.900012]</span> login:<span class="cursor"></span>'
+  ];
+
+  function playBoot(){
+    var el = document.getElementById('bootBody');
+    el.innerHTML = '';
+    var p = Promise.resolve();
+    bootLines.forEach(function(line, i){
+      p = p.then(function(){ return typeLine(el, line); })
+           .then(function(){ return new Promise(function(res){ setTimeout(res, reduceMotion?0:420); }); });
+    });
+  }
+
+  var termSteps = [
+    {cmd:'whoami', out:['aluno23']},
+    {cmd:'uname -a', out:['Linux ifce-lab 6.8.0-so #1 SMP x86_64 GNU/Linux']},
+    {cmd:'ps aux | head -5', out:['PID   USER  %CPU  %MEM  COMMAND','1     root  0.0   0.1   /sbin/init','842   root  0.2   0.4   systemd-journald','1210  root  0.1   0.3   sshd']}
+  ];
+
+  function playTerminal(){
+    var el = document.getElementById('termBody');
+    el.innerHTML = '';
+    var p = Promise.resolve();
+    termSteps.forEach(function(step){
+      p = p.then(function(){
+        var line = document.createElement('div');
+        line.className = 'ln';
+        line.innerHTML = '<span class="prompt">$</span> <span class="cmd">'+step.cmd+'</span>';
+        el.appendChild(line);
+        return new Promise(function(res){ setTimeout(res, reduceMotion?0:250); });
+      }).then(function(){
+        var chain = Promise.resolve();
+        step.out.forEach(function(o){
+          chain = chain.then(function(){
+            var oline = document.createElement('div');
+            oline.className = 'ln out';
+            oline.textContent = o;
+            el.appendChild(oline);
+            return new Promise(function(res){ setTimeout(res, reduceMotion?0:90); });
+          });
+        });
+        return chain;
+      }).then(function(){
+        var spacer = document.createElement('div');
+        spacer.style.height='10px';
+        el.appendChild(spacer);
+        return new Promise(function(res){ setTimeout(res, reduceMotion?0:200); });
+      });
+    });
+  }
+
+  function timelineReveal(){
+    // apenas garante que os nós fiquem marcados como "visible" quando o fragment aparece
+    var obs = new MutationObserver(function(){
+      document.querySelectorAll('#timeline .tnode').forEach(function(n){
+        if (n.classList.contains('visible-frag')) return;
+        if (n.classList.contains('visible')) n.classList.add('visible-frag');
+      });
+    });
+  }
+
+  function maybeAutoplay(){
+    var s = slides[cur];
+    var anim = s.getAttribute('data-anim');
+    if (!anim) return;
+    if (anim==='boot'){ playBoot(); }
+    if (anim==='terminal'){ playTerminal(); }
+    played[cur] = true;
+  }
+
+  function replayAnim(){
+    var s = slides[cur];
+    var anim = s.getAttribute('data-anim');
+    if (anim==='boot') playBoot();
+    if (anim==='terminal') playTerminal();
+  }
+
+  // estado inicial
+  updateUI();
+})();
+</script>
+</body>
+</html>

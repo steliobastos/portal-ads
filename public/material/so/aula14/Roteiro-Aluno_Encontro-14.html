@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roteiro de Laboratório — Encontro 14 · Sistemas Operacionais ADS23</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#fbfaf5;
+    --bg-card:#ffffff;
+    --bg-card-2:#f3f1e8;
+    --line:#e2ddd0;
+    --line-soft:#ece8db;
+    --primary:#1b878f;
+    --primary-dim:#8fc7ca;
+    --primary-soft:rgba(27,135,143,.09);
+    --secondary:#399b3f;
+    --secondary-soft:rgba(57,155,63,.08);
+    --alert:#cd191e;
+    --alert-soft:rgba(205,25,30,.07);
+    --text:#20241f;
+    --text-dim:#5b6058;
+    --text-faint:#8b9088;
+    --font-display:'Space Grotesk',sans-serif;
+    --font-body:'IBM Plex Sans',sans-serif;
+    --font-mono:'IBM Plex Mono',monospace;
+    --term-bg:#10161f;
+    --term-line:#212b3a;
+    --term-dim:#8d96a8;
+    --term-prompt:#7ee787;
+    --term-accent:#5fd9d3;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-body);line-height:1.6;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3,h4{font-family:var(--font-display);font-weight:600;color:var(--text);letter-spacing:-.01em;}
+  code{font-family:var(--font-mono);background:var(--primary-soft);color:var(--primary);padding:1px 6px;border-radius:4px;font-size:.92em;}
+  ::selection{background:var(--primary-soft);color:var(--text);}
+
+  .topbar{
+    position:sticky;top:0;z-index:20;background:rgba(251,250,245,.92);backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);padding:12px 22px;
+    display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  }
+  .topbar .brand{font-family:var(--font-mono);font-size:12.5px;color:var(--text-dim);}
+  .topbar .brand b{color:var(--primary);}
+  .topbar .progress-mini{font-family:var(--font-mono);font-size:12px;color:var(--text-faint);}
+
+  .wrap{max-width:880px;margin:0 auto;padding:36px 22px 80px;}
+
+  .hero{margin-bottom:44px;}
+  .hero .eyebrow{font-family:var(--font-mono);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);margin-bottom:12px;display:flex;align-items:center;gap:10px;}
+  .hero .eyebrow::before{content:'';width:22px;height:1px;background:var(--primary-dim);}
+  .hero h1{font-size:clamp(26px,4vw,38px);margin:0 0 14px;}
+  .hero p{color:var(--text-dim);font-size:16px;max-width:640px;margin:0;}
+  .hero .parts{display:flex;gap:14px;margin-top:22px;flex-wrap:wrap;}
+  .hero .part-chip{background:var(--bg-card);border:1px solid var(--line);border-radius:8px;padding:10px 16px;font-family:var(--font-mono);font-size:12.5px;color:var(--text-dim);}
+  .hero .part-chip b{color:var(--primary);}
+
+  .block{margin-bottom:52px;}
+  .block-num{font-family:var(--font-mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-faint);margin-bottom:8px;}
+  .block h2{font-size:22px;margin-bottom:10px;}
+  .block .intro{color:var(--text-dim);font-size:15px;max-width:680px;margin:0 0 20px;}
+
+  .part-divider{display:flex;align-items:center;gap:16px;margin:56px 0 32px;}
+  .part-divider .line{flex:1;height:1px;background:var(--line);}
+  .part-divider .label{font-family:var(--font-mono);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);white-space:nowrap;}
+
+  .cmd-card{background:var(--bg-card);border:1px solid var(--line);border-radius:12px;padding:20px 22px;margin-bottom:18px;}
+  .cmd-title{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+  .step-badge{width:24px;height:24px;border-radius:50%;background:var(--primary);color:#fff;font-family:var(--font-mono);font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  code.big{font-size:15px;padding:4px 10px;}
+
+  .explain-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+  .explain-box{background:var(--bg-card-2);border:1px solid var(--line-soft);border-radius:8px;padding:12px 14px;}
+  .explain-box .lbl{font-family:var(--font-mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-faint);margin-bottom:5px;}
+  .explain-box p{margin:0;font-size:13.5px;color:var(--text-dim);}
+  @media (max-width:680px){.explain-grid{grid-template-columns:1fr;}}
+
+  .terminal-mini{background:var(--term-bg);border:1px solid var(--term-line);border-radius:8px;overflow:hidden;margin-bottom:12px;}
+  .terminal-mini .bar{background:var(--term-bg);padding:6px 10px;display:flex;gap:5px;}
+  .terminal-mini .bar span{width:8px;height:8px;border-radius:50%;background:var(--term-line);}
+  .terminal-mini .body{padding:14px 16px;font-family:var(--font-mono);font-size:13px;color:var(--term-dim);white-space:pre-wrap;line-height:1.55;}
+  .terminal-mini .prompt{color:var(--term-prompt);}
+  .terminal-mini .out{color:var(--term-dim);}
+  .terminal-mini .hi{color:var(--term-accent);}
+  .terminal-mini .err{color:#e0605f;font-weight:600;}
+
+  details.tip{background:var(--bg-card-2);border:1px solid var(--line-soft);border-radius:8px;margin-top:8px;}
+  details.tip summary{padding:10px 14px;cursor:pointer;font-size:13.5px;color:var(--primary);font-family:var(--font-mono);}
+  details.tip .tip-body{padding:0 14px 14px;font-size:13.5px;color:var(--text-dim);}
+
+  .obs-note{font-size:13.5px;color:var(--text-dim);margin-top:2px;}
+  .obs-note b{color:var(--text);}
+
+  .warn-box{background:var(--alert-soft);border:1px solid var(--alert);border-radius:8px;padding:12px 16px;margin-top:12px;font-size:13.5px;color:var(--text-dim);}
+  .warn-box b{color:var(--alert);}
+
+  .example-pair{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0;}
+  .example-box{border-radius:8px;padding:14px 16px;font-size:13.5px;}
+  .example-box.weak{background:var(--alert-soft);border:1px solid var(--alert);}
+  .example-box.good{background:var(--secondary-soft);border:1px solid var(--secondary);}
+  .example-box .lbl{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;margin-bottom:6px;}
+  .example-box.weak .lbl{color:var(--alert);}
+  .example-box.good .lbl{color:var(--secondary);}
+  .example-box p{margin:0;color:var(--text-dim);font-style:italic;}
+  @media (max-width:680px){.example-pair{grid-template-columns:1fr;}}
+
+  .draft-box{margin-top:14px;}
+  .draft-box label{display:block;font-size:13.5px;color:var(--text-dim);margin-bottom:6px;}
+  .draft-box textarea{width:100%;min-height:90px;background:var(--bg-card-2);border:1px solid var(--line);border-radius:8px;color:var(--text);font-family:var(--font-body);font-size:14px;padding:10px 12px;resize:vertical;}
+  .draft-box textarea:focus{outline:none;border-color:var(--primary-dim);}
+  .char-count{font-family:var(--font-mono);font-size:11.5px;color:var(--text-faint);margin-top:5px;text-align:right;}
+  .char-count.ok{color:var(--secondary);}
+
+  .theory-link{background:var(--primary-soft);border:1px solid var(--primary-dim);border-radius:10px;padding:16px 18px;margin-top:20px;}
+  .theory-link .lbl{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;color:var(--primary);margin-bottom:6px;}
+  .theory-link p{margin:0;font-size:14px;color:var(--text-dim);}
+
+  .checklist{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px;}
+  .checklist li{display:flex;align-items:flex-start;gap:12px;background:var(--bg-card);border:1px solid var(--line);border-radius:8px;padding:12px 16px;font-size:14px;color:var(--text-dim);transition:.2s;}
+  .checklist li.checked{border-color:var(--secondary);background:var(--secondary-soft);color:var(--text);}
+  .checklist input[type=checkbox]{width:18px;height:18px;margin-top:1px;accent-color:var(--secondary);flex-shrink:0;}
+
+  .progress{position:sticky;bottom:0;background:rgba(251,250,245,.95);backdrop-filter:blur(6px);border-top:1px solid var(--line);padding:14px 22px;display:flex;align-items:center;gap:16px;justify-content:center;}
+  .progress #progtext{font-family:var(--font-mono);font-size:12.5px;color:var(--text-dim);white-space:nowrap;}
+  .progress .bar{flex:1;max-width:320px;height:6px;background:var(--line-soft);border-radius:3px;overflow:hidden;}
+  .progress .bar i{display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--primary),var(--secondary));transition:width .3s;}
+
+  footer{text-align:center;padding:30px 20px 90px;font-family:var(--font-mono);font-size:11.5px;color:var(--text-faint);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">Sistemas Operacionais · <b>ADS23</b></div>
+  <div class="progress-mini">Encontro 14 de 17 · Roteiro de Laboratório</div>
+</div>
+
+<div class="wrap">
+
+  <div class="hero">
+    <div class="eyebrow">Mão na massa · ~51 min</div>
+    <h1>Backup que funciona, restauração que prova — e sua equipe definida</h1>
+    <p>Hoje você constrói um script de backup completo, <b>testa restaurar de verdade</b>, agenda a execução automática, e fecha a aula com equipe formada e serviço escolhido para o projeto final.</p>
+    <div class="parts">
+      <div class="part-chip"><b>Passos 1–4</b> · Backup, restauração e cron</div>
+      <div class="part-chip"><b>Passo 5</b> · Projeto final: equipe e planejamento</div>
+    </div>
+  </div>
+
+  <div style="background:var(--primary-soft);border:1px solid var(--primary-dim);border-radius:12px;padding:18px 22px;margin-bottom:44px;">
+    <div style="font-family:var(--font-mono);font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--primary);margin-bottom:8px;">🚀 Hoje começa o projeto final</div>
+    <p style="margin:0 0 8px;font-size:14.5px;color:var(--text-dim);">O que você construir neste roteiro pode ser aproveitado <b>diretamente</b> no toolkit do projeto — o <code>backup.sh</code> do passo 1 já é um dos três scripts obrigatórios da entrega.</p>
+    <p style="margin:0;font-size:14.5px;color:var(--text-dim);">Leia o <b>Enunciado do Projeto Integrador — Etapa 2</b> ainda esta semana. É leitura obrigatória.</p>
+  </div>
+
+  <section class="block">
+    <div class="block-num">PASSO 1 DE 5</div>
+    <h2>Um script de backup de verdade</h2>
+    <p class="intro">Backup útil tem quatro características: identifica a data, compacta, grava em local separado, e registra o que fez.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">1</span> <code class="big">nano ~/backup.sh</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p><code>tar -czf</code> empacota e compacta um diretório inteiro num arquivo só. O nome inclui a data via <code>$(date +%F)</code>, técnica do Encontro 13.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>Sem data no nome, cada backup sobrescreve o anterior — e você fica com uma cópia só, provavelmente já corrompida junto com o original.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="out">#!/bin/bash
+
+ORIGEM=~/dados_importantes
+DESTINO=~/backups
+LOG=~/backup.log
+DATA=$(date +%F_%H-%M)
+
+log() {
+  echo "[$(date +'%F %T')] $1" | tee -a "$LOG"
+}
+
+mkdir -p "$DESTINO"
+
+if [ ! -d "$ORIGEM" ]; then
+  log "ERRO: origem $ORIGEM não existe"
+  exit 1
+fi
+
+ARQUIVO="$DESTINO/backup_${DATA}.tar.gz"
+tar -czf "$ARQUIVO" -C "$(dirname "$ORIGEM")" "$(basename "$ORIGEM")"
+
+if [ $? -eq 0 ]; then
+  TAMANHO=$(du -h "$ARQUIVO" | cut -f1)
+  log "OK: backup criado em $ARQUIVO ($TAMANHO)"
+  exit 0
+else
+  log "ERRO: falha ao criar o backup"
+  exit 1
+fi</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> antes de rodar, crie a origem com <code>mkdir -p ~/dados_importantes &amp;&amp; echo "conteudo valioso" &gt; ~/dados_importantes/arquivo1.txt</code>. Depois <code>chmod +x ~/backup.sh</code> e execute. Confira o resultado com <code>ls -lh ~/backups</code>.</p>
+      <details class="tip">
+        <summary>O que faz o if [ ! -d "$ORIGEM" ]?</summary>
+        <div class="tip-body">
+          O <code>!</code> nega o teste: "se o diretório <b>não</b> existir". É uma verificação defensiva — sem ela, o script tentaria compactar algo inexistente e criaria um backup vazio, dando a falsa impressão de que funcionou. Verificar antes de agir é o requisito nº 6 do enunciado do projeto.
+        </div>
+      </details>
+      <details class="tip">
+        <summary>Por que o -C e o dirname/basename no tar?</summary>
+        <div class="tip-body">
+          Sem isso, o <code>tar</code> guardaria o caminho completo (<code>home/aluno/dados_importantes/...</code>) dentro do pacote, e a restauração recriaria toda essa árvore. Com <code>-C</code>, ele entra no diretório-pai antes de empacotar, guardando só <code>dados_importantes/</code> — bem mais fácil de restaurar em qualquer lugar.
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">PASSO 2 DE 5</div>
+    <h2>A prova real: restaurar</h2>
+    <p class="intro">Este é o passo mais importante do roteiro. Backup que nunca foi restaurado não é backup — e a única forma de saber é testando.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">2</span> Apague o original e recupere do backup</div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p>Simula o desastre: o dado original some, e você precisa recuperá-lo apenas com o que guardou.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>É o único teste que responde "eu tenho backup?". Sem ele, você tem um arquivo compactado de utilidade desconhecida.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="prompt">$</span> cat ~/dados_importantes/arquivo1.txt
+<span class="out">conteudo valioso</span>
+<span class="prompt">$</span> rm -rf ~/dados_importantes
+<span class="prompt">$</span> ls ~/dados_importantes
+<span class="err">ls: não foi possível acessar: Arquivo ou diretório inexistente</span>
+<span class="prompt">$</span> tar -xzf ~/backups/backup_*.tar.gz -C ~/
+<span class="prompt">$</span> cat ~/dados_importantes/arquivo1.txt
+<span class="ok" style="color:#7ee787">conteudo valioso</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> o conteúdo volta exatamente como estava. Se não voltar, seu backup tem um problema — e é <b>muito</b> melhor descobrir isso agora, num diretório de teste, do que em produção.</p>
+      <details class="tip">
+        <summary>Estou com medo de apagar algo importante</summary>
+        <div class="tip-body">
+          Você está apagando apenas <code>~/dados_importantes</code>, criado por você no passo 1 exatamente para este teste. Nenhum arquivo pessoal seu está envolvido. Confirme o caminho antes de rodar o <code>rm -rf</code> — e note que essa checagem é exatamente o hábito que o Encontro 12 ensinou.
+        </div>
+      </details>
+    </div>
+
+    <div class="draft-box">
+      <label for="obs1">Rascunho da observação 1 — por que testar a restauração é considerado parte essencial do backup, e não um passo opcional? O que seu teste revelou?</label>
+      <textarea id="obs1" placeholder="Ex: testei apagando o original e restaurando; sem esse teste eu não teria como saber que..."></textarea>
+      <div class="char-count" data-for="obs1">0 caracteres (mínimo 40)</div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">PASSO 3 DE 5</div>
+    <h2>Fazendo rodar sozinho</h2>
+    <p class="intro">Um backup que depende de você lembrar não é confiável. O cron executa nos horários que você definir.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">3</span> <code class="big">crontab -e</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p>Abre seu arquivo de agendamentos. Cada linha tem cinco campos de tempo (minuto, hora, dia do mês, mês, dia da semana) seguidos do comando.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>É o que transforma um script em automação de verdade — ele passa a rodar mesmo com você desconectado.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="out"># para o teste de hoje: a cada 2 minutos
+*/2 * * * * /home/SEU_USUARIO/backup.sh
+
+# em produção seria algo como: todo dia às 3h
+# 0 3 * * * /home/SEU_USUARIO/backup.sh</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> use <code>*/2</code> hoje para não esperar até de madrugada. <b>Troque <code>SEU_USUARIO</code> pelo seu nome de usuário real</b> — descubra com <code>whoami</code>. Salve e confirme com <code>crontab -l</code>.</p>
+      <details class="tip">
+        <summary>Por que caminho absoluto e não ~/backup.sh?</summary>
+        <div class="tip-body">
+          O cron roda num ambiente reduzido, sem as variáveis do seu shell interativo — o <code>~</code> pode não ser expandido como você espera. <b>Sempre use caminhos absolutos no cron.</b> Esse é o erro nº 1 de quem começa a agendar tarefas: "funciona no terminal mas não no cron", e a causa é quase sempre caminho relativo.
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">PASSO 4 DE 5</div>
+    <h2>Confirmando que executou</h2>
+    <p class="intro">Aguarde alguns minutos e verifique se o cron realmente rodou o script — sem olhar, você só tem a expectativa de que rodou.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">4</span> <code class="big">tail -f ~/backup.log</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p><code>tail -f</code> acompanha o arquivo ao vivo, mostrando novas linhas conforme são gravadas (comando do Encontro 12).</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>É a diferença entre "acho que está rodando" e "sei que rodou às 14h22". Automação sem log é automação sem evidência.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="prompt">$</span> tail -f ~/backup.log
+<span class="out">[2026-11-13 14:20:01] OK: backup criado em /home/aluno/backups/backup_2026-11-13_14-20.tar.gz (4,0K)
+</span><span class="hi">[2026-11-13 14:22:01] OK: backup criado em /home/aluno/backups/backup_2026-11-13_14-22.tar.gz (4,0K)</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> uma nova linha a cada 2 minutos, sem você fazer nada. Saia com <code>Ctrl+C</code>. Confira também <code>ls -lh ~/backups</code> — vários arquivos, um por execução, cada um com sua data no nome.</p>
+      <details class="tip">
+        <summary>O log não recebeu nenhuma linha nova</summary>
+        <div class="tip-body">
+          Verifique nesta ordem: (1) o caminho no crontab está absoluto e correto? (2) o script tem <code>chmod +x</code>? (3) o serviço cron está ativo (<code>systemctl status cron</code>)? (4) rodou o script manualmente e funcionou? Se funciona manualmente mas não pelo cron, é quase certo que seja caminho relativo em algum ponto do script.
+        </div>
+      </details>
+      <p class="obs-note" style="margin-top:12px;"><b>Importante ao terminar:</b> remova o agendamento de teste com <code>crontab -e</code> (apague a linha), senão seu disco vai acumular backups a cada 2 minutos indefinidamente.</p>
+    </div>
+
+    <div class="draft-box">
+      <label for="obs2">Rascunho da observação 2 — por que o cron exige caminho absoluto? O que aconteceria se você usasse ~/backup.sh no agendamento?</label>
+      <textarea id="obs2" placeholder="Ex: o cron roda num ambiente reduzido, então..."></textarea>
+      <div class="char-count" data-for="obs2">0 caracteres (mínimo 40)</div>
+    </div>
+  </section>
+
+  <div class="part-divider"><div class="line"></div><div class="label">Projeto final · equipe e planejamento</div><div class="line"></div></div>
+
+  <section class="block">
+    <div class="block-num">PASSO 5 DE 5</div>
+    <h2>Definindo a equipe e o serviço</h2>
+    <p class="intro">Reserve os últimos minutos da aula para isto. Sair hoje com equipe formada e serviço escolhido é o que garante três encontros úteis de trabalho.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">5</span> Combinem em equipe e registrem</div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que decidir hoje</div>
+          <p>Composição da equipe, qual serviço será operado, e quem fica responsável por cada um dos três scripts.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que agora</div>
+          <p>Restam só três encontros até a entrega. Equipe indefinida hoje significa uma semana perdida.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="out"># Registrem em um arquivo, para trazer no próximo encontro:
+
+EQUIPE: __________________________________
+SERVIÇO ESCOLHIDO: _______________________
+  (sugestão segura: nginx servindo páginas estáticas)
+
+RESPONSÁVEIS:
+  deploy.sh   → _________________________
+  backup.sh   → _________________________
+  monitor.sh  → _________________________
+  README      → _________________________
+
+O QUE VAMOS GUARDAR EM BACKUP: ___________
+O QUE VAMOS MONITORAR (3 métricas): ______</span></div>
+      </div>
+      <p class="obs-note"><b>Recomendação forte:</b> escolham um serviço <b>simples</b>. O mérito do trabalho está na qualidade do toolkit, não na complexidade do serviço — isso está explícito na seção 2 do enunciado. Um <code>nginx</code> com três páginas e um toolkit sólido vale mais do que algo sofisticado e inacabado.</p>
+      <details class="tip">
+        <summary>Não sabemos que serviço escolher</summary>
+        <div class="tip-body">
+          Vão de <code>nginx</code> servindo páginas HTML estáticas. É rápido de subir, tem dado óbvio para backup (as páginas e a configuração), e estado claro para monitorar (o container está no ar? responde?). Vocês já sabem tudo que precisam para isso desde o Encontro 4.
+        </div>
+      </details>
+    </div>
+
+    <div class="draft-box">
+      <label for="obs3">Rascunho da observação 3 — qual serviço sua equipe escolheu operar, e por quê? O que vocês pretendem guardar em backup e monitorar?</label>
+      <textarea id="obs3" placeholder="Ex: escolhemos nginx servindo páginas estáticas porque..."></textarea>
+      <div class="char-count" data-for="obs3">0 caracteres (mínimo 40)</div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2 style="font-size:18px;">Exemplo de observação forte x fraca</h2>
+    <div class="example-pair">
+      <div class="example-box weak">
+        <div class="lbl">Observação fraca</div>
+        <p>"Testei restaurar e funcionou."</p>
+      </div>
+      <div class="example-box good">
+        <div class="lbl">Observação forte</div>
+        <p>"Apaguei <code>~/dados_importantes</code> por completo e restaurei só a partir do <code>.tar.gz</code> — o conteúdo voltou idêntico. O teste importa porque, sem ele, eu teria um arquivo compactado de utilidade desconhecida: poderia estar vazio, com caminho errado ou corrompido, e eu só descobriria no momento em que precisasse de verdade. Na primeira tentativa o <code>tar</code> recriou a árvore <code>home/aluno/</code> inteira dentro do destino, o que só percebi porque testei — foi por isso que passei a usar o <code>-C</code>."</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="theory-link">
+    <div class="lbl">Conexão com a teoria</div>
+    <p>O script do passo 1 aplica variáveis, função de log, condicional e código de saída do Encontro 13, além do <code>du</code> do Encontro 11 para medir o tamanho. A verificação <code>if [ ! -d ... ]</code> é a prática defensiva discutida no slide 7 sobre riscos de automação — a mesma razão pela qual o Laureano (p. 62–69) trata permissões com cuidado. O passo 3 introduz o cron, e o passo 5 dá início ao projeto descrito no <b>Enunciado do Projeto Integrador — Etapa 2</b>, leitura obrigatória desta semana.</p>
+  </div>
+
+  <section class="block" style="margin-top:48px;">
+    <h2 style="font-size:18px;">Checklist final</h2>
+    <ul class="checklist" id="checklist">
+      <li><input type="checkbox"><span>Escrevi o <code>backup.sh</code> com log, data no nome e verificação de origem</span></li>
+      <li><input type="checkbox"><span><b>Testei restaurar</b> apagando o original e recuperando do backup</span></li>
+      <li><input type="checkbox"><span>Agendei o script no cron com caminho absoluto</span></li>
+      <li><input type="checkbox"><span>Confirmei no log que o cron executou sozinho</span></li>
+      <li><input type="checkbox"><span>Removi o agendamento de teste do crontab</span></li>
+      <li><input type="checkbox"><span>Minha equipe está formada e o serviço escolhido</span></li>
+      <li><input type="checkbox"><span>Dividimos as responsabilidades dos três scripts</span></li>
+      <li><input type="checkbox"><span>Li o Enunciado do Projeto Integrador — Etapa 2</span></li>
+      <li><input type="checkbox"><span>Preenchi as 3 observações acima (vou colar no quiz semanal)</span></li>
+    </ul>
+  </section>
+
+</div>
+
+<div class="progress">
+  <span id="progtext">0 / 9 verificados</span>
+  <div class="bar"><i id="progbar"></i></div>
+</div>
+
+<footer>Sistemas Operacionais · ADS23 · IFCE Campus Horizonte · Encontro 14 de 17</footer>
+
+<script>
+  const boxes = document.querySelectorAll('#checklist input[type=checkbox]');
+  const progtext = document.getElementById('progtext');
+  const progbar = document.getElementById('progbar');
+  function updateProgress(){
+    const total = boxes.length;
+    const done = [...boxes].filter(b=>b.checked).length;
+    progtext.textContent = done + ' / ' + total + ' verificados';
+    progbar.style.width = (done/total*100) + '%';
+  }
+  boxes.forEach(b=>{
+    b.addEventListener('change', ()=>{
+      b.closest('li').classList.toggle('checked', b.checked);
+      updateProgress();
+    });
+  });
+  updateProgress();
+
+  document.querySelectorAll('.draft-box textarea').forEach(ta=>{
+    const counter = document.querySelector('.char-count[data-for="'+ta.id+'"]');
+    ta.addEventListener('input', ()=>{
+      const len = ta.value.length;
+      counter.textContent = len + ' caracteres (mínimo 40)';
+      counter.classList.toggle('ok', len >= 40);
+    });
+  });
+</script>
+
+</body>
+</html>

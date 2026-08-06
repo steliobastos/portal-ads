@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roteiro de Laboratório — Encontro 2 · Sistemas Operacionais ADS23</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#fbfaf5;
+    --bg-card:#ffffff;
+    --bg-card-2:#f3f1e8;
+    --line:#e2ddd0;
+    --line-soft:#ece8db;
+    --primary:#1b878f;
+    --primary-dim:#8fc7ca;
+    --primary-soft:rgba(27,135,143,.09);
+    --secondary:#399b3f;
+    --secondary-soft:rgba(57,155,63,.08);
+    --alert:#cd191e;
+    --alert-soft:rgba(205,25,30,.07);
+    --text:#20241f;
+    --text-dim:#5b6058;
+    --text-faint:#8b9088;
+    --font-display:'Space Grotesk',sans-serif;
+    --font-body:'IBM Plex Sans',sans-serif;
+    --font-mono:'IBM Plex Mono',monospace;
+    /* sub-paleta escura reservada — blocos de terminal permanecem escuros */
+    --term-bg:#10161f;
+    --term-line:#212b3a;
+    --term-dim:#8d96a8;
+    --term-prompt:#7ee787;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-body);line-height:1.6;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3,h4{font-family:var(--font-display);font-weight:600;color:var(--text);letter-spacing:-.01em;}
+  code{font-family:var(--font-mono);background:var(--primary-soft);color:var(--primary);padding:1px 6px;border-radius:4px;font-size:.92em;}
+  ::selection{background:var(--primary-soft);color:var(--text);}
+
+  .topbar{
+    position:sticky;top:0;z-index:20;background:rgba(251,250,245,.92);backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);padding:12px 22px;
+    display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  }
+  .topbar .brand{font-family:var(--font-mono);font-size:12.5px;color:var(--text-dim);}
+  .topbar .brand b{color:var(--primary);}
+  .topbar .progress-wrap{display:flex;align-items:center;gap:10px;}
+  .topbar .progress-bar{width:150px;height:6px;background:var(--line-soft);border-radius:4px;overflow:hidden;}
+  .topbar .progress-bar-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--primary),var(--secondary));transition:width .3s ease;}
+  .topbar .progress-label{font-family:var(--font-mono);font-size:11.5px;color:var(--text-faint);white-space:nowrap;}
+
+  .wrap{max-width:840px;margin:0 auto;padding:40px 24px 100px;}
+
+  .hero{margin-bottom:38px;}
+  .hero .kicker{font-family:var(--font-mono);font-size:12.5px;color:var(--primary);letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px;}
+  .hero h1{font-size:clamp(28px,4.5vw,40px);margin:0 0 12px;}
+  .hero p{color:var(--text-dim);font-size:15.5px;max-width:640px;}
+
+  .meta-row{display:flex;gap:14px;flex-wrap:wrap;margin-top:22px;}
+  .meta-chip{background:var(--bg-card);border:1px solid var(--line);border-radius:20px;padding:7px 16px;font-family:var(--font-mono);font-size:12px;color:var(--text-dim);}
+  .meta-chip b{color:var(--text);}
+
+  section.block{margin-top:52px;}
+  .block-num{font-family:var(--font-mono);font-size:12.5px;color:var(--primary);letter-spacing:.08em;margin-bottom:6px;}
+  .block h2{font-size:23px;margin:0 0 14px;}
+  .block > p.intro{color:var(--text-dim);font-size:15px;margin-bottom:22px;}
+
+  .cmd-card{background:var(--bg-card);border:1px solid var(--line);border-radius:14px;padding:24px;margin-bottom:22px;}
+  .cmd-card .cmd-title{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap;}
+  .cmd-card .cmd-title code.big{font-size:16px;padding:6px 14px;}
+  .cmd-card .step-badge{font-family:var(--font-mono);font-size:11px;color:#fff;background:var(--primary);border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;}
+
+  .terminal-mini{background:var(--term-bg);border:1px solid var(--term-line);border-radius:10px;overflow:hidden;margin:14px 0;}
+  .terminal-mini .bar{background:var(--term-bg);padding:7px 12px;display:flex;gap:5px;border-bottom:1px solid var(--term-line);}
+  .terminal-mini .bar span{width:8px;height:8px;border-radius:50%;background:var(--term-line);}
+  .terminal-mini .body{padding:14px 16px;font-family:var(--font-mono);font-size:12.8px;color:var(--term-dim);white-space:pre-wrap;}
+  .terminal-mini .body .prompt{color:var(--term-prompt);}
+  .terminal-mini .body .out{color:var(--term-dim);}
+
+  .explain-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px;}
+  .explain-box{background:var(--bg-card-2);border-radius:10px;padding:14px 16px;}
+  .explain-box .lbl{font-family:var(--font-mono);font-size:10.5px;color:var(--primary);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;}
+  .explain-box p{font-size:13.5px;color:var(--text-dim);margin:0;}
+
+  details.tip{margin-top:14px;background:var(--primary-soft);border:1px solid var(--primary-dim);border-radius:10px;padding:0;overflow:hidden;}
+  details.tip summary{padding:12px 16px;cursor:pointer;font-family:var(--font-mono);font-size:12.5px;color:var(--primary);list-style:none;display:flex;align-items:center;gap:8px;}
+  details.tip summary::-webkit-details-marker{display:none;}
+  details.tip summary::before{content:'▸';transition:transform .2s;}
+  details.tip[open] summary::before{transform:rotate(90deg);}
+  details.tip .tip-body{padding:0 16px 16px;font-size:13.5px;color:var(--text-dim);}
+  details.tip .tip-body code{display:block;margin-top:8px;}
+
+  .connect-box{margin-top:16px;border-left:3px solid var(--primary-dim);background:var(--bg-card-2);border-radius:0 10px 10px 0;padding:14px 18px;font-size:13.5px;color:var(--text-dim);}
+  .connect-box b{color:var(--primary);}
+
+  .obs-card{background:var(--bg-card);border:1px solid var(--line);border-radius:14px;padding:24px;margin-top:20px;}
+  .obs-card h3{font-size:16px;margin:0 0 8px;}
+  .obs-card .qtext{color:var(--text-dim);font-size:14.5px;margin-bottom:14px;}
+  textarea.obs-input{width:100%;background:var(--bg-card-2);border:1px solid var(--line);border-radius:10px;color:var(--text);font-family:var(--font-body);font-size:14px;padding:12px 14px;min-height:80px;resize:vertical;}
+  textarea.obs-input:focus{outline:none;border-color:var(--primary);}
+  .char-count{font-family:var(--font-mono);font-size:11px;color:var(--text-faint);text-align:right;margin-top:6px;}
+  .char-count.ok{color:var(--secondary);}
+
+  .good-bad{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;}
+  .gb-card{border-radius:10px;padding:16px;}
+  .gb-card.bad{background:var(--alert-soft);border:1px solid #ecc3c4;}
+  .gb-card.good{background:var(--secondary-soft);border:1px solid #c4e0c5;}
+  .gb-card .gb-lbl{font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px;}
+  .gb-card.bad .gb-lbl{color:var(--alert);}
+  .gb-card.good .gb-lbl{color:var(--secondary);}
+  .gb-card p{font-size:13px;color:var(--text-dim);margin:0;font-style:italic;}
+
+  .checklist{background:var(--bg-card);border:1px solid var(--line);border-radius:14px;padding:24px;margin-top:18px;}
+  .check-item{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--line-soft);}
+  .check-item:last-child{border-bottom:none;}
+  .check-item input[type=checkbox]{width:18px;height:18px;margin-top:2px;accent-color:var(--primary);cursor:pointer;flex-shrink:0;}
+  .check-item label{font-size:14px;color:var(--text-dim);cursor:pointer;}
+  .check-item.done label{color:var(--text-faint);text-decoration:line-through;}
+
+  .footer-cta{margin-top:56px;text-align:center;padding:30px;background:var(--bg-card);border-radius:14px;border:1px solid var(--line);}
+  .footer-cta p{color:var(--text-dim);font-size:14px;margin:0;}
+
+  @media (max-width:700px){
+    .explain-grid,.good-bad{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">SISTEMAS OPERACIONAIS · ADS23 · <b>LAB · ENCONTRO 2</b></div>
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-bar-fill" id="progFill"></div></div>
+    <div class="progress-label" id="progLabel">0 / 6 concluídos</div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="hero">
+    <div class="kicker">Roteiro de Laboratório · ~90 min</div>
+    <h1>Hardware e tipos de SO — mão na massa</h1>
+    <p>Siga na ordem, leia o "por que importa" antes de rodar cada comando, e use as dicas colapsáveis se travar.</p>
+    <div class="meta-row">
+      <div class="meta-chip">DURAÇÃO<b> ~90 min</b></div>
+      <div class="meta-chip">PRÉ-REQUISITO<b> VM Ubuntu ligada (Semana 0)</b></div>
+      <div class="meta-chip">ENTREGA<b> Quiz_Encontro-02.html</b></div>
+    </div>
+  </div>
+
+  <section class="block">
+    <div class="block-num">PASSO 1 DE 5</div>
+    <h2>Conhecendo sua CPU</h2>
+    <p class="intro">Antes de qualquer coisa, vamos descobrir com que processador sua VM está trabalhando.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">1</span> <code class="big">lscpu</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p>Um comando que resume tudo sobre o processador: modelo, quantos núcleos, arquitetura, velocidade.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>É a primeira pergunta que você faz ao diagnosticar performance: "quantos núcleos essa máquina tem de verdade?"</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="prompt">$</span> lscpu
+<span class="out">Architecture:            x86_64
+CPU(s):                  2
+Model name:              Intel(R) Core(TM) i7 ...
+CPU MHz:                 2600.000</span></div>
+      </div>
+      <p style="font-size:13.5px;color:var(--text-dim);"><b>O que esperar:</b> na sua VM, "CPU(s)" provavelmente mostra 2 — foi o que configuramos na Semana 0. Isso não é o processador físico do seu notebook inteiro, é o que o VirtualBox reservou pra VM.</p>
+      <details class="tip">
+        <summary>Travou? Comando não encontrado</summary>
+        <div class="tip-body">
+          Alguns Ubuntus mínimos não trazem <code>lscpu</code> por padrão. Instale com:
+          <code>sudo apt install util-linux</code>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">PASSO 2 DE 5</div>
+    <h2>Quanta memória você tem — e quanta sobra</h2>
+    <p class="intro">Agora vamos olhar para a RAM: total, em uso e livre.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">2</span> <code class="big">free -h</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p>Mostra memória RAM total, usada, livre e a memória <i>swap</i> (área do disco usada como RAM de emergência).</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>Quando um sistema "trava" ou fica lento, a primeira suspeita costuma ser: acabou a memória disponível.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="prompt">$</span> free -h
+<span class="out">              total        used        free      shared
+Mem:          3.8Gi       612Mi       2.4Gi        12Mi
+Swap:            0B          0B          0B</span></div>
+      </div>
+      <p style="font-size:13.5px;color:var(--text-dim);"><b>O que esperar:</b> o <code>-h</code> significa "human-readable" — sem ele, os números vêm em bytes crus, ilegíveis. O total deve bater com os 4096 MB (~3.8-4 GiB) que configuramos na criação da VM.</p>
+      <details class="tip">
+        <summary>Por que "total" não é exatamente 4096 MB?</summary>
+        <div class="tip-body">
+          Uma parte da RAM é reservada pelo próprio kernel e pelo firmware antes mesmo do Linux terminar de inicializar. É normal ver um número um pouco menor que o configurado no VirtualBox.
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">PASSO 3 DE 5</div>
+    <h2>A mesma informação, direto da fonte</h2>
+    <p class="intro"><code>lscpu</code> e <code>free -h</code> são versões "traduzidas". Agora vamos ver de onde elas tiram esses dados: o <code>/proc</code>.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">3</span> <code class="big">cat /proc/cpuinfo</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p>O arquivo virtual que o kernel expõe com os dados crus de cada núcleo de CPU — a fonte que o <code>lscpu</code> lê e organiza.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>É a prova de que "hardware" e "o que o SO te mostra" são a mesma coisa, só que em duas roupagens diferentes.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="prompt">$</span> cat /proc/cpuinfo
+<span class="out">processor       : 0
+vendor_id       : GenuineIntel
+model name      : Intel(R) Core(TM) i7 ...
+cpu MHz         : 2600.000
+...
+processor       : 1
+vendor_id       : GenuineIntel
+...</span></div>
+      </div>
+      <p style="font-size:13.5px;color:var(--text-dim);"><b>O que esperar:</b> um bloco de texto bem mais longo e cru que o <code>lscpu</code> — repetido uma vez para cada núcleo (0, 1, ...). Conte quantos blocos "processor" aparecem: deve bater com o "CPU(s)" do passo 1.</p>
+    </div>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">4</span> <code class="big">cat /proc/meminfo</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p>A versão crua do <code>free -h</code> — dezenas de linhas com cada detalhe da memória, em kilobytes.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>Mostra que "memória livre" não é uma única linha simples — tem várias categorias (livre, em cache, em buffers).</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="prompt">$</span> cat /proc/meminfo | head -5
+<span class="out">MemTotal:        3980112 kB
+MemFree:         2540332 kB
+MemAvailable:    3120004 kB
+Buffers:           88420 kB
+Cached:           612340 kB</span></div>
+      </div>
+      <p style="font-size:13.5px;color:var(--text-dim);"><b>O que esperar:</b> usamos <code>| head -5</code> pra ver só as 5 primeiras linhas — o arquivo completo tem mais de 40. Compare o "MemTotal" aqui (em kB) com o "total" do <code>free -h</code> (em GiB) — são o mesmo número, unidades diferentes.</p>
+      <details class="tip">
+        <summary>O que é esse "|" no meio do comando?</summary>
+        <div class="tip-body">
+          É o <b>pipe</b> — ele pega a saída de um comando e "encana" para dentro do próximo. Aqui, a saída inteira de <code>cat /proc/meminfo</code> vira a entrada de <code>head -5</code>, que mostra só as 5 primeiras linhas. Vamos usar bastante pipe ao longo do curso.
+        </div>
+      </details>
+    </div>
+
+    <div class="connect-box">
+      <b>Conectando com a teoria:</b> no slide 5 da aula vimos que o <code>/proc</code> é um sistema de arquivos <i>virtual</i> — nada aqui existe fisicamente no disco. Repare que você não criou nenhum desses arquivos: o kernel os gera na hora em que você pede pra ler.
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">PASSO 4 DE 5</div>
+    <h2>E o disco, quanto espaço sobra?</h2>
+    <p class="intro">Vamos fechar o trio CPU/memória/disco olhando para o armazenamento.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">5</span> <code class="big">df -h</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p><i>Disk Free</i> — mostra cada partição/disco montado no sistema, com espaço total, usado e livre.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>Disco cheio é uma das causas mais comuns (e mais bobas) de sistemas travando em produção.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="prompt">$</span> df -h
+<span class="out">Filesystem      Size  Used Avail Use% Mounted on
+/dev/sda2        25G  6.1G   18G  26% /
+tmpfs           1.9G     0  1.9G   0% /dev/shm</span></div>
+      </div>
+      <p style="font-size:13.5px;color:var(--text-dim);"><b>O que esperar:</b> a linha com <code>/</code> na coluna "Mounted on" é o seu disco principal — os 25 GB que configuramos na criação da VM. O "Use%" ainda deve estar baixo, já que a VM é nova.</p>
+      <details class="tip">
+        <summary>O que é essa linha "tmpfs"?</summary>
+        <div class="tip-body">
+          É um sistema de arquivos temporário que vive <b>na memória RAM</b>, não no disco — por isso é tão rápido e por isso some quando a máquina desliga. Não se preocupe com ele agora, é só curiosidade.
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">PASSO 5 DE 5</div>
+    <h2>O arquivo que muda sozinho</h2>
+    <p class="intro">Este é o passo mais importante do roteiro — a prova ao vivo de que o <code>/proc</code> não guarda arquivos de verdade.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">6</span> <code class="big">cat /proc/uptime</code> <span style="color:var(--text-faint);font-family:var(--font-mono);font-size:12px;">(rode duas vezes)</span></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p>Mostra há quantos segundos a máquina está ligada (primeiro número) e há quantos segundos ela está ociosa (segundo número).</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>É o exemplo mais claro de que o conteúdo do <code>/proc</code> é gerado <i>no instante da leitura</i> — não fica salvo em lugar nenhum.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="prompt">$</span> cat /proc/uptime
+<span class="out">3841.92 3714.05</span>
+<span class="prompt">$</span> cat /proc/uptime
+<span class="out">3846.17 3717.83</span></div>
+      </div>
+      <p style="font-size:13.5px;color:var(--text-dim);"><b>O que esperar:</b> os dois números vão ser <b>diferentes</b> entre a primeira e a segunda leitura — mesmo que você rode os comandos com poucos segundos de diferença. Isso é o comportamento esperado, não um erro.</p>
+      <details class="tip">
+        <summary>Quero comparar com um arquivo de verdade</summary>
+        <div class="tip-body">
+          Tente o mesmo teste com um arquivo comum:
+          <code>echo "teste" > ~/arquivo.txt && cat ~/arquivo.txt && cat ~/arquivo.txt</code>
+          Repare que, dessa vez, as duas leituras são idênticas — porque esse arquivo existe de verdade no disco.
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">REGISTRO NO PORTFÓLIO</div>
+    <h2>Suas 3 observações</h2>
+    <p class="intro">Escreva no <a href="#" style="color:var(--primary);">Quiz_Encontro-02.html</a> — não aqui. Este espaço é só para você rascunhar antes. Cada observação precisa ter no mínimo 40 caracteres e <b style="color:var(--text);">conectar o comando ao conceito</b>, não apenas descrever o que apareceu na tela.</p>
+
+    <div class="obs-card">
+      <h3>Observação 1 — CPU</h3>
+      <p class="qtext">Compare a saída de <code>lscpu</code> com <code>cat /proc/cpuinfo</code>. O que muda entre as duas formas de ver a mesma informação?</p>
+      <textarea class="obs-input" placeholder="Escreva seu rascunho aqui..." oninput="updateChar(this)"></textarea>
+      <div class="char-count">0 caracteres</div>
+    </div>
+
+    <div class="obs-card">
+      <h3>Observação 2 — Memória</h3>
+      <p class="qtext">O que os campos "MemFree" e "MemAvailable" do <code>/proc/meminfo</code> sugerem sobre como o Linux gerencia memória livre?</p>
+      <textarea class="obs-input" placeholder="Escreva seu rascunho aqui..." oninput="updateChar(this)"></textarea>
+      <div class="char-count">0 caracteres</div>
+    </div>
+
+    <div class="obs-card">
+      <h3>Observação 3 — /proc como janela virtual</h3>
+      <p class="qtext">Por que <code>/proc/uptime</code> muda de valor a cada leitura, mesmo sem você "editar" nada? Conecte com a ideia de sistema de arquivos virtual vista na aula.</p>
+      <textarea class="obs-input" placeholder="Escreva seu rascunho aqui..." oninput="updateChar(this)"></textarea>
+      <div class="char-count">0 caracteres</div>
+    </div>
+
+    <div class="good-bad">
+      <div class="gb-card bad">
+        <div class="gb-lbl">Observação fraca</div>
+        <p>"O comando mostrou os números da memória e tinha várias linhas com informações."</p>
+      </div>
+      <div class="gb-card good">
+        <div class="gb-lbl">Observação boa</div>
+        <p>"MemFree mostra só a memória totalmente ociosa, enquanto MemAvailable soma a isso o que está em cache/buffer e pode ser liberado na hora se um programa precisar — por isso MemAvailable é sempre maior."</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">CHECKLIST FINAL</div>
+    <h2>Antes de encerrar</h2>
+    <div class="checklist" id="checklist">
+      <div class="check-item"><input type="checkbox" id="c1"><label for="c1">Rodei <code>lscpu</code> e identifiquei quantos núcleos minha VM tem</label></div>
+      <div class="check-item"><input type="checkbox" id="c2"><label for="c2">Rodei <code>free -h</code> e comparei com a memória configurada na VM</label></div>
+      <div class="check-item"><input type="checkbox" id="c3"><label for="c3">Comparei <code>lscpu</code>/<code>free -h</code> com <code>/proc/cpuinfo</code>/<code>/proc/meminfo</code></label></div>
+      <div class="check-item"><input type="checkbox" id="c4"><label for="c4">Rodei <code>df -h</code> e localizei minha partição principal</label></div>
+      <div class="check-item"><input type="checkbox" id="c5"><label for="c5">Rodei <code>cat /proc/uptime</code> duas vezes e confirmei que os números mudam</label></div>
+      <div class="check-item"><input type="checkbox" id="c6"><label for="c6">Escrevi minhas 3 observações no <code>Quiz_Encontro-02.html</code></label></div>
+    </div>
+  </section>
+
+  <div class="footer-cta">
+    <p>Terminou tudo? Feche este roteiro e abra o <b style="color:var(--text);">Quiz_Encontro-02.html</b> para registrar suas observações e responder o quiz de leitura.</p>
+  </div>
+
+</div>
+
+<script>
+  function updateChar(el){
+    const wrap = el.nextElementSibling;
+    const len = el.value.length;
+    wrap.textContent = len + ' caracteres';
+    wrap.classList.toggle('ok', len >= 40);
+  }
+  (function(){
+    const boxes = Array.from(document.querySelectorAll('#checklist input[type=checkbox]'));
+    const fill = document.getElementById('progFill');
+    const label = document.getElementById('progLabel');
+    function refresh(){
+      const done = boxes.filter(b=>b.checked).length;
+      fill.style.width = (done/boxes.length*100) + '%';
+      label.textContent = done + ' / ' + boxes.length + ' concluídos';
+      boxes.forEach(b=>b.closest('.check-item').classList.toggle('done', b.checked));
+    }
+    boxes.forEach(b=>b.addEventListener('change', refresh));
+    refresh();
+  })();
+</script>
+</body>
+</html>

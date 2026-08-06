@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roteiro de Laboratório — Encontro 11 · Sistemas Operacionais ADS23</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#fbfaf5;
+    --bg-card:#ffffff;
+    --bg-card-2:#f3f1e8;
+    --line:#e2ddd0;
+    --line-soft:#ece8db;
+    --primary:#1b878f;
+    --primary-dim:#8fc7ca;
+    --primary-soft:rgba(27,135,143,.09);
+    --secondary:#399b3f;
+    --secondary-soft:rgba(57,155,63,.08);
+    --alert:#cd191e;
+    --alert-soft:rgba(205,25,30,.07);
+    --text:#20241f;
+    --text-dim:#5b6058;
+    --text-faint:#8b9088;
+    --font-display:'Space Grotesk',sans-serif;
+    --font-body:'IBM Plex Sans',sans-serif;
+    --font-mono:'IBM Plex Mono',monospace;
+    --term-bg:#10161f;
+    --term-line:#212b3a;
+    --term-dim:#8d96a8;
+    --term-prompt:#7ee787;
+    --term-accent:#5fd9d3;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-body);line-height:1.6;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3,h4{font-family:var(--font-display);font-weight:600;color:var(--text);letter-spacing:-.01em;}
+  code{font-family:var(--font-mono);background:var(--primary-soft);color:var(--primary);padding:1px 6px;border-radius:4px;font-size:.92em;}
+  ::selection{background:var(--primary-soft);color:var(--text);}
+
+  .topbar{
+    position:sticky;top:0;z-index:20;background:rgba(251,250,245,.92);backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);padding:12px 22px;
+    display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  }
+  .topbar .brand{font-family:var(--font-mono);font-size:12.5px;color:var(--text-dim);}
+  .topbar .brand b{color:var(--primary);}
+  .topbar .progress-mini{font-family:var(--font-mono);font-size:12px;color:var(--text-faint);}
+
+  .wrap{max-width:880px;margin:0 auto;padding:36px 22px 80px;}
+
+  .hero{margin-bottom:44px;}
+  .hero .eyebrow{font-family:var(--font-mono);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);margin-bottom:12px;display:flex;align-items:center;gap:10px;}
+  .hero .eyebrow::before{content:'';width:22px;height:1px;background:var(--primary-dim);}
+  .hero h1{font-size:clamp(26px,4vw,38px);margin:0 0 14px;}
+  .hero p{color:var(--text-dim);font-size:16px;max-width:640px;margin:0;}
+  .hero .parts{display:flex;gap:14px;margin-top:22px;flex-wrap:wrap;}
+  .hero .part-chip{background:var(--bg-card);border:1px solid var(--line);border-radius:8px;padding:10px 16px;font-family:var(--font-mono);font-size:12.5px;color:var(--text-dim);}
+  .hero .part-chip b{color:var(--primary);}
+
+  .block{margin-bottom:52px;}
+  .block-num{font-family:var(--font-mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-faint);margin-bottom:8px;}
+  .block h2{font-size:22px;margin-bottom:10px;}
+  .block .intro{color:var(--text-dim);font-size:15px;max-width:680px;margin:0 0 20px;}
+
+  .part-divider{display:flex;align-items:center;gap:16px;margin:56px 0 32px;}
+  .part-divider .line{flex:1;height:1px;background:var(--line);}
+  .part-divider .label{font-family:var(--font-mono);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);white-space:nowrap;}
+
+  .cmd-card{background:var(--bg-card);border:1px solid var(--line);border-radius:12px;padding:20px 22px;margin-bottom:18px;}
+  .cmd-title{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+  .step-badge{width:24px;height:24px;border-radius:50%;background:var(--primary);color:#fff;font-family:var(--font-mono);font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  code.big{font-size:15px;padding:4px 10px;}
+
+  .explain-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+  .explain-box{background:var(--bg-card-2);border:1px solid var(--line-soft);border-radius:8px;padding:12px 14px;}
+  .explain-box .lbl{font-family:var(--font-mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-faint);margin-bottom:5px;}
+  .explain-box p{margin:0;font-size:13.5px;color:var(--text-dim);}
+  @media (max-width:680px){.explain-grid{grid-template-columns:1fr;}}
+
+  .terminal-mini{background:var(--term-bg);border:1px solid var(--term-line);border-radius:8px;overflow:hidden;margin-bottom:12px;}
+  .terminal-mini .bar{background:var(--term-bg);padding:6px 10px;display:flex;gap:5px;}
+  .terminal-mini .bar span{width:8px;height:8px;border-radius:50%;background:var(--term-line);}
+  .terminal-mini .body{padding:14px 16px;font-family:var(--font-mono);font-size:13px;color:var(--term-dim);white-space:pre-wrap;line-height:1.55;}
+  .terminal-mini .prompt{color:var(--term-prompt);}
+  .terminal-mini .out{color:var(--term-dim);}
+  .terminal-mini .hi{color:var(--term-accent);}
+  .terminal-mini .err{color:#e0605f;font-weight:600;}
+
+  details.tip{background:var(--bg-card-2);border:1px solid var(--line-soft);border-radius:8px;margin-top:8px;}
+  details.tip summary{padding:10px 14px;cursor:pointer;font-size:13.5px;color:var(--primary);font-family:var(--font-mono);}
+  details.tip .tip-body{padding:0 14px 14px;font-size:13.5px;color:var(--text-dim);}
+
+  .obs-note{font-size:13.5px;color:var(--text-dim);margin-top:2px;}
+  .obs-note b{color:var(--text);}
+
+  .warn-box{background:var(--alert-soft);border:1px solid var(--alert);border-radius:8px;padding:12px 16px;margin-top:12px;font-size:13.5px;color:var(--text-dim);}
+  .warn-box b{color:var(--alert);}
+
+  .example-pair{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0;}
+  .example-box{border-radius:8px;padding:14px 16px;font-size:13.5px;}
+  .example-box.weak{background:var(--alert-soft);border:1px solid var(--alert);}
+  .example-box.good{background:var(--secondary-soft);border:1px solid var(--secondary);}
+  .example-box .lbl{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;margin-bottom:6px;}
+  .example-box.weak .lbl{color:var(--alert);}
+  .example-box.good .lbl{color:var(--secondary);}
+  .example-box p{margin:0;color:var(--text-dim);font-style:italic;}
+  @media (max-width:680px){.example-pair{grid-template-columns:1fr;}}
+
+  .draft-box{margin-top:14px;}
+  .draft-box label{display:block;font-size:13.5px;color:var(--text-dim);margin-bottom:6px;}
+  .draft-box textarea{width:100%;min-height:90px;background:var(--bg-card-2);border:1px solid var(--line);border-radius:8px;color:var(--text);font-family:var(--font-body);font-size:14px;padding:10px 12px;resize:vertical;}
+  .draft-box textarea:focus{outline:none;border-color:var(--primary-dim);}
+  .char-count{font-family:var(--font-mono);font-size:11.5px;color:var(--text-faint);margin-top:5px;text-align:right;}
+  .char-count.ok{color:var(--secondary);}
+
+  .theory-link{background:var(--primary-soft);border:1px solid var(--primary-dim);border-radius:10px;padding:16px 18px;margin-top:20px;}
+  .theory-link .lbl{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;color:var(--primary);margin-bottom:6px;}
+  .theory-link p{margin:0;font-size:14px;color:var(--text-dim);}
+
+  .checklist{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px;}
+  .checklist li{display:flex;align-items:flex-start;gap:12px;background:var(--bg-card);border:1px solid var(--line);border-radius:8px;padding:12px 16px;font-size:14px;color:var(--text-dim);transition:.2s;}
+  .checklist li.checked{border-color:var(--secondary);background:var(--secondary-soft);color:var(--text);}
+  .checklist input[type=checkbox]{width:18px;height:18px;margin-top:1px;accent-color:var(--secondary);flex-shrink:0;}
+
+  .progress{position:sticky;bottom:0;background:rgba(251,250,245,.95);backdrop-filter:blur(6px);border-top:1px solid var(--line);padding:14px 22px;display:flex;align-items:center;gap:16px;justify-content:center;}
+  .progress #progtext{font-family:var(--font-mono);font-size:12.5px;color:var(--text-dim);white-space:nowrap;}
+  .progress .bar{flex:1;max-width:320px;height:6px;background:var(--line-soft);border-radius:3px;overflow:hidden;}
+  .progress .bar i{display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--primary),var(--secondary));transition:width .3s;}
+
+  footer{text-align:center;padding:30px 20px 90px;font-family:var(--font-mono);font-size:11.5px;color:var(--text-faint);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">Sistemas Operacionais · <b>ADS23</b></div>
+  <div class="progress-mini">Encontro 11 de 17 · Roteiro de Laboratório</div>
+</div>
+
+<div class="wrap">
+
+  <div class="hero">
+    <div class="eyebrow">Mão na massa · ~45 min</div>
+    <h1>Mapeando o disco — e provando o que sobrevive a um container</h1>
+    <p>Hoje você mapeia os discos da máquina, aprende a dupla de comandos que resolve o incidente "o disco encheu", confirma que dispositivos são arquivos como quaisquer outros, e termina provando na prática a diferença entre um container com e sem volume.</p>
+    <div class="parts">
+      <div class="part-chip"><b>Passos 1–5</b> · Discos, espaço e latência</div>
+      <div class="part-chip"><b>Passos 6–8</b> · Reforço Docker: volumes</div>
+    </div>
+  </div>
+
+  <section class="block">
+    <div class="block-num">PASSO 1 DE 8</div>
+    <h2>Mapeando os discos da máquina</h2>
+    <p class="intro">Antes de diagnosticar qualquer coisa de E/S, é preciso saber o que existe: quais discos, quais partições, montadas onde.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">1</span> <code class="big">lsblk</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p>Lista os dispositivos de bloco (discos e partições) em formato de árvore, mostrando tamanho e ponto de montagem.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>É o primeiro comando de qualquer investigação de armazenamento — mostra a estrutura física antes de olhar o uso.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="prompt">$</span> lsblk
+<span class="out">NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+sda      8:0     0   25G  0 disk
+|-sda1   8:1     0   24G  0 part </span><span class="hi">/</span><span class="out">
+`-sda2   8:2     0    1G  0 part [SWAP]
+sr0     11:0     1 1024M  0 rom</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> o disco da sua VM (provavelmente <code>sda</code>, ~25G conforme configurado na Semana 0), dividido em partições. Repare que a partição de swap aparece aqui — é o mesmo swap dos Encontros 9 e 10, agora visto como estrutura de disco.</p>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">PASSO 2 DE 8</div>
+    <h2>Quanto espaço resta</h2>
+    <p class="intro">Agora a pergunta mais frequente de sustentação: quanto ainda cabe?</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">2</span> <code class="big">df -h</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p>"Disk free" — espaço usado e disponível por sistema de arquivos montado. O <code>-h</code> converte pra G/M legíveis.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>Responde <b>qual partição</b> está cheia. É sempre o primeiro passo do incidente "a aplicação parou de gravar".</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="prompt">$</span> df -h
+<span class="out">Filesystem      Size  Used Avail Use% Mounted on
+/dev/sda1        24G  8.1G   15G  </span><span class="hi">36%</span><span class="out"> /
+tmpfs           1.9G     0  1.9G   0% /dev/shm</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> a coluna <code>Use%</code> da partição <code>/</code>. Anote esse percentual — quando passa de ~90% em produção, é hora de agir.</p>
+      <details class="tip">
+        <summary>O que é esse tmpfs que aparece na lista?</summary>
+        <div class="tip-body">
+          É um sistema de arquivos que vive <b>na memória RAM</b>, não em disco — some quando a máquina desliga. É outro exemplo da abstração do slide 6: algo que não é disco algum, mas aparece como um caminho normal na árvore de arquivos.
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">PASSO 3 DE 8</div>
+    <h2>Quem está ocupando o espaço</h2>
+    <p class="intro">O <code>df</code> disse qual partição está cheia. O <code>du</code> diz o que, dentro dela, está ocupando lugar.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">3</span> <code class="big">sudo du -sh /var/* 2&gt;/dev/null | sort -h | tail -5</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p>"Disk usage" — soma o tamanho de cada subdiretório de <code>/var</code>. O <code>sort -h</code> ordena por tamanho e o <code>tail -5</code> mostra os cinco maiores.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p><code>/var</code> é onde ficam logs e dados variáveis — o suspeito número um quando um disco enche sozinho.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="prompt">$</span> sudo du -sh /var/* 2&gt;/dev/null | sort -h | tail -5
+<span class="out">28M     /var/backups
+94M     /var/cache
+</span><span class="hi">312M    /var/log</span><span class="out">
+1.4G    /var/lib</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> <code>/var/lib</code> e <code>/var/log</code> entre os maiores. Note o encadeamento de pipes — é exatamente a técnica do Encontro 6, agora aplicada a um problema real de diagnóstico.</p>
+      <details class="tip">
+        <summary>O comando está demorando muito</summary>
+        <div class="tip-body">
+          O <code>du</code> percorre todos os arquivos, então demora proporcionalmente ao volume de dados. Nunca rode <code>du</code> direto na raiz <code>/</code> sem necessidade — comece por diretórios específicos, como fizemos com <code>/var</code>. O <code>2&gt;/dev/null</code> descarta erros de permissão (redirecionamento de stderr, do Encontro 6).
+        </div>
+      </details>
+    </div>
+
+    <div class="draft-box">
+      <label for="obs1">Rascunho da observação 1 — qual a diferença entre o que o df e o du respondem? Em que ordem você usaria os dois num incidente de "disco cheio"?</label>
+      <textarea id="obs1" placeholder="Ex: o df mostra qual partição está cheia, enquanto o du..."></textarea>
+      <div class="char-count" data-for="obs1">0 caracteres (mínimo 40)</div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">PASSO 4 DE 8</div>
+    <h2>Dispositivos são arquivos mesmo?</h2>
+    <p class="intro">Vamos confirmar na prática a afirmação do slide 6 — inclusive nos dois dispositivos que vocês já usaram sem saber.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">4</span> <code class="big">ls -l /dev/null /dev/zero /dev/sda</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p>Lista três dispositivos como se fossem arquivos comuns. A primeira letra da permissão indica o tipo: <code>c</code> = caractere, <code>b</code> = bloco.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>Confirma a nomeação uniforme do slide 5 — a razão de <code>cat</code>, <code>dd</code> e redirecionamento funcionarem igual com arquivo ou dispositivo.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="prompt">$</span> ls -l /dev/null /dev/zero /dev/sda
+<span class="hi">c</span><span class="out">rw-rw-rw- 1 root root 1, 3 /dev/null
+</span><span class="hi">c</span><span class="out">rw-rw-rw- 1 root root 1, 5 /dev/zero
+</span><span class="hi">b</span><span class="out">rw-rw---- 1 root disk 8, 0 /dev/sda</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> <code>c</code> no início das linhas de <code>null</code> e <code>zero</code>, <code>b</code> na do disco. Repare também que, no lugar do tamanho, aparecem dois números (major, minor) — o endereço do driver no kernel.</p>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">PASSO 5 DE 8</div>
+    <h2>O disco está sendo o gargalo?</h2>
+    <p class="intro">A ferramenta que responde diretamente se a lentidão vem do disco.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">5</span> <code class="big">iostat -x 1 3</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p>Estatísticas estendidas de E/S, 3 amostras de 1 segundo. As colunas-chave são <code>%util</code> (o quanto o disco está ocupado) e <code>await</code> (tempo médio de espera por operação, em ms).</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p><code>%util</code> perto de 100% significa disco saturado — o gargalo é ele, não a CPU.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="prompt">$</span> iostat -x 1 3
+<span class="out">Device   r/s    w/s   rkB/s   wkB/s  </span><span class="hi">await  %util</span><span class="out">
+sda     0.42   3.18   18.60  126.40   </span><span class="hi">4.83   1.20</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> <code>%util</code> baixo numa VM ociosa. Para ver o número subir, abra outro terminal e rode <code>dd if=/dev/zero of=teste bs=1M count=500; sync</code> enquanto o <code>iostat</code> roda — e depois apague o arquivo com <code>rm teste</code>.</p>
+      <details class="tip">
+        <summary>iostat: comando não encontrado</summary>
+        <div class="tip-body">
+          O <code>iostat</code> vem no pacote <code>sysstat</code>, que não é instalado por padrão no Ubuntu. Instale com <code>sudo apt install sysstat</code>. Se não conseguir instalar agora, pule este passo — os demais não dependem dele.
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <div class="part-divider"><div class="line"></div><div class="label">Reforço Docker · o dado que sobrevive</div><div class="line"></div></div>
+
+  <section class="block">
+    <div class="block-num">PASSO 6 DE 8</div>
+    <h2>Sem volume: o dado morre com o container</h2>
+    <p class="intro">Primeiro o cenário ingênuo — gravar um arquivo dentro do container, destruí-lo, e ver o que acontece.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">6</span> Gravar → destruir → conferir</div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p>Cria um arquivo na camada de escrita do próprio container, remove o container, e sobe outro para verificar se o arquivo continua lá.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>Demonstra, sem margem pra dúvida, o que "container é efêmero" significa na prática.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="prompt">$</span> docker run --name semvol alpine sh -c "echo 'dado importante' &gt; /dados.txt &amp;&amp; cat /dados.txt"
+<span class="out">dado importante</span>
+<span class="prompt">$</span> docker rm semvol
+<span class="out">semvol</span>
+<span class="prompt">$</span> docker run --rm alpine cat /dados.txt
+<span class="err">cat: can't open '/dados.txt': No such file or directory</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> o arquivo existe enquanto o container vive, e <b>desaparece</b> quando ele é removido. Pare um instante nessa linha de erro e pense: e se isso fosse o banco de dados de um sistema em produção?</p>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">PASSO 7 DE 8</div>
+    <h2>Com volume: o dado sobrevive</h2>
+    <p class="intro">Agora exatamente a mesma sequência, mudando uma única coisa: um volume montado.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">7</span> <code class="big">-v meuvolume:/dados</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p><code>-v meuvolume:/dados</code> monta um volume gerenciado pelo Docker (gravado no disco do host) dentro do container, no caminho <code>/dados</code>.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>É assim que se roda banco de dados, uploads de usuário, ou qualquer dado que não pode se perder quando o container reinicia.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="prompt">$</span> docker run --name comvol -v meuvolume:/dados alpine sh -c "echo 'dado importante' &gt; /dados/arquivo.txt"
+<span class="prompt">$</span> docker rm comvol
+<span class="out">comvol</span>
+<span class="prompt">$</span> docker run --rm -v meuvolume:/dados alpine cat /dados/arquivo.txt
+<span class="ok" style="color:#7ee787">dado importante</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> desta vez o conteúdo <b>aparece</b>, mesmo com o container original já destruído. O dado está no host, não no container. Confirme com <code>docker volume ls</code> que o volume continua existindo por conta própria.</p>
+      <details class="tip">
+        <summary>Onde esse volume fica fisicamente no host?</summary>
+        <div class="tip-body">
+          Rode <code>docker volume inspect meuvolume</code> — o campo <code>Mountpoint</code> mostra o caminho real no disco da VM. É um diretório comum, dentro da área do Docker, exatamente no sistema de arquivos que você mapeou no passo 1.
+        </div>
+      </details>
+    </div>
+
+    <div class="draft-box">
+      <label for="obs2">Rascunho da observação 2 — o que aconteceu com o arquivo no passo 6 e no passo 7? Por que a diferença, se o comando era praticamente o mesmo?</label>
+      <textarea id="obs2" placeholder="Ex: no passo 6 o arquivo sumiu depois do docker rm, já no passo 7..."></textarea>
+      <div class="char-count" data-for="obs2">0 caracteres (mínimo 40)</div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">PASSO 8 DE 8</div>
+    <h2>Limpando</h2>
+    <p class="intro">Remova o volume criado — e note que ele precisa ser removido explicitamente, justamente porque sobrevive aos containers.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">8</span> <code class="big">docker volume rm meuvolume</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p>Remove o volume e os dados dentro dele. Confira antes com <code>docker volume ls</code> e <code>docker ps -a</code> se sobrou algo dos testes.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>Volumes órfãos acumulam silenciosamente e são causa comum de disco cheio em máquinas de desenvolvimento — exatamente o incidente do passo 2.</p>
+        </div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> o nome do volume impresso de volta. Se der erro de "volume in use", remova antes os containers que ainda o referenciam.</p>
+    </div>
+
+    <div class="draft-box">
+      <label for="obs3">Rascunho da observação 3 — livre: algo que te surpreendeu ou uma dúvida que sobrou de hoje</label>
+      <textarea id="obs3" placeholder="Ex: não imaginava a diferença de velocidade entre RAM e disco, ou uma dúvida sobre volumes..."></textarea>
+      <div class="char-count" data-for="obs3">0 caracteres (mínimo 40)</div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2 style="font-size:18px;">Exemplo de observação forte x fraca</h2>
+    <div class="example-pair">
+      <div class="example-box weak">
+        <div class="lbl">Observação fraca</div>
+        <p>"Com volume o arquivo ficou salvo e sem volume ele sumiu."</p>
+      </div>
+      <div class="example-box good">
+        <div class="lbl">Observação forte</div>
+        <p>"No passo 6 o arquivo foi gravado na camada de escrita do próprio container — quando rodei <code>docker rm</code>, essa camada foi destruída junto e o dado se perdeu. No passo 7, o <code>-v</code> montou um diretório do host dentro do container, então a gravação aconteceu fora dele; por isso o dado sobreviveu à destruição. Na prática, isso significa que rodar um banco de dados em container sem volume é perder tudo no primeiro <code>docker rm</code>."</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="theory-link">
+    <div class="lbl">Conexão com a teoria</div>
+    <p>Os passos 1–3 são o sistema de arquivos, partições e diretórios do Laureano (p. 39–43), aplicados ao incidente real de "disco cheio". O passo 4 comprova a nomeação uniforme descrita pelo Tanenbaum nos princípios do software de E/S (p. 243–246) — a mesma abstração que faz <code>/dev/null</code> e <code>/dev/zero</code> funcionarem como arquivos desde o Encontro 6. O passo 5 mede a latência que o slide 3 descreveu em ordens de grandeza. Os passos 6–7 são o gancho Docker do slide 10.</p>
+  </div>
+
+  <section class="block" style="margin-top:48px;">
+    <h2 style="font-size:18px;">Checklist final</h2>
+    <ul class="checklist" id="checklist">
+      <li><input type="checkbox"><span>Mapeei discos e partições com <code>lsblk</code></span></li>
+      <li><input type="checkbox"><span>Verifiquei o espaço livre com <code>df -h</code></span></li>
+      <li><input type="checkbox"><span>Encontrei os maiores consumidores de espaço com <code>du</code></span></li>
+      <li><input type="checkbox"><span>Confirmei que dispositivos aparecem como arquivos em <code>/dev</code></span></li>
+      <li><input type="checkbox"><span>Li <code>%util</code> e <code>await</code> no <code>iostat</code> (ou registrei que o pacote não estava disponível)</span></li>
+      <li><input type="checkbox"><span>Comprovei que o dado <b>some</b> num container sem volume</span></li>
+      <li><input type="checkbox"><span>Comprovei que o dado <b>sobrevive</b> com volume montado</span></li>
+      <li><input type="checkbox"><span>Limpei containers e volumes de teste</span></li>
+      <li><input type="checkbox"><span>Preenchi as 3 observações acima (vou colar no quiz semanal)</span></li>
+    </ul>
+  </section>
+
+</div>
+
+<div class="progress">
+  <span id="progtext">0 / 9 verificados</span>
+  <div class="bar"><i id="progbar"></i></div>
+</div>
+
+<footer>Sistemas Operacionais · ADS23 · IFCE Campus Horizonte · Encontro 11 de 17</footer>
+
+<script>
+  const boxes = document.querySelectorAll('#checklist input[type=checkbox]');
+  const progtext = document.getElementById('progtext');
+  const progbar = document.getElementById('progbar');
+  function updateProgress(){
+    const total = boxes.length;
+    const done = [...boxes].filter(b=>b.checked).length;
+    progtext.textContent = done + ' / ' + total + ' verificados';
+    progbar.style.width = (done/total*100) + '%';
+  }
+  boxes.forEach(b=>{
+    b.addEventListener('change', ()=>{
+      b.closest('li').classList.toggle('checked', b.checked);
+      updateProgress();
+    });
+  });
+  updateProgress();
+
+  document.querySelectorAll('.draft-box textarea').forEach(ta=>{
+    const counter = document.querySelector('.char-count[data-for="'+ta.id+'"]');
+    ta.addEventListener('input', ()=>{
+      const len = ta.value.length;
+      counter.textContent = len + ' caracteres (mínimo 40)';
+      counter.classList.toggle('ok', len >= 40);
+    });
+  });
+</script>
+
+</body>
+</html>

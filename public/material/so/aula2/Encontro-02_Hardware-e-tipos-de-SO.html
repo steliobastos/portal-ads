@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Encontro 2 · Hardware e Tipos de SO — Sistemas Operacionais ADS23</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* paleta clara institucional (IFCE) — ver "Paleta visual dos materiais HTML" na memória do curso */
+    --bg:#fbfaf5;
+    --bg-panel:#f3f1e8;
+    --bg-card:#ffffff;
+    --bg-card-2:#f3f1e8;
+    --line:#e2ddd0;
+    --line-soft:#ece8db;
+    --primary:#1b878f;        /* teal — títulos, badges, destaques */
+    --primary-dim:#8fc7ca;    /* teal claro — bordas/divisores sutis */
+    --primary-soft:rgba(27,135,143,.09);
+    --primary-glow:rgba(27,135,143,.35);
+    --secondary:#399b3f;      /* verde IF — apoio técnico */
+    --secondary-dim:#a8d4ab;
+    --secondary-soft:rgba(57,155,63,.08);
+    --alert:#cd191e;          /* vermelho IF — alerta pontual */
+    --text:#20241f;
+    --text-dim:#5b6058;
+    --text-faint:#8b9088;
+    --font-display:'Space Grotesk',sans-serif;
+    --font-body:'IBM Plex Sans',sans-serif;
+    --font-mono:'IBM Plex Mono',monospace;
+    /* sub-paleta escura reservada — blocos de código/terminal permanecem escuros por contraste técnico */
+    --term-bg:#10161f;
+    --term-line:#212b3a;
+    --term-text:#c9d1d9;
+    --term-dim:#8d96a8;
+    --term-faint:#4d5566;
+    --term-prompt:#7ee787;
+    --term-accent:#5fd9d3;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-body);line-height:1.65;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3{font-family:var(--font-display);font-weight:600;color:var(--text);letter-spacing:-.01em;margin:0;}
+  a{color:var(--primary);}
+  code{font-family:var(--font-mono);background:var(--primary-soft);color:var(--primary);padding:1px 6px;border-radius:4px;font-size:.92em;}
+  ::selection{background:var(--primary-soft);color:var(--text);}
+
+  .topbar{
+    position:sticky;top:0;z-index:30;background:rgba(251,250,245,.94);backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);padding:12px 22px;
+    display:flex;align-items:center;justify-content:space-between;gap:14px;
+  }
+  .topbar .brand{font-family:var(--font-mono);font-size:12.5px;color:var(--text-dim);letter-spacing:.03em;}
+  .topbar .brand b{color:var(--primary);}
+  .progress-track{position:absolute;left:0;bottom:-1px;height:2px;width:100%;background:var(--line-soft);}
+  .progress-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--primary),var(--secondary));transition:width .1s linear;}
+  .dots{display:flex;gap:6px;}
+  .dots span{width:6px;height:6px;border-radius:50%;background:var(--line);transition:background .2s,transform .2s;}
+  .dots span.active{background:var(--primary);transform:scale(1.3);}
+
+  section.slide{
+    min-height:100vh;display:flex;flex-direction:column;justify-content:center;
+    padding:90px 8vw 70px;position:relative;border-bottom:1px solid var(--line-soft);
+    opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s ease;
+  }
+  section.slide.in{opacity:1;transform:translateY(0);}
+  .eyebrow{font-family:var(--font-mono);font-size:12.5px;color:var(--primary);letter-spacing:.12em;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+  .eyebrow::before{content:'';width:18px;height:1px;background:var(--primary-dim);}
+  .slide h2{font-size:clamp(28px,4vw,44px);max-width:900px;}
+  .slide .lede{font-size:17px;color:var(--text-dim);max-width:640px;margin-top:14px;}
+
+  /* CAPA */
+  #capa{justify-content:center;align-items:flex-start;}
+  #capa .kicker{font-family:var(--font-mono);color:var(--text-dim);font-size:13px;letter-spacing:.08em;margin-bottom:22px;}
+  #capa .kicker b{color:var(--primary);}
+  #capa h1{font-size:clamp(38px,6.4vw,72px);line-height:1.04;max-width:920px;}
+  #capa h1 .hl{color:var(--primary);}
+  #capa .sub{font-size:18px;color:var(--text-dim);max-width:600px;margin-top:20px;}
+  .capa-meta{display:flex;gap:28px;margin-top:46px;flex-wrap:wrap;}
+  .capa-meta div{font-family:var(--font-mono);font-size:12.5px;color:var(--text-faint);}
+  .capa-meta div b{display:block;color:var(--text);font-size:14px;font-family:var(--font-body);font-weight:600;margin-top:3px;}
+  .boot-line{font-family:var(--font-mono);font-size:13px;color:var(--secondary);opacity:0;margin-top:36px;}
+
+  /* GRID CARDS */
+  .grid{display:grid;gap:16px;margin-top:34px;}
+  .grid.cols-2{grid-template-columns:repeat(2,1fr);}
+  .grid.cols-3{grid-template-columns:repeat(3,1fr);}
+  .grid.cols-4{grid-template-columns:repeat(4,1fr);}
+  .card{background:var(--bg-card);border:1px solid var(--line);border-radius:12px;padding:20px;}
+  .card h3{font-size:16px;margin-bottom:8px;display:flex;align-items:center;gap:9px;}
+  .card h3 .ic{font-size:19px;}
+  .card p{font-size:13.8px;color:var(--text-dim);margin:0;}
+  .card .tag{display:inline-block;font-family:var(--font-mono);font-size:10.5px;color:var(--primary);background:var(--primary-soft);padding:2px 8px;border-radius:20px;margin-top:10px;letter-spacing:.03em;}
+
+  /* BUS DIAGRAM */
+  .bus-wrap{margin-top:38px;background:var(--bg-panel);border:1px solid var(--line);border-radius:14px;padding:32px;}
+  .bus-row{display:flex;align-items:center;justify-content:center;gap:0;flex-wrap:wrap;}
+  .bus-node{background:var(--bg-card);border:1px solid var(--line);border-radius:10px;padding:14px 20px;text-align:center;min-width:110px;}
+  .bus-node .lbl{font-family:var(--font-mono);font-size:12px;color:var(--text-dim);}
+  .bus-node .val{font-size:15px;font-weight:600;color:var(--text);margin-top:4px;}
+  .bus-node.cpu{border-color:var(--primary-dim);}
+  .bus-node.cpu .val{color:var(--primary);}
+  .bus-node.mem{border-color:var(--secondary-dim);}
+  .bus-node.mem .val{color:var(--secondary);}
+  .bus-line{height:2px;background:repeating-linear-gradient(90deg,var(--line-soft) 0 6px,transparent 6px 12px);width:46px;position:relative;}
+  .bus-line.active{background:repeating-linear-gradient(90deg,var(--primary) 0 6px,transparent 6px 12px);}
+  .bus-bottom{margin-top:18px;text-align:center;font-family:var(--font-mono);font-size:12px;color:var(--text-faint);}
+
+  /* ZOO */
+  .zoo-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:30px;}
+  .zoo-card{background:var(--bg-card);border:1px solid var(--line);border-radius:12px;padding:16px;transition:border-color .2s,transform .2s;}
+  .zoo-card:hover{border-color:var(--primary-dim);transform:translateY(-2px);}
+  .zoo-card .n{font-family:var(--font-mono);font-size:11px;color:var(--text-faint);}
+  .zoo-card h4{font-family:var(--font-display);font-size:14.5px;color:var(--text);margin:6px 0 6px;font-weight:600;}
+  .zoo-card p{font-size:12.5px;color:var(--text-dim);margin:0;}
+  .zoo-card.here{border-color:var(--secondary);box-shadow:0 0 0 1px var(--secondary) inset;}
+  .zoo-card.here .n{color:var(--secondary);}
+
+  /* PROCFS */
+  .split{display:grid;grid-template-columns:1.1fr .9fr;gap:34px;align-items:center;margin-top:30px;}
+  .terminal{background:var(--term-bg);border:1px solid var(--term-line);border-radius:12px;overflow:hidden;box-shadow:0 20px 50px -20px rgba(0,0,0,.35);}
+  .terminal .bar{background:var(--term-bg);padding:9px 14px;display:flex;gap:6px;border-bottom:1px solid var(--term-line);}
+  .terminal .bar span{width:10px;height:10px;border-radius:50%;background:var(--term-line);}
+  .terminal .bar span:nth-child(1){background:#e0605a;}
+  .terminal .bar span:nth-child(2){background:#e0b23a;}
+  .terminal .bar span:nth-child(3){background:#5fbf6e;}
+  .terminal .body{padding:18px 20px;font-family:var(--font-mono);font-size:13px;color:var(--term-dim);min-height:170px;}
+  .terminal .prompt{color:var(--term-accent);}
+  .terminal .out{color:var(--term-text);}
+  .terminal .out b{color:var(--term-accent);}
+  .cursor{display:inline-block;width:7px;height:14px;background:var(--secondary);vertical-align:middle;animation:blink 1s step-end infinite;}
+  @keyframes blink{50%{opacity:0;}}
+
+  .procfs-note{background:var(--bg-card-2);border-left:3px solid var(--secondary);border-radius:0 10px 10px 0;padding:16px 20px;font-size:14px;color:var(--text-dim);}
+  .procfs-note b{color:var(--secondary);}
+
+  /* TABLE MAP */
+  table.cmdmap{width:100%;border-collapse:collapse;margin-top:30px;background:var(--bg-card);border:1px solid var(--line);border-radius:12px;overflow:hidden;}
+  table.cmdmap th{background:var(--bg-panel);color:var(--text-dim);font-family:var(--font-mono);font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;text-align:left;padding:12px 16px;border-bottom:1px solid var(--line);}
+  table.cmdmap td{padding:13px 16px;border-bottom:1px solid var(--line-soft);font-size:13.8px;color:var(--text-dim);vertical-align:top;}
+  table.cmdmap tr:last-child td{border-bottom:none;}
+  table.cmdmap td.cmd{font-family:var(--font-mono);color:var(--primary);white-space:nowrap;}
+  table.cmdmap td.rev{color:var(--text);}
+
+  /* DOCKER HOOK */
+  .hook-box{margin-top:32px;background:linear-gradient(135deg,rgba(57,155,63,.08),rgba(27,135,143,.06));border:1px solid var(--secondary-dim);border-radius:14px;padding:26px 30px;display:flex;gap:22px;align-items:flex-start;}
+  .hook-box .icon{font-size:30px;}
+  .hook-box h4{font-family:var(--font-display);font-size:17px;color:var(--text);margin-bottom:6px;}
+  .hook-box p{font-size:14px;color:var(--text-dim);margin:0;}
+  .hook-box .soon{display:inline-block;margin-top:10px;font-family:var(--font-mono);font-size:11px;color:var(--secondary);background:var(--secondary-soft);padding:3px 10px;border-radius:20px;}
+
+  /* ATIVIDADE */
+  .cta-panel{margin-top:34px;background:var(--bg-panel);border:1px dashed var(--primary-dim);border-radius:14px;padding:30px;display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;}
+  .cta-panel .txt h4{font-size:19px;color:var(--text);margin-bottom:6px;}
+  .cta-panel .txt p{font-size:14px;color:var(--text-dim);margin:0;max-width:480px;}
+  .cta-btn{font-family:var(--font-mono);font-size:13px;color:#fff;background:var(--primary);padding:12px 22px;border-radius:8px;font-weight:600;white-space:nowrap;}
+
+  /* LEITURA */
+  .read-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:30px;}
+  .read-card{border-radius:12px;padding:20px;border:1px solid var(--line);background:var(--bg-card);}
+  .read-card .badge{font-size:20px;}
+  .read-card h4{font-family:var(--font-display);font-size:15px;color:var(--text);margin:10px 0 4px;}
+  .read-card .pages{font-family:var(--font-mono);font-size:11.5px;color:var(--primary);}
+  .read-card p{font-size:13px;color:var(--text-dim);margin-top:8px;}
+  .read-card.base{border-color:var(--secondary);}
+  .read-card.recorte{border-color:var(--secondary-dim);}
+  .read-card.funda{border-color:var(--line);opacity:.85;}
+
+  .footer-note{margin-top:44px;font-family:var(--font-mono);font-size:12px;color:var(--text-faint);text-align:center;}
+
+  @media (max-width:900px){
+    .grid.cols-4,.grid.cols-3,.grid.cols-2,.zoo-grid,.read-grid{grid-template-columns:repeat(2,1fr);}
+    .split{grid-template-columns:1fr;}
+    .bus-row{flex-direction:column;}
+    .bus-line{width:2px;height:26px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">SISTEMAS OPERACIONAIS · ADS23 · <b>ENCONTRO 2</b></div>
+  <div class="dots" id="dots"></div>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+</div>
+
+<section class="slide" id="capa">
+  <div class="kicker"><b>Encontro 2</b> de 17 · Sistemas Operacionais</div>
+  <h1>Hardware e tipos de <span class="hl">SO</span></h1>
+  <p class="sub">O que a máquina tem por baixo do capô — e como o próprio sistema operacional te deixa espiar isso, sem abrir o gabinete.</p>
+  <div class="capa-meta">
+    <div>EIXO DO CURSO<b>Docker &amp; containers</b></div>
+    <div>DE ONDE VIEMOS<b>O que é um SO (Enc. 1)</b></div>
+    <div>PARA ONDE VAMOS<b>Arquiteturas de SO (Enc. 3)</b></div>
+  </div>
+  <div class="boot-line" id="bootLine">$ systemctl status hardware.target <span class="cursor"></span></div>
+</section>
+
+<section class="slide" id="recap">
+  <div class="eyebrow">Recapitulando</div>
+  <h2>No Encontro 1, o SO usava dois óculos</h2>
+  <p class="lede">Vimos que todo sistema operacional faz duas coisas ao mesmo tempo: entrega uma <b style="color:var(--text)">máquina estendida</b> pros programas, e atua como <b style="color:var(--text)">gerenciador de recursos</b> por trás das cortinas.</p>
+  <div class="grid cols-2">
+    <div class="card">
+      <h3><span class="ic">🖥️</span> Máquina estendida</h3>
+      <p>Esconde a complexidade do hardware. Você digita <code>cat arquivo.txt</code> e nunca precisa saber em que setor do disco os bytes estão.</p>
+    </div>
+    <div class="card">
+      <h3><span class="ic">🧮</span> Gerenciador de recursos</h3>
+      <p>Decide quem usa a CPU agora, quanta memória cada processo recebe, e em que ordem o disco atende os pedidos.</p>
+    </div>
+  </div>
+  <div class="procfs-note" style="margin-top:30px;">
+    Hoje a pergunta muda de direção: <b>o que exatamente</b> é esse hardware que o SO está gerenciando? E como fazemos pra <b>ver</b> essa gestão acontecendo, ao vivo, no terminal?
+  </div>
+</section>
+
+<section class="slide" id="hardware">
+  <div class="eyebrow">Por dentro da máquina</div>
+  <h2>O vocabulário mínimo de hardware</h2>
+  <p class="lede">Não é curso de arquitetura de computadores — é o suficiente pra você, como profissional de ADS, entender <b style="color:var(--text)">o que</b> pode estar limitando a performance de uma aplicação.</p>
+  <div class="grid cols-4">
+    <div class="card">
+      <h3><span class="ic">⚙️</span> CPU</h3>
+      <p>Executa instruções. Tem núcleos (cores) e cache. É o recurso que os processos disputam entre si.</p>
+      <span class="tag">lscpu</span>
+    </div>
+    <div class="card">
+      <h3><span class="ic">🧠</span> Memória (RAM)</h3>
+      <p>Rápida e volátil — perde tudo ao desligar. Onde os programas em execução vivem enquanto rodam.</p>
+      <span class="tag">free -h</span>
+    </div>
+    <div class="card">
+      <h3><span class="ic">💾</span> Disco</h3>
+      <p>Lento e persistente. Guarda tudo mesmo desligado. É o gargalo clássico de E/S.</p>
+      <span class="tag">df -h</span>
+    </div>
+    <div class="card">
+      <h3><span class="ic">🔌</span> E/S e barramento</h3>
+      <p>Teclado, rede, USB — e a "estrada" que liga tudo isso à CPU e à memória.</p>
+      <span class="tag">lsusb / lspci</span>
+    </div>
+  </div>
+
+  <div class="bus-wrap">
+    <div class="bus-row">
+      <div class="bus-node cpu"><div class="lbl">PROCESSA</div><div class="val">CPU</div></div>
+      <div class="bus-line active"></div>
+      <div class="bus-node mem"><div class="lbl">GUARDA (TEMP.)</div><div class="val">Memória</div></div>
+      <div class="bus-line"></div>
+      <div class="bus-node"><div class="lbl">GUARDA (PERM.)</div><div class="val">Disco</div></div>
+      <div class="bus-line"></div>
+      <div class="bus-node"><div class="lbl">CONVERSA COM FORA</div><div class="val">E/S</div></div>
+    </div>
+    <div class="bus-bottom">tudo conectado pelo barramento — a via de mão dupla entre os componentes</div>
+  </div>
+</section>
+
+<section class="slide" id="zoo">
+  <div class="eyebrow">O zoológico dos sistemas operacionais</div>
+  <h2>Nem todo SO é feito pra fazer a mesma coisa</h2>
+  <p class="lede">Tanenbaum descreve o hardware por trás de cada categoria de SO. O mesmo Linux que você instalou aparece em quase todas elas.</p>
+  <div class="zoo-grid">
+    <div class="zoo-card"><div class="n">01</div><h4>Mainframe</h4><p>Salas inteiras de disco. Lote, transações, tempo compartilhado.</p></div>
+    <div class="zoo-card here"><div class="n">02</div><h4>Servidor</h4><p>Atende muitos clientes via rede. Linux, FreeBSD, Windows Server.</p></div>
+    <div class="zoo-card"><div class="n">03</div><h4>Multiprocessador</h4><p>Várias CPUs, um sistema só. Todo notebook multinúcleo entra aqui.</p></div>
+    <div class="zoo-card here"><div class="n">04</div><h4>Computador pessoal</h4><p>Foco em um único usuário. É a sua VM Ubuntu agora.</p></div>
+    <div class="zoo-card here"><div class="n">05</div><h4>Portátil / móvel</h4><p>Tablets e smartphones. Android é Linux por baixo.</p></div>
+    <div class="zoo-card"><div class="n">06</div><h4>Embarcado</h4><p>Roda dentro de um forno de micro-ondas. Sem instalar apps.</p></div>
+    <div class="zoo-card"><div class="n">07</div><h4>Nó sensor</h4><p>Minúsculo, à bateria, orientado a eventos. TinyOS é exemplo clássico.</p></div>
+    <div class="zoo-card"><div class="n">08</div><h4>Tempo real</h4><p>Prazo é lei. Um robô soldador não pode atrasar a solda.</p></div>
+  </div>
+  <div class="procfs-note" style="margin-top:26px;">
+    <b>Por que isso importa pra você?</b> Quando for escolher onde rodar uma aplicação — um container num servidor, um app num celular — o tipo de SO por trás muda completamente o que é possível e o que é prioridade.
+  </div>
+</section>
+
+<section class="slide" id="procfs">
+  <div class="eyebrow">A ponte entre teoria e terminal</div>
+  <h2><code style="font-size:.85em;">/proc</code>: o SO te deixa espiar por dentro</h2>
+  <div class="split">
+    <div>
+      <p class="lede" style="margin-top:0;">O <code>/proc</code> parece uma pasta comum, mas é um sistema de arquivos <b style="color:var(--text)">virtual</b>: nada ali existe fisicamente no disco. É uma janela ao vivo para dentro do núcleo (kernel).</p>
+      <div class="procfs-note">
+        Os dados de <code>/proc/uptime</code> só são <b>gerados no instante</b> em que você lê o arquivo — e mudam a cada leitura. Não é um arquivo, é uma pergunta feita ao kernel disfarçada de arquivo.
+      </div>
+    </div>
+    <div class="terminal">
+      <div class="bar"><span></span><span></span><span></span></div>
+      <div class="body">
+        <div><span class="prompt">$</span> cat /proc/uptime</div>
+        <div class="out">3841.92 3714.05</div>
+        <div style="margin-top:10px;"><span class="prompt">$</span> cat /proc/uptime</div>
+        <div class="out">3846.17 3717.83</div>
+        <div style="margin-top:14px;color:var(--term-faint);">↑ dois números diferentes — o arquivo "muda sozinho" porque não é um arquivo de verdade.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="mapa">
+  <div class="eyebrow">Do conceito ao comando</div>
+  <h2>Cada pedaço de hardware tem uma janela no <code style="font-size:.8em;">/proc</code></h2>
+  <table class="cmdmap">
+    <tr><th>Hardware</th><th>Comando rápido</th><th>Janela em /proc</th><th>O que revela</th></tr>
+    <tr><td class="rev">CPU</td><td class="cmd">lscpu</td><td class="cmd">/proc/cpuinfo</td><td class="rev">Modelo, núcleos, cache, velocidade</td></tr>
+    <tr><td class="rev">Memória</td><td class="cmd">free -h</td><td class="cmd">/proc/meminfo</td><td class="rev">RAM total, em uso, livre, swap</td></tr>
+    <tr><td class="rev">Kernel</td><td class="cmd">uname -r</td><td class="cmd">/proc/version</td><td class="rev">Versão exata do núcleo Linux</td></tr>
+    <tr><td class="rev">Tempo ativo</td><td class="cmd">uptime</td><td class="cmd">/proc/uptime</td><td class="rev">Há quanto tempo a máquina está ligada</td></tr>
+    <tr><td class="rev">Disco</td><td class="cmd">df -h</td><td class="cmd">/proc/mounts</td><td class="rev">Espaço usado e pontos de montagem</td></tr>
+  </table>
+</section>
+
+<section class="slide" id="hook">
+  <div class="eyebrow">Eixo do curso</div>
+  <h2>Um spoiler sobre containers</h2>
+  <div class="hook-box">
+    <div class="icon">🐳</div>
+    <div>
+      <h4>Um container não tem hardware próprio</h4>
+      <p>Quando você roda <code>docker run</code>, o container enxerga o <b style="color:var(--text)">mesmo</b> <code>/proc</code> do host — só que com limites. Um <code>docker run --memory=512m</code> não muda a RAM física da máquina: ele restringe o que aquele processo pode enxergar e usar dela.</p>
+      <span class="soon">Voltamos nisso com força no Encontro 4</span>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="atividade">
+  <div class="eyebrow">Mão na massa</div>
+  <h2>Sua vez de abrir o capô</h2>
+  <p class="lede">Nos próximos ~90 minutos você vai rodar <code>lscpu</code>, <code>free -h</code> e explorar o <code>/proc</code> na sua própria VM — e escrever três observações conectando o que viu com o que acabamos de discutir.</p>
+  <div class="cta-panel">
+    <div class="txt">
+      <h4>Roteiro de Laboratório — Encontro 2</h4>
+      <p>Comandos explicados passo a passo, dicas pra quem travar, e o checklist final pro seu portfólio.</p>
+    </div>
+    <div class="cta-btn">Abrir Roteiro-Aluno_Encontro-02.html →</div>
+  </div>
+</section>
+
+<section class="slide" id="leitura">
+  <div class="eyebrow">Para ler</div>
+  <h2>Fechando o Encontro 2</h2>
+  <p class="lede">A leitura vem <b style="color:var(--text)">depois</b> da aula, como fechamento — e já prepara o Encontro 3. Confira o mapa completo em <code>Mapa_de_Leituras_SO_ADS23.md</code>.</p>
+  <div class="read-grid">
+    <div class="read-card base">
+      <div class="badge">🟢</div>
+      <h4>LAUREANO — Cap. 9</h4>
+      <div class="pages">p. 90–94</div>
+      <p><i>O Sistema de Arquivo /procfs.</i> O livro explica exatamente o que você acabou de explorar no laboratório.</p>
+    </div>
+    <div class="read-card recorte">
+      <div class="badge">🔵</div>
+      <h4>TANENBAUM — 1.4</h4>
+      <div class="pages">p. 24–27</div>
+      <p><i>O zoológico dos sistemas operacionais.</i> Mainframe, servidor, embarcado, tempo real — onde o Linux do lab se encaixa.</p>
+    </div>
+    <div class="read-card funda">
+      <div class="badge">⚪</div>
+      <h4>TANENBAUM — 1.3</h4>
+      <div class="pages">p. 14–24</div>
+      <p><i>Revisão sobre hardware de computadores.</i> Processadores, memória, discos, barramentos — opcional, pra quem quer ir além.</p>
+    </div>
+  </div>
+  <div class="footer-note">Sistemas Operacionais · ADS23 · IFCE Campus Horizonte</div>
+</section>
+
+<script>
+(function(){
+  const slides = Array.from(document.querySelectorAll('section.slide'));
+  const dotsWrap = document.getElementById('dots');
+  slides.forEach((_,i)=>{
+    const d = document.createElement('span');
+    if(i===0) d.classList.add('active');
+    dotsWrap.appendChild(d);
+  });
+  const dots = Array.from(dotsWrap.children);
+
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        e.target.classList.add('in');
+        const idx = slides.indexOf(e.target);
+        dots.forEach((d,i)=>d.classList.toggle('active', i===idx));
+      }
+    });
+  }, {threshold:.35});
+  slides.forEach(s=>io.observe(s));
+
+  window.addEventListener('scroll', ()=>{
+    const h = document.documentElement;
+    const scrolled = (h.scrollTop) / (h.scrollHeight - h.clientHeight) * 100;
+    document.getElementById('progressFill').style.width = scrolled + '%';
+  });
+
+  setTimeout(()=>{
+    const b = document.getElementById('bootLine');
+    b.style.transition = 'opacity .8s ease';
+    b.style.opacity = '1';
+  }, 500);
+})();
+</script>
+</body>
+</html>

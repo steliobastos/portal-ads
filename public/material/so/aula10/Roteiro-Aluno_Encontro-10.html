@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roteiro de Laboratório — Encontro 10 · Sistemas Operacionais ADS23</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#fbfaf5;
+    --bg-card:#ffffff;
+    --bg-card-2:#f3f1e8;
+    --line:#e2ddd0;
+    --line-soft:#ece8db;
+    --primary:#1b878f;
+    --primary-dim:#8fc7ca;
+    --primary-soft:rgba(27,135,143,.09);
+    --secondary:#399b3f;
+    --secondary-soft:rgba(57,155,63,.08);
+    --alert:#cd191e;
+    --alert-soft:rgba(205,25,30,.07);
+    --text:#20241f;
+    --text-dim:#5b6058;
+    --text-faint:#8b9088;
+    --font-display:'Space Grotesk',sans-serif;
+    --font-body:'IBM Plex Sans',sans-serif;
+    --font-mono:'IBM Plex Mono',monospace;
+    --term-bg:#10161f;
+    --term-line:#212b3a;
+    --term-dim:#8d96a8;
+    --term-prompt:#7ee787;
+    --term-accent:#5fd9d3;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-body);line-height:1.6;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3,h4{font-family:var(--font-display);font-weight:600;color:var(--text);letter-spacing:-.01em;}
+  code{font-family:var(--font-mono);background:var(--primary-soft);color:var(--primary);padding:1px 6px;border-radius:4px;font-size:.92em;}
+  ::selection{background:var(--primary-soft);color:var(--text);}
+
+  .topbar{
+    position:sticky;top:0;z-index:20;background:rgba(251,250,245,.92);backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);padding:12px 22px;
+    display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  }
+  .topbar .brand{font-family:var(--font-mono);font-size:12.5px;color:var(--text-dim);}
+  .topbar .brand b{color:var(--primary);}
+  .topbar .progress-mini{font-family:var(--font-mono);font-size:12px;color:var(--text-faint);}
+
+  .wrap{max-width:880px;margin:0 auto;padding:36px 22px 80px;}
+
+  .hero{margin-bottom:44px;}
+  .hero .eyebrow{font-family:var(--font-mono);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);margin-bottom:12px;display:flex;align-items:center;gap:10px;}
+  .hero .eyebrow::before{content:'';width:22px;height:1px;background:var(--primary-dim);}
+  .hero h1{font-size:clamp(26px,4vw,38px);margin:0 0 14px;}
+  .hero p{color:var(--text-dim);font-size:16px;max-width:640px;margin:0;}
+  .hero .parts{display:flex;gap:14px;margin-top:22px;flex-wrap:wrap;}
+  .hero .part-chip{background:var(--bg-card);border:1px solid var(--line);border-radius:8px;padding:10px 16px;font-family:var(--font-mono);font-size:12.5px;color:var(--text-dim);}
+  .hero .part-chip b{color:var(--primary);}
+
+  .block{margin-bottom:52px;}
+  .block-num{font-family:var(--font-mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-faint);margin-bottom:8px;}
+  .block h2{font-size:22px;margin-bottom:10px;}
+  .block .intro{color:var(--text-dim);font-size:15px;max-width:680px;margin:0 0 20px;}
+
+  .part-divider{display:flex;align-items:center;gap:16px;margin:56px 0 32px;}
+  .part-divider .line{flex:1;height:1px;background:var(--line);}
+  .part-divider .label{font-family:var(--font-mono);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);white-space:nowrap;}
+
+  .cmd-card{background:var(--bg-card);border:1px solid var(--line);border-radius:12px;padding:20px 22px;margin-bottom:18px;}
+  .cmd-title{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+  .step-badge{width:24px;height:24px;border-radius:50%;background:var(--primary);color:#fff;font-family:var(--font-mono);font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  code.big{font-size:15px;padding:4px 10px;}
+
+  .explain-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+  .explain-box{background:var(--bg-card-2);border:1px solid var(--line-soft);border-radius:8px;padding:12px 14px;}
+  .explain-box .lbl{font-family:var(--font-mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-faint);margin-bottom:5px;}
+  .explain-box p{margin:0;font-size:13.5px;color:var(--text-dim);}
+  @media (max-width:680px){.explain-grid{grid-template-columns:1fr;}}
+
+  .terminal-mini{background:var(--term-bg);border:1px solid var(--term-line);border-radius:8px;overflow:hidden;margin-bottom:12px;}
+  .terminal-mini .bar{background:var(--term-bg);padding:6px 10px;display:flex;gap:5px;}
+  .terminal-mini .bar span{width:8px;height:8px;border-radius:50%;background:var(--term-line);}
+  .terminal-mini .body{padding:14px 16px;font-family:var(--font-mono);font-size:13px;color:var(--term-dim);white-space:pre-wrap;line-height:1.55;}
+  .terminal-mini .prompt{color:var(--term-prompt);}
+  .terminal-mini .out{color:var(--term-dim);}
+  .terminal-mini .hi{color:var(--term-accent);}
+  .terminal-mini .err{color:#e0605f;font-weight:600;}
+
+  details.tip{background:var(--bg-card-2);border:1px solid var(--line-soft);border-radius:8px;margin-top:8px;}
+  details.tip summary{padding:10px 14px;cursor:pointer;font-size:13.5px;color:var(--primary);font-family:var(--font-mono);}
+  details.tip .tip-body{padding:0 14px 14px;font-size:13.5px;color:var(--text-dim);}
+
+  .obs-note{font-size:13.5px;color:var(--text-dim);margin-top:2px;}
+  .obs-note b{color:var(--text);}
+
+  .warn-box{background:var(--alert-soft);border:1px solid var(--alert);border-radius:8px;padding:12px 16px;margin-top:12px;font-size:13.5px;color:var(--text-dim);}
+  .warn-box b{color:var(--alert);}
+
+  .example-pair{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0;}
+  .example-box{border-radius:8px;padding:14px 16px;font-size:13.5px;}
+  .example-box.weak{background:var(--alert-soft);border:1px solid var(--alert);}
+  .example-box.good{background:var(--secondary-soft);border:1px solid var(--secondary);}
+  .example-box .lbl{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;margin-bottom:6px;}
+  .example-box.weak .lbl{color:var(--alert);}
+  .example-box.good .lbl{color:var(--secondary);}
+  .example-box p{margin:0;color:var(--text-dim);font-style:italic;}
+  @media (max-width:680px){.example-pair{grid-template-columns:1fr;}}
+
+  .draft-box{margin-top:14px;}
+  .draft-box label{display:block;font-size:13.5px;color:var(--text-dim);margin-bottom:6px;}
+  .draft-box textarea{width:100%;min-height:90px;background:var(--bg-card-2);border:1px solid var(--line);border-radius:8px;color:var(--text);font-family:var(--font-body);font-size:14px;padding:10px 12px;resize:vertical;}
+  .draft-box textarea:focus{outline:none;border-color:var(--primary-dim);}
+  .char-count{font-family:var(--font-mono);font-size:11.5px;color:var(--text-faint);margin-top:5px;text-align:right;}
+  .char-count.ok{color:var(--secondary);}
+
+  .theory-link{background:var(--primary-soft);border:1px solid var(--primary-dim);border-radius:10px;padding:16px 18px;margin-top:20px;}
+  .theory-link .lbl{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;color:var(--primary);margin-bottom:6px;}
+  .theory-link p{margin:0;font-size:14px;color:var(--text-dim);}
+
+  .checklist{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px;}
+  .checklist li{display:flex;align-items:flex-start;gap:12px;background:var(--bg-card);border:1px solid var(--line);border-radius:8px;padding:12px 16px;font-size:14px;color:var(--text-dim);transition:.2s;}
+  .checklist li.checked{border-color:var(--secondary);background:var(--secondary-soft);color:var(--text);}
+  .checklist input[type=checkbox]{width:18px;height:18px;margin-top:1px;accent-color:var(--secondary);flex-shrink:0;}
+
+  .progress{position:sticky;bottom:0;background:rgba(251,250,245,.95);backdrop-filter:blur(6px);border-top:1px solid var(--line);padding:14px 22px;display:flex;align-items:center;gap:16px;justify-content:center;}
+  .progress #progtext{font-family:var(--font-mono);font-size:12.5px;color:var(--text-dim);white-space:nowrap;}
+  .progress .bar{flex:1;max-width:320px;height:6px;background:var(--line-soft);border-radius:3px;overflow:hidden;}
+  .progress .bar i{display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--primary),var(--secondary));transition:width .3s;}
+
+  footer{text-align:center;padding:30px 20px 90px;font-family:var(--font-mono);font-size:11.5px;color:var(--text-faint);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">Sistemas Operacionais · <b>ADS23</b></div>
+  <div class="progress-mini">Encontro 10 de 17 · Roteiro de Laboratório</div>
+</div>
+
+<div class="wrap">
+
+  <div class="hero">
+    <div class="eyebrow">Mão na massa · ~48 min</div>
+    <h1>Medindo page faults, swap — e dimensionando um container</h1>
+    <p>Hoje você mede quantas vezes o sistema teve que buscar páginas no disco, aprende a ler as colunas de swap que denunciam thrashing, e fecha descobrindo empiricamente o menor limite de memória em que um container ainda funciona — em vez de chutar um número.</p>
+    <div class="parts">
+      <div class="part-chip"><b>Passos 1–4</b> · Page faults, vmstat e swap</div>
+      <div class="part-chip"><b>Passos 5–7</b> · Reforço Docker: dimensionar o limite</div>
+    </div>
+  </div>
+
+  <section class="block">
+    <div class="block-num">PASSO 1 DE 7</div>
+    <h2>Contando page faults de um comando</h2>
+    <p class="intro">Vamos rodar um comando que percorre muitos arquivos e medir quantas vezes o sistema precisou buscar páginas.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">1</span> <code class="big">/usr/bin/time -v ls -R /usr 2&gt;&amp;1 | grep -i "page faults"</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p><code>/usr/bin/time -v</code> (caminho completo, não o <code>time</code> embutido do shell) mostra estatísticas detalhadas do comando, incluindo page faults.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>Separa page faults <b>minor</b> (resolvidos na RAM, baratos) de <b>major</b> (exigiram disco, caros) — a distinção que importa no diagnóstico.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="prompt">$</span> /usr/bin/time -v ls -R /usr 2&gt;&amp;1 | grep -i "page faults"
+<span class="out">Major (requiring I/O) page faults: </span><span class="hi">3</span><span class="out">
+Minor (reclaiming a frame) page faults: </span><span class="hi">4821</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> muitos <i>minor</i> e pouquíssimos <i>major</i>. Isso é o padrão saudável — a maioria das páginas já estava disponível na RAM, sem precisar tocar o disco.</p>
+      <details class="tip">
+        <summary>Deu "comando não encontrado" ou não mostrou page faults</summary>
+        <div class="tip-body">
+          Use o caminho completo <code>/usr/bin/time</code> — o <code>time</code> sozinho chama a versão embutida do shell, que não tem a opção <code>-v</code>. Se o pacote não existir, instale com <code>sudo apt install time</code>.
+        </div>
+      </details>
+    </div>
+
+    <div class="draft-box">
+      <label for="obs1">Rascunho da observação 1 — quantos page faults minor e major seu comando gerou? Por que a diferença entre os dois números é tão grande?</label>
+      <textarea id="obs1" placeholder="Ex: tive 4821 minor e só 3 major, porque..."></textarea>
+      <div class="char-count" data-for="obs1">0 caracteres (mínimo 40)</div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">PASSO 2 DE 7</div>
+    <h2>Os contadores globais do kernel</h2>
+    <p class="intro">O sistema inteiro mantém contadores acumulados de page fault desde o boot — em <code>/proc</code>, como sempre.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">2</span> <code class="big">grep -E "^pgfault|^pgmajfault" /proc/vmstat</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p><code>pgfault</code> é o total de page faults desde o boot; <code>pgmajfault</code> é só a parcela que exigiu leitura de disco.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>É a fonte que ferramentas de monitoramento consultam pra montar gráficos de page fault ao longo do tempo.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="prompt">$</span> grep -E "^pgfault|^pgmajfault" /proc/vmstat
+<span class="out">pgfault 2841096
+pgmajfault 4127</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> números grandes (acumulados desde que a VM ligou) e, de novo, <code>pgmajfault</code> muito menor que <code>pgfault</code>. Rode duas vezes com alguns segundos de intervalo e veja os valores subirem.</p>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">PASSO 3 DE 7</div>
+    <h2>As colunas que denunciam thrashing</h2>
+    <p class="intro">O <code>vmstat</code> é a ferramenta clássica pra ver troca de páginas acontecendo em tempo real.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">3</span> <code class="big">vmstat 1 5</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p>Mostra 5 amostras, uma por segundo. As colunas <code>si</code> (swap in) e <code>so</code> (swap out) indicam páginas movendo entre RAM e disco.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p><code>si</code>/<code>so</code> altos e constantes é a assinatura de thrashing — o diagnóstico que o slide de hoje ensinou a reconhecer.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="prompt">$</span> vmstat 1 5
+<span class="out">procs -------memory------- ---swap--
+ r  b     free   buff  cache   </span><span class="hi">si   so</span><span class="out">
+ 1  0   438292  83104 1912440    </span><span class="hi">0    0</span><span class="out">
+ 0  0   438160  83104 1912440    </span><span class="hi">0    0</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> <code>si</code> e <code>so</code> zerados. Isso é <b>o resultado correto</b> numa VM ociosa — o valor do exercício é saber onde olhar quando <i>não</i> estiverem zerados.</p>
+      <details class="tip">
+        <summary>Zerado não significa que o comando falhou?</summary>
+        <div class="tip-body">
+          Não — significa que sua VM está saudável, sem pressão de memória. Um sistema em thrashing mostraria centenas ou milhares nessas colunas, continuamente. O objetivo aqui é reconhecer o padrão normal pra depois identificar o anormal.
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">PASSO 4 DE 7</div>
+    <h2>O estado do swap</h2>
+    <p class="intro">Confirme se sua VM tem área de swap configurada e quanto dela está em uso.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">4</span> <code class="big">swapon --show &amp;&amp; free -h | grep -i swap</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p><code>swapon --show</code> lista as áreas de swap ativas; o <code>free</code> filtrado mostra total e uso.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>Swap alocado com pouca troca é normal e saudável; o alarme é a <i>taxa de troca</i> do passo 3, não o total alocado.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="prompt">$</span> swapon --show &amp;&amp; free -h | grep -i swap
+<span class="out">NAME      TYPE  SIZE  USED  PRIO
+/swapfile file  2.0G    0B   -2
+Swap:     2.0Gi   0B  2.0Gi</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> uma área de swap listada, com uso próximo de zero. Se <code>swapon --show</code> não retornar nada, sua VM está sem swap — anote isso, é uma configuração possível e vale discutir suas implicações.</p>
+    </div>
+  </section>
+
+  <div class="part-divider"><div class="line"></div><div class="label">Reforço Docker · dimensionando o limite</div><div class="line"></div></div>
+
+  <section class="block">
+    <div class="block-num">PASSO 5 DE 7</div>
+    <h2>Descobrindo o limite mínimo viável</h2>
+    <p class="intro">Em vez de chutar um valor pro <code>--memory</code>, vamos descobrir empiricamente qual é o menor limite em que o container ainda funciona.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">5</span> Rode a mesma carga com limites decrescentes</div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p>O mesmo container, executado quatro vezes, com <code>--memory</code> cada vez menor: 256m → 128m → 64m → 32m.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>É assim que se dimensiona um serviço de verdade: medindo, não adivinhando. Limite alto demais desperdiça; baixo demais derruba em produção.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="prompt">$</span> for M in 256m 128m 64m 32m; do
+    echo "--- testando $M ---"
+    docker run --rm --memory=$M alpine sh -c "head -c 40m /dev/zero | wc -c" \
+      &amp;&amp; echo "OK em $M" || echo "FALHOU em $M"
+  done
+<span class="out">--- testando 256m ---
+41943040
+</span><span class="ok" style="color:#7ee787">OK em 256m</span><span class="out">
+--- testando 64m ---
+41943040
+</span><span class="ok" style="color:#7ee787">OK em 64m</span><span class="out">
+--- testando 32m ---
+</span><span class="err">FALHOU em 32m</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> sucesso nos limites maiores e falha em algum ponto conforme aperta. <b>Anote o menor valor que ainda funcionou</b> — esse é o limite mínimo viável para essa carga.</p>
+      <details class="tip">
+        <summary>Funcionou em todos os valores, até 32m</summary>
+        <div class="tip-body">
+          Sua carga é leve demais pra pressionar o limite. Aumente o consumo: troque <code>head -c 40m</code> por <code>head -c 100m</code> e rode de novo.
+        </div>
+      </details>
+    </div>
+
+    <div class="draft-box">
+      <label for="obs2">Rascunho da observação 2 — qual foi o menor limite de memória em que o container ainda funcionou? Por que não seria prudente usar exatamente esse valor em produção?</label>
+      <textarea id="obs2" placeholder="Ex: funcionou até 64m e falhou em 32m; usar exatamente 64m seria arriscado porque..."></textarea>
+      <div class="char-count" data-for="obs2">0 caracteres (mínimo 40)</div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">PASSO 6 DE 7</div>
+    <h2>Consumo contra o limite, ao vivo</h2>
+    <p class="intro">Suba um container duradouro com o limite que você encontrou e observe o consumo em relação ao teto.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">6</span> <code class="big">docker run -d --name dimensionado --memory=128m alpine sleep 300</code> <span style="color:var(--text-faint);font-family:var(--font-mono);font-size:12.5px;">depois</span> <code class="big">docker stats --no-stream</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p>O mesmo <code>docker stats</code> do Encontro 6 — mas agora a coluna de memória mostra consumo <b>contra o limite definido</b>, não contra a RAM total da máquina.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>É esse percentual que ferramentas de monitoramento usam pra alertar antes de um serviço ser morto por OOM.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="prompt">$</span> docker stats --no-stream
+<span class="out">NAME           CPU %   MEM USAGE / LIMIT   MEM %
+dimensionado   0.00%   </span><span class="hi">1.1MiB / 128MiB</span><span class="out">      0.86%</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> o limite (128MiB) aparecendo no lugar da RAM total da VM. Compare com o Encontro 6, onde o container sem limite mostrava a memória inteira da máquina como teto.</p>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">PASSO 7 DE 7</div>
+    <h2>Limpando</h2>
+    <p class="intro">Encerre e remova o container antes de fechar.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">7</span> <code class="big">docker stop dimensionado &amp;&amp; docker rm dimensionado</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p>Encerra e remove. Os containers do passo 5 usaram <code>--rm</code>, então já se removeram sozinhos.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>Boa prática: não deixar containers de teste ocupando recursos após a aula.</p>
+        </div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> o nome impresso duas vezes. Confirme com <code>docker ps -a</code> que não sobrou nada dos testes de hoje.</p>
+    </div>
+
+    <div class="draft-box">
+      <label for="obs3">Rascunho da observação 3 — livre: algo que te surpreendeu ou uma dúvida que sobrou de hoje</label>
+      <textarea id="obs3" placeholder="Ex: não esperava que si/so ficassem zerados, ou uma dúvida sobre paginação..."></textarea>
+      <div class="char-count" data-for="obs3">0 caracteres (mínimo 40)</div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2 style="font-size:18px;">Exemplo de observação forte x fraca</h2>
+    <div class="example-pair">
+      <div class="example-box weak">
+        <div class="lbl">Observação fraca</div>
+        <p>"O container funcionou com 64m e falhou com 32m."</p>
+      </div>
+      <div class="example-box good">
+        <div class="lbl">Observação forte</div>
+        <p>"O menor limite viável foi 64m — abaixo disso o container foi morto por OOM. Mas usar exatamente 64m em produção seria arriscado: qualquer variação de carga, atualização de dependência ou pico de requisições ultrapassaria o teto e derrubaria o serviço. O sensato é deixar uma folga sobre o mínimo medido, justamente porque o valor foi obtido numa carga controlada e previsível, diferente do mundo real."</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="theory-link">
+    <div class="lbl">Conexão com a teoria</div>
+    <p>Os passos 1–2 medem os page faults do slide 4 (Tanenbaum p. 134–136) — a distinção minor/major é exatamente a diferença entre resolver na RAM e ter que ir ao disco. O passo 3 é o instrumento pra reconhecer o thrashing do slide 5. Os passos 5–6 são o dimensionamento consciente dos slides 8–9, usando o mesmo mecanismo de cgroups que sustenta o <code>--memory</code>.</p>
+  </div>
+
+  <section class="block" style="margin-top:48px;">
+    <h2 style="font-size:18px;">Checklist final</h2>
+    <ul class="checklist" id="checklist">
+      <li><input type="checkbox"><span>Medi page faults minor e major de um comando</span></li>
+      <li><input type="checkbox"><span>Conferi os contadores globais em <code>/proc/vmstat</code></span></li>
+      <li><input type="checkbox"><span>Rodei <code>vmstat</code> e identifiquei as colunas <code>si</code>/<code>so</code></span></li>
+      <li><input type="checkbox"><span>Verifiquei o estado do swap da minha VM</span></li>
+      <li><input type="checkbox"><span>Descobri o menor limite de memória viável pro container</span></li>
+      <li><input type="checkbox"><span>Observei o consumo contra o limite no <code>docker stats</code></span></li>
+      <li><input type="checkbox"><span>Limpei os containers de teste</span></li>
+      <li><input type="checkbox"><span>Preenchi as 3 observações acima (vou colar no quiz semanal)</span></li>
+    </ul>
+  </section>
+
+</div>
+
+<div class="progress">
+  <span id="progtext">0 / 8 verificados</span>
+  <div class="bar"><i id="progbar"></i></div>
+</div>
+
+<footer>Sistemas Operacionais · ADS23 · IFCE Campus Horizonte · Encontro 10 de 17</footer>
+
+<script>
+  const boxes = document.querySelectorAll('#checklist input[type=checkbox]');
+  const progtext = document.getElementById('progtext');
+  const progbar = document.getElementById('progbar');
+  function updateProgress(){
+    const total = boxes.length;
+    const done = [...boxes].filter(b=>b.checked).length;
+    progtext.textContent = done + ' / ' + total + ' verificados';
+    progbar.style.width = (done/total*100) + '%';
+  }
+  boxes.forEach(b=>{
+    b.addEventListener('change', ()=>{
+      b.closest('li').classList.toggle('checked', b.checked);
+      updateProgress();
+    });
+  });
+  updateProgress();
+
+  document.querySelectorAll('.draft-box textarea').forEach(ta=>{
+    const counter = document.querySelector('.char-count[data-for="'+ta.id+'"]');
+    ta.addEventListener('input', ()=>{
+      const len = ta.value.length;
+      counter.textContent = len + ' caracteres (mínimo 40)';
+      counter.classList.toggle('ok', len >= 40);
+    });
+  });
+</script>
+
+</body>
+</html>

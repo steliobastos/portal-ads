@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roteiro de Laboratório — Encontro 5 · Sistemas Operacionais ADS23</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#fbfaf5;
+    --bg-card:#ffffff;
+    --bg-card-2:#f3f1e8;
+    --line:#e2ddd0;
+    --line-soft:#ece8db;
+    --primary:#1b878f;
+    --primary-dim:#8fc7ca;
+    --primary-soft:rgba(27,135,143,.09);
+    --secondary:#399b3f;
+    --secondary-soft:rgba(57,155,63,.08);
+    --alert:#cd191e;
+    --alert-soft:rgba(205,25,30,.07);
+    --text:#20241f;
+    --text-dim:#5b6058;
+    --text-faint:#8b9088;
+    --font-display:'Space Grotesk',sans-serif;
+    --font-body:'IBM Plex Sans',sans-serif;
+    --font-mono:'IBM Plex Mono',monospace;
+    /* sub-paleta escura reservada — blocos de terminal permanecem escuros */
+    --term-bg:#10161f;
+    --term-line:#212b3a;
+    --term-dim:#8d96a8;
+    --term-prompt:#7ee787;
+    --term-accent:#5fd9d3;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-body);line-height:1.6;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3,h4{font-family:var(--font-display);font-weight:600;color:var(--text);letter-spacing:-.01em;}
+  code{font-family:var(--font-mono);background:var(--primary-soft);color:var(--primary);padding:1px 6px;border-radius:4px;font-size:.92em;}
+  ::selection{background:var(--primary-soft);color:var(--text);}
+
+  .topbar{
+    position:sticky;top:0;z-index:20;background:rgba(251,250,245,.92);backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);padding:12px 22px;
+    display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  }
+  .topbar .brand{font-family:var(--font-mono);font-size:12.5px;color:var(--text-dim);}
+  .topbar .brand b{color:var(--primary);}
+  .topbar .progress-mini{font-family:var(--font-mono);font-size:12px;color:var(--text-faint);}
+
+  .wrap{max-width:880px;margin:0 auto;padding:36px 22px 80px;}
+
+  .hero{margin-bottom:44px;}
+  .hero .eyebrow{font-family:var(--font-mono);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);margin-bottom:12px;display:flex;align-items:center;gap:10px;}
+  .hero .eyebrow::before{content:'';width:22px;height:1px;background:var(--primary-dim);}
+  .hero h1{font-size:clamp(26px,4vw,38px);margin:0 0 14px;}
+  .hero p{color:var(--text-dim);font-size:16px;max-width:640px;margin:0;}
+  .hero .parts{display:flex;gap:14px;margin-top:22px;flex-wrap:wrap;}
+  .hero .part-chip{background:var(--bg-card);border:1px solid var(--line);border-radius:8px;padding:10px 16px;font-family:var(--font-mono);font-size:12.5px;color:var(--text-dim);}
+  .hero .part-chip b{color:var(--primary);}
+
+  .block{margin-bottom:52px;}
+  .block-num{font-family:var(--font-mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-faint);margin-bottom:8px;}
+  .block h2{font-size:22px;margin-bottom:10px;}
+  .block .intro{color:var(--text-dim);font-size:15px;max-width:680px;margin:0 0 20px;}
+
+  .part-divider{display:flex;align-items:center;gap:16px;margin:56px 0 32px;}
+  .part-divider .line{flex:1;height:1px;background:var(--line);}
+  .part-divider .label{font-family:var(--font-mono);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);white-space:nowrap;}
+
+  .cmd-card{background:var(--bg-card);border:1px solid var(--line);border-radius:12px;padding:20px 22px;margin-bottom:18px;}
+  .cmd-title{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  .step-badge{width:24px;height:24px;border-radius:50%;background:var(--primary);color:#fff;font-family:var(--font-mono);font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  code.big{font-size:15.5px;padding:4px 10px;}
+
+  .explain-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+  .explain-box{background:var(--bg-card-2);border:1px solid var(--line-soft);border-radius:8px;padding:12px 14px;}
+  .explain-box .lbl{font-family:var(--font-mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-faint);margin-bottom:5px;}
+  .explain-box p{margin:0;font-size:13.5px;color:var(--text-dim);}
+  @media (max-width:680px){.explain-grid{grid-template-columns:1fr;}}
+
+  .terminal-mini{background:var(--term-bg);border:1px solid var(--term-line);border-radius:8px;overflow:hidden;margin-bottom:12px;}
+  .terminal-mini .bar{background:var(--term-bg);padding:6px 10px;display:flex;gap:5px;}
+  .terminal-mini .bar span{width:8px;height:8px;border-radius:50%;background:var(--term-line);}
+  .terminal-mini .body{padding:14px 16px;font-family:var(--font-mono);font-size:13px;color:var(--term-dim);white-space:pre-wrap;line-height:1.55;}
+  .terminal-mini .prompt{color:var(--term-prompt);}
+  .terminal-mini .out{color:var(--term-dim);}
+  .terminal-mini .hi{color:var(--term-accent);}
+
+  details.tip{background:var(--bg-card-2);border:1px solid var(--line-soft);border-radius:8px;margin-top:8px;}
+  details.tip summary{padding:10px 14px;cursor:pointer;font-size:13.5px;color:var(--primary);font-family:var(--font-mono);}
+  details.tip .tip-body{padding:0 14px 14px;font-size:13.5px;color:var(--text-dim);}
+
+  .obs-note{font-size:13.5px;color:var(--text-dim);margin-top:2px;}
+  .obs-note b{color:var(--text);}
+
+  .example-pair{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0;}
+  .example-box{border-radius:8px;padding:14px 16px;font-size:13.5px;}
+  .example-box.weak{background:var(--alert-soft);border:1px solid var(--alert);}
+  .example-box.good{background:var(--secondary-soft);border:1px solid var(--secondary);}
+  .example-box .lbl{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;margin-bottom:6px;}
+  .example-box.weak .lbl{color:var(--alert);}
+  .example-box.good .lbl{color:var(--secondary);}
+  .example-box p{margin:0;color:var(--text-dim);font-style:italic;}
+  @media (max-width:680px){.example-pair{grid-template-columns:1fr;}}
+
+  .draft-box{margin-top:14px;}
+  .draft-box label{display:block;font-size:13.5px;color:var(--text-dim);margin-bottom:6px;}
+  .draft-box textarea{width:100%;min-height:90px;background:var(--bg-card-2);border:1px solid var(--line);border-radius:8px;color:var(--text);font-family:var(--font-body);font-size:14px;padding:10px 12px;resize:vertical;}
+  .draft-box textarea:focus{outline:none;border-color:var(--primary-dim);}
+  .char-count{font-family:var(--font-mono);font-size:11.5px;color:var(--text-faint);margin-top:5px;text-align:right;}
+  .char-count.ok{color:var(--secondary);}
+
+  .theory-link{background:var(--primary-soft);border:1px solid var(--primary-dim);border-radius:10px;padding:16px 18px;margin-top:20px;}
+  .theory-link .lbl{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;color:var(--primary);margin-bottom:6px;}
+  .theory-link p{margin:0;font-size:14px;color:var(--text-dim);}
+
+  .checklist{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px;}
+  .checklist li{display:flex;align-items:flex-start;gap:12px;background:var(--bg-card);border:1px solid var(--line);border-radius:8px;padding:12px 16px;font-size:14px;color:var(--text-dim);transition:.2s;}
+  .checklist li.checked{border-color:var(--secondary);background:var(--secondary-soft);color:var(--text);}
+  .checklist input[type=checkbox]{width:18px;height:18px;margin-top:1px;accent-color:var(--secondary);flex-shrink:0;}
+
+  .progress{position:sticky;bottom:0;background:rgba(251,250,245,.95);backdrop-filter:blur(6px);border-top:1px solid var(--line);padding:14px 22px;display:flex;align-items:center;gap:16px;justify-content:center;}
+  .progress #progtext{font-family:var(--font-mono);font-size:12.5px;color:var(--text-dim);white-space:nowrap;}
+  .progress .bar{flex:1;max-width:320px;height:6px;background:var(--line-soft);border-radius:3px;overflow:hidden;}
+  .progress .bar i{display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--primary),var(--secondary));transition:width .3s;}
+
+  footer{text-align:center;padding:30px 20px 90px;font-family:var(--font-mono);font-size:11.5px;color:var(--text-faint);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">Sistemas Operacionais · <b>ADS23</b></div>
+  <div class="progress-mini">Encontro 5 de 17 · Roteiro de Laboratório</div>
+</div>
+
+<div class="wrap">
+
+  <div class="hero">
+    <div class="eyebrow">Mão na massa · ~55 min</div>
+    <h1>Diagnóstico de processos — e o PID duplo do container</h1>
+    <p>Hoje você localiza processos de verdade com <code>ps</code> e <code>top</code>, revisita o <code>/proc</code> do Encontro 2 sob uma nova luz, e fecha com o reforço Docker: o mesmo processo visto de dentro e de fora de um container.</p>
+    <div class="parts">
+      <div class="part-chip"><b>Passos 1–4</b> · Diagnóstico com ps/top/proc</div>
+      <div class="part-chip"><b>Passos 5–8</b> · Reforço Docker: PID duplo</div>
+    </div>
+  </div>
+
+  <section class="block">
+    <div class="block-num">PASSO 1 DE 8</div>
+    <h2>A fotografia de tudo que está rodando</h2>
+    <p class="intro"><code>ps aux</code> lista todos os processos do sistema num instante só — a primeira ferramenta de diagnóstico do dia.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">1</span> <code class="big">ps aux</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p>Lista todos os processos rodando agora, com colunas como USER, PID, %CPU, %MEM, STAT e COMMAND.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>É o primeiro comando que qualquer profissional roda quando quer saber "o que está acontecendo" numa máquina.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="prompt">$</span> ps aux
+<span class="out">USER   PID  %CPU %MEM STAT  COMMAND
+root     1   0.0  0.1  Ss    /sbin/init
+root   842   0.2  0.4  Ss    systemd-journald
+aluno 1930   0.0  0.3  Ss    bash
+aluno 2044   0.0  0.1  R+    ps aux</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> uma lista longa — dezenas de linhas, mesmo numa VM "vazia". Reparem no PID 1 (<code>init</code>) e no processo do próprio <code>ps aux</code> aparecendo na lista (STAT "R+", rodando agora).</p>
+      <details class="tip">
+        <summary>A lista é grande demais, não sei o que procurar</summary>
+        <div class="tip-body">
+          Normal — <code>ps aux</code> mostra tudo por padrão. No próximo passo você vai filtrar.
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">PASSO 2 DE 8</div>
+    <h2>Encontrando um processo específico</h2>
+    <p class="intro">Em vez de ler a lista inteira, filtre pelo nome do processo que você procura.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">2</span> <code class="big">ps aux | grep bash</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p>O <code>|</code> (pipe) encana a saída do <code>ps aux</code> pro <code>grep</code>, que filtra só as linhas contendo "bash".</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>É assim que, na prática, alguém confirma se um processo específico (um servidor, um script) está rodando ou não.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="prompt">$</span> ps aux | grep bash
+<span class="out">aluno 1930   0.0  0.3  Ss    bash
+aluno 2051   0.0  0.0  S+    grep bash</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> a linha do seu próprio terminal (<code>bash</code>) e, curiosamente, uma linha do próprio <code>grep bash</code> que você acabou de rodar — ele também é um processo, e apareceu procurando por si mesmo.</p>
+    </div>
+
+    <div class="draft-box">
+      <label for="obs1">Rascunho da observação 1 — qual a diferença entre o que ps aux mostra e o que top (passo 4) mostra? Cite uma vantagem de cada um.</label>
+      <textarea id="obs1" placeholder="Ex: ps aux é uma foto parada, enquanto top..."></textarea>
+      <div class="char-count" data-for="obs1">0 caracteres (mínimo 40)</div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">PASSO 3 DE 8</div>
+    <h2>A versão crua, direto do /proc</h2>
+    <p class="intro">Lembra do Encontro 2? Todo PID também é uma pasta dentro de <code>/proc</code>. Vamos confirmar isso com o PID do seu próprio terminal.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">3</span> <code class="big">cat /proc/$$/status | head -5</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p><code>$$</code> é uma variável especial do shell que vale o PID do próprio terminal em que você está digitando.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>Prova que <code>ps</code> não é mágica — ele só lê e organiza arquivos que já existem dentro de <code>/proc/&lt;pid&gt;/</code>.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="prompt">$</span> cat /proc/$$/status | head -5
+<span class="out">Name:   bash
+State:  S (sleeping)
+Tgid:   1930
+Pid:    1930
+PPid:   1721</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> o campo "Name" deve ser <code>bash</code> (ou o shell que você estiver usando), e o "Pid" deve bater com o número que apareceu no <code>ps aux | grep bash</code> do passo anterior.</p>
+      <details class="tip">
+        <summary>O que significa "State: S (sleeping)"?</summary>
+        <div class="tip-body">
+          É o estado "bloqueado" do slide 5 — seu terminal está parado esperando você digitar algo (uma forma de E/S). Assim que você aperta uma tecla, ele volta pra fila de pronto e depois roda.
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">PASSO 4 DE 8</div>
+    <h2>O vídeo ao vivo</h2>
+    <p class="intro">Agora troque a fotografia parada por uma visão que atualiza sozinha.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">4</span> <code class="big">top</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p>Mostra os processos ao vivo, atualizando a cada segundo, ordenados por quem consome mais CPU agora.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>É a ferramenta que qualquer pessoa usa pra descobrir, em tempo real, o que está consumindo os recursos de uma máquina.</p>
+        </div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> uma tela cheia, atualizando sozinha. Repare na linha "load average" no topo — a fila média de processos esperando CPU nos últimos 1, 5 e 15 minutos. Aperte <code>q</code> pra sair.</p>
+      <details class="tip">
+        <summary>A tela do top parece confusa</summary>
+        <div class="tip-body">
+          Ignore a maioria das colunas por enquanto — foque em <code>%CPU</code>, <code>%MEM</code> e <code>COMMAND</code>. O resto vem com a prática.
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <div class="part-divider"><div class="line"></div><div class="label">Reforço Docker · PID duplo</div><div class="line"></div></div>
+
+  <section class="block">
+    <div class="block-num">PASSO 5 DE 8</div>
+    <h2>Subindo um container em segundo plano</h2>
+    <p class="intro">Agora vamos criar um processo de propósito — um container rodando <code>sleep</code> — pra comparar como ele aparece de dentro e de fora.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">5</span> <code class="big">docker run -d --name meuproc alpine sleep 300</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p><code>-d</code> ("detached") sobe o container em segundo plano. <code>sleep 300</code> só espera 300 segundos, sem fazer mais nada — um processo fácil de rastrear.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>Cria um processo isolado, com nome fácil de filtrar (<code>meuproc</code>), pra comparar as duas visões do próximo passo.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="prompt">$</span> docker run -d --name meuproc alpine sleep 300
+<span class="out">8f2c91a7e6b04d3e...</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> um código longo (o ID do container) impresso na tela, e o comando volta pro seu prompt imediatamente — o <code>-d</code> não prende seu terminal.</p>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">PASSO 6 DE 8</div>
+    <h2>O processo visto de fora (no host)</h2>
+    <p class="intro">O container roda como um processo comum do ponto de vista do seu Linux — vamos encontrá-lo com as mesmas ferramentas de sempre.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">6</span> <code class="big">ps aux | grep sleep</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p>Filtra a lista de processos do host procurando por "sleep" — o comando que está rodando dentro do container.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>Prova que, visto de fora, o container não é nada especial — é só mais um processo na lista do host, com um PID qualquer.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="prompt">$</span> ps aux | grep sleep
+<span class="out">root  48213  0.0  0.0  Ss    sleep 300</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> um PID qualquer (nesse exemplo, 48213) — provavelmente um número alto, parecido com qualquer outro processo do host. <b>Anote esse número</b>, você vai compará-lo no próximo passo.</p>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">PASSO 7 DE 8</div>
+    <h2>O mesmo processo visto de dentro (no container)</h2>
+    <p class="intro">Agora entramos no próprio container e rodamos o mesmo tipo de comando lá dentro.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">7</span> <code class="big">docker exec meuproc ps aux</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p><code>docker exec</code> roda um comando <b>dentro</b> de um container que já está de pé — aqui, o próprio <code>ps aux</code>.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>É o momento em que o namespace de PID aparece na prática — o "aha" da aula de hoje.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="prompt">$</span> docker exec meuproc ps aux
+<span class="out">PID   USER     COMMAND
+    1 root     sleep 300</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> o mesmo processo <code>sleep 300</code> — só que agora com <b>PID 1</b>, não o número que você anotou no passo 6. É o mesmo processo, dois números diferentes, dependendo de quem está perguntando.</p>
+      <details class="tip">
+        <summary>docker exec deu erro "container not found"</summary>
+        <div class="tip-body">
+          Confirme que o container ainda está rodando com <code>docker ps</code>. Se ele já tiver terminado (improvável em 300 segundos), repita o passo 5.
+        </div>
+      </details>
+    </div>
+
+    <div class="draft-box">
+      <label for="obs2">Rascunho da observação 2 — compare o PID do passo 6 (fora) com o PID do passo 7 (dentro). Por que eles são diferentes, mesmo sendo o mesmo processo?</label>
+      <textarea id="obs2" placeholder="Ex: de fora o PID era..., de dentro era 1, porque..."></textarea>
+      <div class="char-count" data-for="obs2">0 caracteres (mínimo 40)</div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">PASSO 8 DE 8</div>
+    <h2>Encerrando e limpando</h2>
+    <p class="intro">Antes de fechar, vamos parar e remover o container criado neste roteiro.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">8</span> <code class="big">docker stop meuproc &amp;&amp; docker rm meuproc</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p><code>docker stop</code> encerra o container (não precisa esperar os 300 segundos). <code>docker rm</code> remove o registro dele.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>Boa prática básica: não deixar containers de teste "esquecidos" rodando ou ocupando espaço.</p>
+        </div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> o nome <code>meuproc</code> impresso duas vezes (uma pra cada comando), confirmando a parada e a remoção.</p>
+    </div>
+
+    <div class="draft-box">
+      <label for="obs3">Rascunho da observação 3 — livre: algo que te surpreendeu ou uma dúvida que sobrou de hoje</label>
+      <textarea id="obs3" placeholder="Ex: uma dúvida sobre estados de processo, ou algo do namespace de PID que não esperava..."></textarea>
+      <div class="char-count" data-for="obs3">0 caracteres (mínimo 40)</div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2 style="font-size:18px;">Exemplo de observação forte x fraca</h2>
+    <div class="example-pair">
+      <div class="example-box weak">
+        <div class="lbl">Observação fraca</div>
+        <p>"O PID de dentro do container era diferente do PID de fora."</p>
+      </div>
+      <div class="example-box good">
+        <div class="lbl">Observação forte</div>
+        <p>"De fora, o sleep apareceu como PID 48213 — um número comum, misturado com todos os outros processos do host. De dentro, apareceu como PID 1, porque o container tem seu próprio namespace de PID: ele conta os processos começando do zero, isolado do host."</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="theory-link">
+    <div class="lbl">Conexão com a teoria</div>
+    <p>Os passos 1–4 são o modelo de processo e os três estados do slide 5 (Tanenbaum p. 59–67), e a ponte com <code>/proc</code> do slide 9 (Laureano p. 99–106). Os passos 5–7 são o namespace de PID do slide 10 — a mesma peça técnica (<code>namespaces</code>) mencionada de leve no Encontro 4, agora vista na prática.</p>
+  </div>
+
+  <section class="block" style="margin-top:48px;">
+    <h2 style="font-size:18px;">Checklist final</h2>
+    <ul class="checklist" id="checklist">
+      <li><input type="checkbox"><span>Rodei <code>ps aux</code> e identifiquei pelo menos 3 colunas diferentes</span></li>
+      <li><input type="checkbox"><span>Filtrei um processo específico com <code>ps aux | grep</code></span></li>
+      <li><input type="checkbox"><span>Comparei <code>ps aux</code> com <code>cat /proc/$$/status</code></span></li>
+      <li><input type="checkbox"><span>Observei o <code>top</code> ao vivo e identifiquei o load average</span></li>
+      <li><input type="checkbox"><span>Subi um container e comparei o PID visto de fora e de dentro</span></li>
+      <li><input type="checkbox"><span>Preenchi as 3 observações acima (vou colar no quiz semanal)</span></li>
+    </ul>
+  </section>
+
+</div>
+
+<div class="progress">
+  <span id="progtext">0 / 6 verificados</span>
+  <div class="bar"><i id="progbar"></i></div>
+</div>
+
+<footer>Sistemas Operacionais · ADS23 · IFCE Campus Horizonte · Encontro 5 de 17</footer>
+
+<script>
+  const boxes = document.querySelectorAll('#checklist input[type=checkbox]');
+  const progtext = document.getElementById('progtext');
+  const progbar = document.getElementById('progbar');
+  function updateProgress(){
+    const total = boxes.length;
+    const done = [...boxes].filter(b=>b.checked).length;
+    progtext.textContent = done + ' / ' + total + ' verificados';
+    progbar.style.width = (done/total*100) + '%';
+  }
+  boxes.forEach(b=>{
+    b.addEventListener('change', ()=>{
+      b.closest('li').classList.toggle('checked', b.checked);
+      updateProgress();
+    });
+  });
+  updateProgress();
+
+  document.querySelectorAll('.draft-box textarea').forEach(ta=>{
+    const counter = document.querySelector('.char-count[data-for="'+ta.id+'"]');
+    ta.addEventListener('input', ()=>{
+      const len = ta.value.length;
+      counter.textContent = len + ' caracteres (mínimo 40)';
+      counter.classList.toggle('ok', len >= 40);
+    });
+  });
+</script>
+
+</body>
+</html>

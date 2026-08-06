@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roteiro de Laboratório — Encontro 4 · Sistemas Operacionais ADS23</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#fbfaf5;
+    --bg-card:#ffffff;
+    --bg-card-2:#f3f1e8;
+    --line:#e2ddd0;
+    --line-soft:#ece8db;
+    --primary:#1b878f;
+    --primary-dim:#8fc7ca;
+    --primary-soft:rgba(27,135,143,.09);
+    --secondary:#399b3f;
+    --secondary-soft:rgba(57,155,63,.08);
+    --alert:#cd191e;
+    --alert-soft:rgba(205,25,30,.07);
+    --text:#20241f;
+    --text-dim:#5b6058;
+    --text-faint:#8b9088;
+    --font-display:'Space Grotesk',sans-serif;
+    --font-body:'IBM Plex Sans',sans-serif;
+    --font-mono:'IBM Plex Mono',monospace;
+    /* sub-paleta escura reservada — blocos de terminal permanecem escuros */
+    --term-bg:#10161f;
+    --term-line:#212b3a;
+    --term-dim:#8d96a8;
+    --term-prompt:#7ee787;
+    --term-accent:#5fd9d3;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-body);line-height:1.6;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3,h4{font-family:var(--font-display);font-weight:600;color:var(--text);letter-spacing:-.01em;}
+  code{font-family:var(--font-mono);background:var(--primary-soft);color:var(--primary);padding:1px 6px;border-radius:4px;font-size:.92em;}
+  ::selection{background:var(--primary-soft);color:var(--text);}
+
+  .topbar{
+    position:sticky;top:0;z-index:20;background:rgba(251,250,245,.92);backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);padding:12px 22px;
+    display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  }
+  .topbar .brand{font-family:var(--font-mono);font-size:12.5px;color:var(--text-dim);}
+  .topbar .brand b{color:var(--primary);}
+  .topbar .progress-mini{font-family:var(--font-mono);font-size:12px;color:var(--text-faint);}
+
+  .wrap{max-width:880px;margin:0 auto;padding:36px 22px 80px;}
+
+  .hero{margin-bottom:44px;}
+  .hero .eyebrow{font-family:var(--font-mono);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);margin-bottom:12px;display:flex;align-items:center;gap:10px;}
+  .hero .eyebrow::before{content:'';width:22px;height:1px;background:var(--primary-dim);}
+  .hero h1{font-size:clamp(26px,4vw,38px);margin:0 0 14px;}
+  .hero p{color:var(--text-dim);font-size:16px;max-width:640px;margin:0;}
+  .hero .parts{display:flex;gap:14px;margin-top:22px;flex-wrap:wrap;}
+  .hero .part-chip{background:var(--bg-card);border:1px solid var(--line);border-radius:8px;padding:10px 16px;font-family:var(--font-mono);font-size:12.5px;color:var(--text-dim);}
+  .hero .part-chip b{color:var(--primary);}
+
+  .block{margin-bottom:52px;}
+  .block-num{font-family:var(--font-mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-faint);margin-bottom:8px;}
+  .block h2{font-size:22px;margin-bottom:10px;}
+  .block .intro{color:var(--text-dim);font-size:15px;max-width:680px;margin:0 0 20px;}
+
+  .part-divider{display:flex;align-items:center;gap:16px;margin:56px 0 32px;}
+  .part-divider .line{flex:1;height:1px;background:var(--line);}
+  .part-divider .label{font-family:var(--font-mono);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);white-space:nowrap;}
+
+  .cmd-card{background:var(--bg-card);border:1px solid var(--line);border-radius:12px;padding:20px 22px;margin-bottom:18px;}
+  .cmd-title{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  .step-badge{width:24px;height:24px;border-radius:50%;background:var(--primary);color:#fff;font-family:var(--font-mono);font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  code.big{font-size:15.5px;padding:4px 10px;}
+
+  .explain-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+  .explain-box{background:var(--bg-card-2);border:1px solid var(--line-soft);border-radius:8px;padding:12px 14px;}
+  .explain-box .lbl{font-family:var(--font-mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-faint);margin-bottom:5px;}
+  .explain-box p{margin:0;font-size:13.5px;color:var(--text-dim);}
+  @media (max-width:680px){.explain-grid{grid-template-columns:1fr;}}
+
+  .terminal-mini{background:var(--term-bg);border:1px solid var(--term-line);border-radius:8px;overflow:hidden;margin-bottom:12px;}
+  .terminal-mini .bar{background:var(--term-bg);padding:6px 10px;display:flex;gap:5px;}
+  .terminal-mini .bar span{width:8px;height:8px;border-radius:50%;background:var(--term-line);}
+  .terminal-mini .body{padding:14px 16px;font-family:var(--font-mono);font-size:13px;color:var(--term-dim);white-space:pre-wrap;line-height:1.55;}
+  .terminal-mini .prompt{color:var(--term-prompt);}
+  .terminal-mini .out{color:var(--term-dim);}
+  .terminal-mini .hi{color:var(--term-accent);}
+
+  .filebox{background:var(--term-bg);border:1px solid var(--term-line);border-radius:8px;overflow:hidden;margin-bottom:12px;}
+  .filebox .fname{background:var(--bg-card-2);color:var(--text-dim);font-family:var(--font-mono);font-size:11.5px;padding:6px 14px;border-bottom:1px solid var(--term-line);}
+  .filebox .fbody{padding:14px 16px;font-family:var(--font-mono);font-size:13px;color:var(--term-dim);white-space:pre-wrap;line-height:1.8;}
+  .filebox .kw{color:var(--term-accent);}
+  .filebox .cm{color:var(--term-dim);opacity:.6;font-style:italic;}
+
+  details.tip{background:var(--bg-card-2);border:1px solid var(--line-soft);border-radius:8px;margin-top:8px;}
+  details.tip summary{padding:10px 14px;cursor:pointer;font-size:13.5px;color:var(--primary);font-family:var(--font-mono);}
+  details.tip .tip-body{padding:0 14px 14px;font-size:13.5px;color:var(--text-dim);}
+
+  .obs-note{font-size:13.5px;color:var(--text-dim);margin-top:2px;}
+  .obs-note b{color:var(--text);}
+
+  .example-pair{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0;}
+  .example-box{border-radius:8px;padding:14px 16px;font-size:13.5px;}
+  .example-box.weak{background:var(--alert-soft);border:1px solid var(--alert);}
+  .example-box.good{background:var(--secondary-soft);border:1px solid var(--secondary);}
+  .example-box .lbl{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;margin-bottom:6px;}
+  .example-box.weak .lbl{color:var(--alert);}
+  .example-box.good .lbl{color:var(--secondary);}
+  .example-box p{margin:0;color:var(--text-dim);font-style:italic;}
+  @media (max-width:680px){.example-pair{grid-template-columns:1fr;}}
+
+  .draft-box{margin-top:14px;}
+  .draft-box label{display:block;font-size:13.5px;color:var(--text-dim);margin-bottom:6px;}
+  .draft-box textarea{width:100%;min-height:90px;background:var(--bg-card-2);border:1px solid var(--line);border-radius:8px;color:var(--text);font-family:var(--font-body);font-size:14px;padding:10px 12px;resize:vertical;}
+  .draft-box textarea:focus{outline:none;border-color:var(--primary-dim);}
+  .char-count{font-family:var(--font-mono);font-size:11.5px;color:var(--text-faint);margin-top:5px;text-align:right;}
+  .char-count.ok{color:var(--secondary);}
+
+  .theory-link{background:var(--primary-soft);border:1px solid var(--primary-dim);border-radius:10px;padding:16px 18px;margin-top:20px;}
+  .theory-link .lbl{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;color:var(--primary);margin-bottom:6px;}
+  .theory-link p{margin:0;font-size:14px;color:var(--text-dim);}
+
+  .checklist{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px;}
+  .checklist li{display:flex;align-items:flex-start;gap:12px;background:var(--bg-card);border:1px solid var(--line);border-radius:8px;padding:12px 16px;font-size:14px;color:var(--text-dim);transition:.2s;}
+  .checklist li.checked{border-color:var(--secondary);background:var(--secondary-soft);color:var(--text);}
+  .checklist input[type=checkbox]{width:18px;height:18px;margin-top:1px;accent-color:var(--secondary);flex-shrink:0;}
+
+  .progress{position:sticky;bottom:0;background:rgba(251,250,245,.95);backdrop-filter:blur(6px);border-top:1px solid var(--line);padding:14px 22px;display:flex;align-items:center;gap:16px;justify-content:center;}
+  .progress #progtext{font-family:var(--font-mono);font-size:12.5px;color:var(--text-dim);white-space:nowrap;}
+  .progress .bar{flex:1;max-width:320px;height:6px;background:var(--line-soft);border-radius:3px;overflow:hidden;}
+  .progress .bar i{display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--primary),var(--secondary));transition:width .3s;}
+
+  footer{text-align:center;padding:30px 20px 90px;font-family:var(--font-mono);font-size:11.5px;color:var(--text-faint);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">Sistemas Operacionais · <b>ADS23</b></div>
+  <div class="progress-mini">Encontro 4 de 17 · Roteiro de Laboratório</div>
+</div>
+
+<div class="wrap">
+
+  <div class="hero">
+    <div class="eyebrow">Mão na massa · ~55 min</div>
+    <h1>De usuário de imagens prontas a autor da sua própria</h1>
+    <p>Hoje você usa o Docker de verdade: baixa uma imagem pronta do Docker Hub, sobe um container a partir dela, e depois escreve seu próprio <code>Dockerfile</code> e constrói sua primeira imagem do zero.</p>
+    <div class="parts">
+      <div class="part-chip"><b>Parte 1</b> · Imagens prontas</div>
+      <div class="part-chip"><b>Parte 2</b> · Sua primeira imagem</div>
+    </div>
+  </div>
+
+  <div class="part-divider"><div class="line"></div><div class="label">Parte 1 · Imagens prontas</div><div class="line"></div></div>
+
+  <section class="block">
+    <div class="block-num">PASSO 1 DE 8</div>
+    <h2>Confirmando que o Docker está de pé</h2>
+    <p class="intro">Antes de qualquer coisa, vamos confirmar que o Docker instalado na Semana 0 continua funcionando.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">1</span> <code class="big">docker --version</code> e <code class="big">docker ps</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p><code>docker --version</code> confirma que o Docker está instalado. <code>docker ps</code> lista containers rodando agora (deve vir vazio).</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>Confirma o ambiente antes de você depender dele nos próximos passos — barato de checar, caro de descobrir travado no meio da prática.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="prompt">$</span> docker --version
+<span class="out">Docker version 26.1.0, build 8cbe042</span>
+<span class="prompt">$</span> docker ps
+<span class="out">CONTAINER ID   IMAGE   COMMAND   CREATED   STATUS   PORTS   NAMES</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> a tabela do <code>docker ps</code> vem só com cabeçalho, sem linhas — normal, significa que nenhum container está rodando agora.</p>
+      <details class="tip">
+        <summary>Comando não encontrado ou "permission denied"</summary>
+        <div class="tip-body">
+          Confirme a instalação da Semana 0. Se der "permission denied", tente <code>sudo docker ps</code> — seu usuário pode não estar no grupo <code>docker</code> ainda.
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">PASSO 2 DE 8</div>
+    <h2>Baixando uma imagem sem rodar nada</h2>
+    <p class="intro"><code>docker pull</code> só baixa a imagem do Docker Hub pro seu computador — não sobe container nenhum ainda.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">2</span> <code class="big">docker pull alpine</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p>Baixa a imagem <code>alpine</code> (um Linux mínimo, ~5 MB) do registro público Docker Hub.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>Separar "baixar" de "rodar" deixa claro que imagem e container são coisas diferentes — a confusão mais comum de quem está começando.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="prompt">$</span> docker pull alpine
+<span class="out">latest: Pulling from library/alpine</span>
+<span class="out">Digest: sha256:a8560b36e8b8210634f77d9f7f9efd7ffa4…</span>
+<span class="hi">Status: Downloaded newer image for alpine:latest</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> algumas linhas de download e a mensagem final "Downloaded newer image". Se você já tiver baixado essa imagem antes (no Encontro 3), pode aparecer "Image is up to date" em vez disso — tudo bem, significa que já está lá.</p>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">PASSO 3 DE 8</div>
+    <h2>Vendo o que já está baixado</h2>
+    <p class="intro">Toda imagem baixada ou construída fica guardada localmente até você apagar.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">3</span> <code class="big">docker images</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p>Lista todas as imagens que existem no seu computador agora — baixadas ou construídas por você.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>É o "estoque" de receitas prontas pra usar. Antes de rodar um <code>docker run</code>, vale saber o que já existe.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="prompt">$</span> docker images
+<span class="out">REPOSITORY   TAG       IMAGE ID       CREATED       SIZE
+alpine       latest    b0c9d4f2abcd   3 weeks ago   7.8MB</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> pelo menos a linha do <code>alpine</code>. O tamanho (coluna SIZE) costuma ser minúsculo comparado a uma VM inteira — vale reparar nisso.</p>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">PASSO 4 DE 8</div>
+    <h2>Subindo seu primeiro container desta imagem</h2>
+    <p class="intro">Agora sim: um container de verdade, nascendo da imagem que você acabou de baixar.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">4</span> <code class="big">docker run alpine echo "primeiro container"</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p><code>docker run</code> cria e inicia um container a partir da imagem <code>alpine</code>, executando o comando <code>echo</code> dentro dele.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>É a diferença entre imagem (a receita, parada) e container (a receita em execução, viva por alguns instantes).</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="prompt">$</span> docker run alpine echo "primeiro container"
+<span class="out">primeiro container</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> a palavra que você mandou o <code>echo</code> imprimir, e o comando volta pro seu prompt normal — o container fez o trabalho dele e encerrou.</p>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">PASSO 5 DE 8</div>
+    <h2>O container que "sumiu" ainda existe (parado)</h2>
+    <p class="intro">Um container que terminou não desaparece — ele fica registrado como parado, até você removê-lo.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">5</span> <code class="big">docker ps -a</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p>A flag <code>-a</code> ("all") mostra todos os containers, incluindo os que já terminaram — não só os que estão rodando agora.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>Explica por que <code>docker ps</code> (sem <code>-a</code>) pode vir vazio mesmo depois de você ter acabado de rodar um container.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="prompt">$</span> docker ps -a
+<span class="out">CONTAINER ID   IMAGE     COMMAND                  STATUS                     NAMES
+7f3a1c9e2b04   alpine    "echo 'primeiro cont…"   Exited (0) 10 seconds ago  festive_hopper</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> uma linha com <code>STATUS</code> "Exited (0)" — o container rodou, terminou com sucesso (código 0), e continua existindo, só que parado.</p>
+      <details class="tip">
+        <summary>Quero apagar esse container parado</summary>
+        <div class="tip-body">
+          Use <code>docker rm &lt;CONTAINER ID&gt;</code> (os primeiros caracteres já bastam). Não precisa fazer isso agora — é só pra saber que existe.
+        </div>
+      </details>
+    </div>
+
+    <div class="draft-box">
+      <label for="obs1">Rascunho da observação 1 — qual a diferença entre uma imagem (passo 3) e um container (passo 4/5)? Use suas próprias palavras.</label>
+      <textarea id="obs1" placeholder="Ex: a imagem é..., o container é...; percebi isso quando..."></textarea>
+      <div class="char-count" data-for="obs1">0 caracteres (mínimo 40)</div>
+    </div>
+  </section>
+
+  <div class="part-divider"><div class="line"></div><div class="label">Parte 2 · Sua primeira imagem</div><div class="line"></div></div>
+
+  <section class="block">
+    <div class="block-num">PASSO 6 DE 8</div>
+    <h2>Escrevendo seu próprio Dockerfile</h2>
+    <p class="intro">Chegou a hora de vocês escreverem a receita, não só usarem as prontas. Crie uma pasta nova (ex: <code>mkdir ~/minha-imagem &amp;&amp; cd ~/minha-imagem</code>) e dois arquivos dentro dela.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">6</span> Criar <code class="big">ola.sh</code> e <code class="big">Dockerfile</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p>Um script de 2 linhas (<code>ola.sh</code>) e uma receita de 4 linhas (<code>Dockerfile</code>) que empacota esse script numa imagem.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>É o primeiro passo pra construir imagens sob medida — o que separa "usar Docker" de "usar Docker de verdade no trabalho".</p>
+        </div>
+      </div>
+      <div class="filebox">
+        <div class="fname">ola.sh</div>
+        <div class="fbody">#!/bin/sh
+echo "Ola do meu primeiro container!"</div>
+      </div>
+      <div class="filebox">
+        <div class="fname">Dockerfile</div>
+        <div class="fbody"><span class="kw">FROM</span> alpine:3.20         <span class="cm"># imagem-base</span>
+<span class="kw">COPY</span> ola.sh /ola.sh        <span class="cm"># copia seu script pra dentro da imagem</span>
+<span class="kw">RUN</span> chmod +x /ola.sh       <span class="cm"># dá permissão de execução (acontece 1x, na construção)</span>
+<span class="kw">CMD</span> ["/ola.sh"]            <span class="cm"># roda toda vez que um container nascer daqui</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> você pode criar os arquivos com <code>nano ola.sh</code> e <code>nano Dockerfile</code> (ou o editor de sua preferência) e colar o conteúdo acima exatamente. Os dois arquivos precisam estar na mesma pasta.</p>
+      <details class="tip">
+        <summary>Diferença entre RUN e CMD ainda não ficou clara</summary>
+        <div class="tip-body">
+          <code>RUN</code> acontece <b>uma vez</b>, no momento em que a imagem é construída (<code>docker build</code>) — como cozinhar um prato antes de guardar na geladeira. <code>CMD</code> acontece <b>toda vez</b> que um container novo nasce dessa imagem (<code>docker run</code>) — como esquentar e servir o prato guardado.
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">PASSO 7 DE 8</div>
+    <h2>Construindo sua imagem</h2>
+    <p class="intro">Com os dois arquivos prontos na mesma pasta, é hora de transformar a receita numa imagem de verdade.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">7</span> <code class="big">docker build -t meu-ola .</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p><code>docker build</code> lê o <code>Dockerfile</code> da pasta atual (o <code>.</code> no final) e monta a imagem, executando cada instrução na ordem. <code>-t meu-ola</code> dá um nome (tag) pra ela.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>É o momento em que sua receita escrita vira um artefato de verdade, guardado e reutilizável — igual às imagens prontas que vocês baixaram na Parte 1.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="prompt">$</span> docker build -t meu-ola .
+<span class="out">[+] Building 1.2s (8/8) FINISHED
+ => [1/3] FROM docker.io/library/alpine:3.20
+ => [2/3] COPY ola.sh /ola.sh
+ => [3/3] RUN chmod +x /ola.sh</span>
+<span class="hi">Successfully tagged meu-ola:latest</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> uma lista curta de passos ([1/3], [2/3]...) e a mensagem final "Successfully tagged". Rode <code>docker images</code> de novo depois — agora <code>meu-ola</code> deve aparecer na lista, ao lado do <code>alpine</code>.</p>
+      <details class="tip">
+        <summary>Erro dizendo que não encontrou o Dockerfile</summary>
+        <div class="tip-body">
+          Confirme que você está dentro da pasta certa (<code>pwd</code> pra checar) e que o arquivo se chama exatamente <code>Dockerfile</code>, sem extensão, com D maiúsculo.
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-num">PASSO 8 DE 8</div>
+    <h2>Rodando um container da sua própria imagem</h2>
+    <p class="intro">O momento da verdade: um container nascendo de uma imagem que você mesmo escreveu.</p>
+
+    <div class="cmd-card">
+      <div class="cmd-title"><span class="step-badge">8</span> <code class="big">docker run meu-ola</code></div>
+      <div class="explain-grid">
+        <div class="explain-box">
+          <div class="lbl">O que é</div>
+          <p>Sobe um container a partir da imagem <code>meu-ola</code> — sem precisar dizer o que rodar, porque o <code>CMD</code> do Dockerfile já define isso.</p>
+        </div>
+        <div class="explain-box">
+          <div class="lbl">Por que importa</div>
+          <p>Fecha o ciclo completo: escrever a receita → construir a imagem → rodar o container, exatamente como qualquer imagem do Docker Hub que vocês já usaram.</p>
+        </div>
+      </div>
+      <div class="terminal-mini">
+        <div class="bar"><span></span><span></span><span></span></div>
+        <div class="body"><span class="prompt">$</span> docker run meu-ola
+<span class="out">Ola do meu primeiro container!</span></div>
+      </div>
+      <p class="obs-note"><b>O que esperar:</b> a mensagem do seu <code>ola.sh</code>, impressa por um container criado a partir de uma imagem 100% escrita por vocês.</p>
+    </div>
+
+    <div class="draft-box">
+      <label for="obs2">Rascunho da observação 2 — o que aconteceu quando você rodou docker build? Conecte com a diferença entre RUN e CMD no Dockerfile.</label>
+      <textarea id="obs2" placeholder="Ex: percebi que RUN aconteceu durante o build, enquanto CMD só rodou quando eu..."></textarea>
+      <div class="char-count" data-for="obs2">0 caracteres (mínimo 40)</div>
+    </div>
+
+    <div class="draft-box">
+      <label for="obs3">Rascunho da observação 3 — livre: algo que te surpreendeu ou uma dúvida que sobrou de hoje</label>
+      <textarea id="obs3" placeholder="Ex: uma dúvida sobre quando usar VM em vez de container, ou algo do Dockerfile que não esperava..."></textarea>
+      <div class="char-count" data-for="obs3">0 caracteres (mínimo 40)</div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2 style="font-size:18px;">Exemplo de observação forte x fraca</h2>
+    <div class="example-pair">
+      <div class="example-box weak">
+        <div class="lbl">Observação fraca</div>
+        <p>"Consegui construir a imagem e rodar o container."</p>
+      </div>
+      <div class="example-box good">
+        <div class="lbl">Observação forte</div>
+        <p>"O RUN chmod só apareceu nos logs do docker build, uma vez — mas quando rodei docker run três vezes, o CMD (o echo) executou nas três, provando que RUN é construção e CMD é execução."</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="theory-link">
+    <div class="lbl">Conexão com a teoria</div>
+    <p>Os passos 1–5 são a distinção Imagem × Container do slide 7 (Laureano p. 70–77 dá o pano de fundo de virtualização que motivou tudo isso). Os passos 6–8 são o Dockerfile do slide 9 — o mesmo "receita por escrito, construída uma vez, rodada muitas vezes" que sustenta como o mercado empacota software hoje.</p>
+  </div>
+
+  <section class="block" style="margin-top:48px;">
+    <h2 style="font-size:18px;">Checklist final</h2>
+    <ul class="checklist" id="checklist">
+      <li><input type="checkbox"><span>Confirmei o Docker funcionando com <code>docker --version</code> e <code>docker ps</code></span></li>
+      <li><input type="checkbox"><span>Rodei <code>docker pull alpine</code> e vi a imagem em <code>docker images</code></span></li>
+      <li><input type="checkbox"><span>Subi um container com <code>docker run alpine echo ...</code> e o vi parado em <code>docker ps -a</code></span></li>
+      <li><input type="checkbox"><span>Escrevi meu próprio <code>Dockerfile</code> e construí com <code>docker build</code></span></li>
+      <li><input type="checkbox"><span>Rodei um container da minha própria imagem com <code>docker run meu-ola</code></span></li>
+      <li><input type="checkbox"><span>Preenchi as 3 observações acima (vou colar no quiz semanal)</span></li>
+    </ul>
+  </section>
+
+</div>
+
+<div class="progress">
+  <span id="progtext">0 / 6 verificados</span>
+  <div class="bar"><i id="progbar"></i></div>
+</div>
+
+<footer>Sistemas Operacionais · ADS23 · IFCE Campus Horizonte · Encontro 4 de 17</footer>
+
+<script>
+  const boxes = document.querySelectorAll('#checklist input[type=checkbox]');
+  const progtext = document.getElementById('progtext');
+  const progbar = document.getElementById('progbar');
+  function updateProgress(){
+    const total = boxes.length;
+    const done = [...boxes].filter(b=>b.checked).length;
+    progtext.textContent = done + ' / ' + total + ' verificados';
+    progbar.style.width = (done/total*100) + '%';
+  }
+  boxes.forEach(b=>{
+    b.addEventListener('change', ()=>{
+      b.closest('li').classList.toggle('checked', b.checked);
+      updateProgress();
+    });
+  });
+  updateProgress();
+
+  document.querySelectorAll('.draft-box textarea').forEach(ta=>{
+    const counter = document.querySelector('.char-count[data-for="'+ta.id+'"]');
+    ta.addEventListener('input', ()=>{
+      const len = ta.value.length;
+      counter.textContent = len + ' caracteres (mínimo 40)';
+      counter.classList.toggle('ok', len >= 40);
+    });
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roteiro de Laboratório — Encontro 1 · Sistemas Operacionais ADS23</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#fbfaf5;
+    --bg-card:#ffffff;
+    --bg-card-2:#f3f1e8;
+    --line:#e2ddd0;
+    --line-soft:#ece8db;
+    --primary:#1b878f;
+    --primary-dim:#8fc7ca;
+    --primary-soft:rgba(27,135,143,.09);
+    --secondary:#399b3f;
+    --secondary-soft:rgba(57,155,63,.08);
+    --alert:#cd191e;
+    --alert-soft:rgba(205,25,30,.07);
+    --text:#20241f;
+    --text-dim:#5b6058;
+    --text-faint:#8b9088;
+    --font-display:'Space Grotesk',sans-serif;
+    --font-body:'IBM Plex Sans',sans-serif;
+    --font-mono:'IBM Plex Mono',monospace;
+    /* sub-paleta escura reservada — blocos de terminal permanecem escuros */
+    --term-bg:#10161f;
+    --term-line:#212b3a;
+    --term-dim:#8d96a8;
+    --term-prompt:#7ee787;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;background:var(--bg);color:var(--text);font-family:var(--font-body);
+    line-height:1.6;-webkit-font-smoothing:antialiased;
+  }
+  code{font-family:var(--font-mono);background:var(--primary-soft);color:var(--primary);padding:1px 6px;border-radius:4px;font-size:.92em;}
+
+  .topbar{
+    position:sticky;top:0;z-index:20;background:rgba(251,250,245,.92);backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);padding:12px 22px;
+    display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px 16px;
+  }
+  .topbar .tag{font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;color:var(--text-dim);}
+  .topbar nav{display:flex;gap:14px;flex-wrap:wrap;}
+  .topbar nav a{font-family:var(--font-mono);font-size:11.5px;color:var(--text-faint);text-decoration:none;border-bottom:1px dashed transparent;}
+  .topbar nav a:hover{color:var(--primary);border-color:var(--primary-dim);}
+
+  .doc{max-width:760px;margin:0 auto;padding:48px 22px 100px;}
+
+  .eyebrow{
+    font-family:var(--font-mono);font-size:12px;letter-spacing:.14em;color:var(--primary);
+    text-transform:uppercase;margin:0 0 10px;display:flex;align-items:center;gap:10px;
+  }
+  .eyebrow::before{content:"";width:22px;height:1px;background:var(--primary-dim);}
+  h1{font-family:var(--font-display);font-weight:700;font-size:clamp(28px,4vw,40px);margin:0 0 8px;line-height:1.1;}
+  .subtitle{color:var(--text-dim);font-size:16px;margin:0 0 32px;}
+
+  .box{background:var(--bg-card);border:1px solid var(--line);border-radius:12px;padding:20px 22px;margin-bottom:20px;box-shadow:0 2px 10px rgba(30,30,20,.04);}
+  .box.info{border-left:3px solid var(--primary);}
+  .box.warn{border-left:3px solid var(--alert);}
+  .box h4{margin:0 0 8px;font-family:var(--font-display);font-size:15px;color:var(--text);}
+  .box p{margin:0 0 8px;font-size:14.5px;color:var(--text-dim);}
+  .box p:last-child{margin-bottom:0;}
+  .box ul{margin:6px 0 0;padding-left:20px;color:var(--text-dim);font-size:14.5px;}
+  .box ul li{margin-bottom:4px;}
+
+  .step{
+    background:var(--bg-card);border:1px solid var(--line);border-radius:14px;
+    padding:26px 26px 22px;margin-bottom:22px;scroll-margin-top:70px;position:relative;
+    box-shadow:0 2px 10px rgba(30,30,20,.04);
+  }
+  .step-head{display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap;}
+  .step-num{
+    font-family:var(--font-display);font-weight:700;font-size:15px;color:#fff;
+    background:var(--primary);width:32px;height:32px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;flex:none;
+  }
+  .cmd-chip{
+    font-family:var(--font-mono);font-size:15px;background:var(--primary-soft);
+    border:1px solid var(--primary-dim);color:var(--primary);padding:4px 12px;border-radius:8px;
+  }
+  .step-time{margin-left:auto;font-family:var(--font-mono);font-size:11.5px;color:var(--text-faint);}
+  .step h4{font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);margin:16px 0 6px;}
+  .step p{font-size:15px;color:var(--text);margin:0 0 4px;}
+
+  .term{
+    background:var(--term-bg);border:1px solid var(--term-line);border-radius:10px;
+    font-family:var(--font-mono);font-size:13.5px;line-height:1.7;padding:16px 18px;margin-top:8px;
+  }
+  .term .prompt{color:var(--term-prompt);}
+  .term .out{color:var(--term-dim);display:block;}
+
+  details.hint{
+    margin-top:14px;background:var(--bg-card-2);border:1px solid var(--line-soft);border-radius:10px;
+  }
+  details.hint summary{
+    cursor:pointer;padding:10px 16px;font-family:var(--font-mono);font-size:12.5px;color:var(--text-dim);
+    list-style:none;display:flex;align-items:center;gap:8px;
+  }
+  details.hint summary::-webkit-details-marker{display:none;}
+  details.hint summary::before{content:"▸";color:var(--primary);}
+  details.hint[open] summary::before{content:"▾";}
+  details.hint .hint-body{padding:0 16px 14px;font-size:14px;color:var(--text-dim);}
+  details.hint .hint-body p{margin:6px 0;}
+
+  .think{
+    margin-top:14px;border-left:2px solid var(--primary-dim);padding:8px 14px;font-size:14px;
+    color:var(--text-dim);background:var(--primary-soft);border-radius:0 8px 8px 0;
+  }
+  .think b{color:var(--primary);}
+
+  section.block{margin:46px 0 22px;}
+  section.block h2{font-family:var(--font-display);font-size:24px;margin:0 0 16px;}
+
+  .cards2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media (max-width:640px){.cards2{grid-template-columns:1fr;}}
+  .idea-card{background:var(--bg-card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;}
+  .idea-card .kicker{font-family:var(--font-mono);font-size:11px;color:var(--primary);text-transform:uppercase;letter-spacing:.08em;}
+  .idea-card.alt .kicker{color:var(--secondary);}
+  .idea-card h5{margin:6px 0 8px;font-family:var(--font-display);font-size:17px;}
+  .idea-card p{margin:0;font-size:13.5px;color:var(--text-dim);}
+
+  .example-pair{display:flex;flex-direction:column;gap:12px;margin-top:14px;}
+  .example{border-radius:10px;padding:14px 16px;font-size:14px;line-height:1.55;}
+  .example.bad{background:var(--alert-soft);border:1px solid #ecc3c4;color:var(--text-dim);}
+  .example.good{background:var(--secondary-soft);border:1px solid #c4e0c5;color:var(--text);}
+  .example .tag{font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;display:block;margin-bottom:6px;}
+  .example.bad .tag{color:var(--alert);}
+  .example.good .tag{color:var(--secondary);}
+
+  .checklist{list-style:none;margin:0;padding:0;}
+  .checklist li{display:flex;gap:12px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--line-soft);font-size:14.5px;}
+  .checklist li:last-child{border-bottom:none;}
+  .checklist input{margin-top:3px;accent-color:var(--primary);width:16px;height:16px;flex:none;}
+
+  .footnote{margin-top:40px;font-size:13px;color:var(--text-faint);font-family:var(--font-mono);border-top:1px solid var(--line);padding-top:18px;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="tag">SISTEMAS OPERACIONAIS · ADS23 · ENCONTRO 1</div>
+  <nav>
+    <a href="#passo-1">1</a><a href="#passo-2">2</a><a href="#passo-3">3</a>
+    <a href="#passo-4">4</a><a href="#passo-5">5</a><a href="#bonus">bônus</a><a href="#entrega">entrega</a>
+  </nav>
+</div>
+
+<main class="doc">
+
+  <div class="eyebrow">Roteiro de laboratório do aluno</div>
+  <h1>Primeiro contato com o terminal</h1>
+  <p class="subtitle">Encontro 1 · Sistemas Operacionais · ~90 minutos de prática</p>
+
+  <div class="box info">
+    <h4>Como usar este roteiro</h4>
+    <p>Siga os passos na ordem. Para cada um: leia rapidinho o "por que importa", rode o comando no seu terminal, e compare com o que é esperado. Não precisa decorar nada — o objetivo hoje é <b style="color:var(--text)">reconhecer</b>, não memorizar.</p>
+    <p>Pode ir no seu próprio ritmo. Os tempos ao lado de cada passo são só uma referência — se você terminar tudo antes da hora, vá direto pro <a href="#bonus" style="color:var(--primary)">desafio bônus</a>.</p>
+  </div>
+
+  <div class="box warn">
+    <h4>Antes de começar</h4>
+    <ul>
+      <li>Terminal aberto e login funcionando (se algo da Semana 0 não funcionou, chame o professor agora, antes de seguir).</li>
+      <li>Tenha um bloco de notas (físico ou digital) por perto — você vai escrever 3 observações no final.</li>
+    </ul>
+  </div>
+
+  <!-- PASSO 1 -->
+  <section class="step" id="passo-1">
+    <div class="step-head">
+      <div class="step-num">1</div>
+      <span class="cmd-chip">whoami</span>
+      <span class="step-time">~5 min</span>
+    </div>
+    <h4>O que é</h4>
+    <p>Pergunta ao sistema operacional: "quem sou eu, do seu ponto de vista?"</p>
+    <h4>Por que importa</h4>
+    <p>Todo processo que você roda carrega uma identidade. É assim que o SO decide o que você pode ou não fazer — isso é o gerenciador de recursos controlando o acesso.</p>
+    <h4>Rode</h4>
+    <div class="term"><span class="prompt">$</span> whoami</div>
+    <h4>O que esperar</h4>
+    <div class="term"><span class="out">aluno23</span></div>
+    <p style="font-size:13.5px;color:var(--text-faint);margin-top:4px;">(o nome vai ser o seu usuário real, não literalmente "aluno23")</p>
+    <div class="think"><b>Pense:</b> esse nome é o mesmo que você usa pra fazer login?</div>
+    <details class="hint">
+      <summary>Se algo der errado</summary>
+      <div class="hint-body">
+        <p>Comando não encontrado? Confira se digitou exatamente <code>whoami</code>, tudo minúsculo, sem espaço.</p>
+        <p>Nada aparece? Aperte Enter de novo. Se continuar travado, chame o professor.</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- PASSO 2 -->
+  <section class="step" id="passo-2">
+    <div class="step-head">
+      <div class="step-num">2</div>
+      <span class="cmd-chip">uname -a</span>
+      <span class="step-time">~10 min</span>
+    </div>
+    <h4>O que é</h4>
+    <p>Pergunta ao <b style="color:var(--text)">kernel</b> (o núcleo do SO) informações sobre ele mesmo: nome, versão, arquitetura da CPU.</p>
+    <h4>Por que importa</h4>
+    <p>É o SO se apresentando. Toda vez que você roda um programa, ele está conversando com esse kernel específico — não com o hardware diretamente.</p>
+    <h4>Rode</h4>
+    <div class="term"><span class="prompt">$</span> uname -a</div>
+    <h4>O que esperar</h4>
+    <div class="term"><span class="out">Linux ifce-lab 6.8.0-so #1 SMP x86_64 GNU/Linux</span></div>
+    <div class="think"><b>Desafio rápido:</b> na sua saída, encontre (1) o nome do kernel e (2) a arquitetura — se aparecer <code>x86_64</code>, é um processador de 64 bits.</div>
+    <details class="hint">
+      <summary>Se algo der errado</summary>
+      <div class="hint-body">
+        <p>A saída ficou diferente do exemplo? Tudo bem — cada máquina/distribuição mostra um pouco diferente. O que importa é reconhecer o padrão: nome do SO + versão do kernel + arquitetura.</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- PASSO 3 -->
+  <section class="step" id="passo-3">
+    <div class="step-head">
+      <div class="step-num">3</div>
+      <span class="cmd-chip">hostname</span>
+      <span class="step-time">~5 min</span>
+    </div>
+    <h4>O que é</h4>
+    <p>Mostra o nome desta máquina na rede.</p>
+    <h4>Por que importa</h4>
+    <p>Esse semestre você vai transitar entre várias "máquinas" — seu notebook, um servidor, um container. <code>hostname</code> é o jeito mais rápido de responder "espera, onde eu estou agora?"</p>
+    <h4>Rode</h4>
+    <div class="term"><span class="prompt">$</span> hostname</div>
+    <h4>O que esperar</h4>
+    <div class="term"><span class="out">ifce-lab</span></div>
+  </section>
+
+  <!-- PASSO 4 -->
+  <section class="step" id="passo-4">
+    <div class="step-head">
+      <div class="step-num">4</div>
+      <span class="cmd-chip">ps aux | head -5</span>
+      <span class="step-time">~15 min</span>
+    </div>
+    <h4>O que é</h4>
+    <p><code>ps aux</code> lista todos os processos rodando agora. O <code>| head -5</code> corta e mostra só os 5 primeiros, pra não lotar a tela.</p>
+    <h4>Por que importa</h4>
+    <p>Cada processo é um programa em execução — inclusive o próprio terminal que você está usando agora. Esse comando é a ideia de <b style="color:var(--text)">gerenciador de recursos</b> em ação: o SO organizando uma fila de processos disputando CPU e memória.</p>
+    <h4>Rode</h4>
+    <div class="term"><span class="prompt">$</span> ps aux | head -5</div>
+    <h4>O que esperar</h4>
+    <div class="term">
+      <span class="out">USER   PID  %CPU  %MEM  COMMAND</span>
+      <span class="out">root   1    0.0   0.1   /sbin/init</span>
+      <span class="out">root   842  0.2   0.4   systemd-journald</span>
+      <span class="out">root   1210 0.1   0.3   sshd</span>
+    </div>
+    <div class="think"><b>Pense:</b> qual processo tem PID 1? (dica: geralmente é o <code>init</code> ou <code>systemd</code> — o primeiro processo que o kernel cria quando a máquina liga. Se você assistiu a animação de boot na abertura, é literalmente a última linha daquela sequência virando realidade aqui.)</div>
+    <details class="hint">
+      <summary>Se algo der errado</summary>
+      <div class="hint-body">
+        <p><code>head: command not found</code>? É raro, mas se acontecer, rode só <code>ps aux</code> sem o <code>| head -5</code> e ignore o resto da lista.</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- PASSO 5 -->
+  <section class="step" id="passo-5">
+    <div class="step-head">
+      <div class="step-num">5</div>
+      <span class="cmd-chip">ls -la /</span>
+      <span class="step-time">~15 min</span>
+    </div>
+    <h4>O que é</h4>
+    <p>Lista o conteúdo da raiz (<code>/</code>) do sistema de arquivos, com detalhes (<code>-la</code>).</p>
+    <h4>Por que importa</h4>
+    <p>É o mapa de como o Linux organiza tudo. Cada pasta tem um papel — e você vai usar várias delas o semestre inteiro.</p>
+    <h4>Rode</h4>
+    <div class="term"><span class="prompt">$</span> ls -la /</div>
+    <h4>O que esperar</h4>
+    <div class="term">
+      <span class="out">drwxr-xr-x  bin</span>
+      <span class="out">drwxr-xr-x  etc</span>
+      <span class="out">drwxr-xr-x  home</span>
+      <span class="out">dr-xr-xr-x  proc</span>
+      <span class="out">drwxr-xr-x  var</span>
+    </div>
+    <div class="think"><b>Curiosidade:</b> a pasta <code>/proc</code> não guarda arquivos "de verdade" — é uma janela que o kernel abre pra você espiar processos rodando em tempo real. A gente usa ela a partir do Encontro 2.</div>
+  </section>
+
+  <!-- BÔNUS -->
+  <section class="block" id="bonus">
+    <h2>🎯 Desafio bônus (opcional)</h2>
+    <div class="box">
+      <p>Terminou tudo e ainda tem tempo? Faça este teste:</p>
+      <ol style="color:var(--text-dim);font-size:14.5px;padding-left:20px;">
+        <li>Rode <code>ps aux | wc -l</code> e anote o número (é a contagem de processos rodando agora).</li>
+        <li>Abra o navegador de internet, deixe uma aba carregando.</li>
+        <li>Rode <code>ps aux | wc -l</code> de novo. O número mudou?</li>
+      </ol>
+      <p>Isso é o gerenciador de recursos ao vivo: cada programa que você abre é mais um processo entrando na fila.</p>
+    </div>
+  </section>
+
+  <!-- TEORIA -->
+  <section class="block">
+    <h2>🔗 Conectando com a teoria</h2>
+    <p style="color:var(--text-dim);font-size:14.5px;">Na abertura da aula vimos duas ideias sobre o que o SO faz. Os comandos que você acabou de rodar são exemplos concretos das duas:</p>
+    <div class="cards2">
+      <div class="idea-card">
+        <div class="kicker">Ideia 1</div>
+        <h5>Máquina estendida</h5>
+        <p>O SO te entrega uma versão mais simples do hardware — você nunca precisou saber como o disco grava bits fisicamente pra rodar <code>ls</code> ou <code>whoami</code>.</p>
+      </div>
+      <div class="idea-card alt">
+        <div class="kicker">Ideia 2</div>
+        <h5>Gerenciador de recursos</h5>
+        <p>O <code>ps aux</code> mostrou o SO organizando a fila de processos disputando CPU e memória — mesmo antes de você abrir qualquer programa.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ENTREGA -->
+  <section class="block" id="entrega">
+    <h2>📝 O que entregar</h2>
+    <div class="box warn">
+      <h4>3 observações para o portfólio</h4>
+      <p>Escreva 3 coisas que você notou durante a prática de hoje. Cada observação precisa <b style="color:var(--text)">conectar o que você viu na tela com uma das duas ideias acima</b> (máquina estendida ou gerenciador de recursos) — não vale só descrever o que apareceu.</p>
+    </div>
+    <div class="example-pair">
+      <div class="example bad">
+        <span class="tag">✕ FRACO — não conta</span>
+        Rodei o <code>ps aux</code> e apareceram vários processos.
+      </div>
+      <div class="example good">
+        <span class="tag">✓ BOM — conecta com um conceito</span>
+        O <code>ps aux</code> mostrou dezenas de processos rodando mesmo sem eu ter aberto nenhum programa — isso é a ideia de gerenciador de recursos na prática: o SO já estava ocupado organizando tudo antes de eu fazer qualquer coisa.
+      </div>
+    </div>
+    <p style="font-size:13.5px;color:var(--text-faint);margin-top:14px;">Não precisa ser longo — 2 a 3 frases por observação já bastam. O que vale é a conexão com o conceito, não o tamanho do texto. Copiar frase do livro não conta como observação.</p>
+  </section>
+
+  <!-- CHECKLIST -->
+  <section class="block">
+    <h2>✅ Antes de encerrar</h2>
+    <div class="box">
+      <ul class="checklist">
+        <li><input type="checkbox"><span>Rodei os 5 comandos (<code>whoami</code>, <code>uname -a</code>, <code>hostname</code>, <code>ps aux | head -5</code>, <code>ls -la /</code>)</span></li>
+        <li><input type="checkbox"><span>Escrevi 3 observações, cada uma conectada a um conceito (máquina estendida ou gerenciador de recursos)</span></li>
+        <li><input type="checkbox"><span>Nenhuma observação é cópia literal de texto — são palavras minhas</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <div class="footnote">
+    Sistemas Operacionais · ADS23 · IFCE Campus Horizonte · Encontro 1 de 17<br>
+    Dúvida a qualquer momento? Chame o professor — ele está circulando pela sala.
+  </div>
+
+</main>
+</body>
+</html>

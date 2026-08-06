@@ -1,0 +1,76 @@
+@import "tailwindcss";
+
+/*
+ * Identidade visual do portal.
+ *
+ * A paleta é a mesma dos materiais dos encontros: clara, derivada das cores
+ * oficiais do Manual de Aplicação da Marca IF — teal complementar como primária,
+ * verde IF como secundária, vermelho IF reservado para alerta. Blocos de
+ * terminal permanecem escuros por contraste técnico.
+ */
+@theme {
+  --color-bg: #fbfaf5;
+  --color-panel: #f3f1e8;
+  --color-card: #ffffff;
+  --color-line: #e2ddd0;
+  --color-line-soft: #ece8db;
+
+  --color-primary: #1b878f;
+  --color-primary-dim: #8fc7ca;
+  --color-primary-soft: rgba(27, 135, 143, 0.09);
+
+  --color-secondary: #399b3f;
+  --color-secondary-dim: #a8d4ab;
+  --color-secondary-soft: rgba(57, 155, 63, 0.08);
+
+  --color-alert: #cd191e;
+  --color-alert-soft: rgba(205, 25, 30, 0.07);
+
+  --color-ink: #20241f;
+  --color-ink-dim: #5b6058;
+  --color-ink-faint: #8b9088;
+
+  /* sub-paleta escura reservada — blocos de código/terminal */
+  --color-term: #10161f;
+  --color-term-line: #212b3a;
+  --color-term-dim: #8d96a8;
+  --color-term-prompt: #7ee787;
+  --color-term-accent: #5fd9d3;
+
+  --font-display: var(--fonte-display), sans-serif;
+  --font-sans: var(--fonte-corpo), sans-serif;
+  --font-mono: var(--fonte-mono), monospace;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background: var(--color-bg);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  ::selection {
+    background: var(--color-primary-soft);
+  }
+
+  /* Foco visível — o portal também é exemplo didático de acessibilidade. */
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}

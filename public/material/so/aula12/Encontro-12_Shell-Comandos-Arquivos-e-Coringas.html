@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Encontro 12 · Shell: comandos, arquivos e coringas — Sistemas Operacionais ADS23</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#fbfaf5;
+    --bg-panel:#f3f1e8;
+    --bg-card:#ffffff;
+    --bg-card-2:#f3f1e8;
+    --line:#e2ddd0;
+    --line-soft:#ece8db;
+    --primary:#1b878f;
+    --primary-dim:#8fc7ca;
+    --primary-soft:rgba(27,135,143,.09);
+    --primary-glow:rgba(27,135,143,.35);
+    --secondary:#399b3f;
+    --secondary-dim:#a8d4ab;
+    --secondary-soft:rgba(57,155,63,.08);
+    --alert:#cd191e;
+    --alert-soft:rgba(205,25,30,.07);
+    --text:#20241f;
+    --text-dim:#5b6058;
+    --text-faint:#8b9088;
+    --font-display:'Space Grotesk',sans-serif;
+    --font-body:'IBM Plex Sans',sans-serif;
+    --font-mono:'IBM Plex Mono',monospace;
+    --term-bg:#10161f;
+    --term-line:#212b3a;
+    --term-dim:#8d96a8;
+    --term-prompt:#7ee787;
+    --term-accent:#5fd9d3;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-body);line-height:1.65;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3{font-family:var(--font-display);font-weight:600;color:var(--text);letter-spacing:-.01em;margin:0;}
+  a{color:var(--primary);}
+  code{font-family:var(--font-mono);background:var(--primary-soft);color:var(--primary);padding:1px 6px;border-radius:4px;font-size:.92em;}
+  ::selection{background:var(--primary-soft);color:var(--text);}
+
+  .topbar{
+    position:sticky;top:0;z-index:30;background:rgba(251,250,245,.94);backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);padding:12px 22px;
+    display:flex;align-items:center;justify-content:space-between;gap:14px;
+  }
+  .topbar .brand{font-family:var(--font-mono);font-size:12.5px;color:var(--text-dim);letter-spacing:.03em;}
+  .topbar .brand b{color:var(--primary);}
+  .progress-track{position:absolute;left:0;bottom:-1px;height:2px;width:100%;background:var(--line-soft);}
+  .progress-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--primary),var(--secondary));transition:width .15s linear;}
+
+  .dot-nav{position:fixed;right:18px;top:50%;transform:translateY(-50%);z-index:30;display:flex;flex-direction:column;gap:9px;}
+  .dot-nav a{width:9px;height:9px;border-radius:50%;background:var(--line);border:1px solid var(--line);display:block;transition:.2s;position:relative;}
+  .dot-nav a:hover{background:var(--text-faint);}
+  .dot-nav a.active{background:var(--primary);border-color:var(--primary);box-shadow:0 0 8px var(--primary-glow);}
+  .dot-nav a .tip{position:absolute;right:18px;top:50%;transform:translateY(-50%);white-space:nowrap;font-family:var(--font-mono);font-size:11px;color:var(--text-dim);background:var(--bg-panel);border:1px solid var(--line);padding:3px 8px;border-radius:5px;opacity:0;pointer-events:none;transition:.15s;}
+  .dot-nav a:hover .tip{opacity:1;}
+  @media (max-width:780px){.dot-nav{display:none;}}
+
+  .slide{min-height:100vh;display:flex;align-items:center;padding:70px 22px;border-bottom:1px solid var(--line-soft);position:relative;}
+  .slide-inner{max-width:920px;margin:0 auto;width:100%;}
+  .eyebrow{font-family:var(--font-mono);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+  .eyebrow::before{content:'';width:22px;height:1px;background:var(--primary-dim);}
+  .slide-title{font-size:clamp(24px,3.4vw,38px);margin-bottom:22px;}
+  .lead{font-size:17.5px;color:var(--text-dim);max-width:680px;}
+  .big{font-size:clamp(36px,6.4vw,64px);line-height:1.05;}
+  .glow{text-shadow:0 0 34px var(--primary-glow);}
+  .meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:26px;font-family:var(--font-mono);font-size:12.5px;color:var(--text-faint);}
+  .meta span{padding-left:16px;border-left:1px solid var(--line);}
+  .meta span:first-child{padding-left:0;border-left:none;}
+  .hint{margin-top:40px;font-family:var(--font-mono);font-size:11.5px;color:var(--text-faint);}
+
+  .fragment{opacity:0;transform:translateY(14px);transition:opacity .55s ease,transform .55s ease;}
+  .fragment.visible{opacity:1;transform:translateY(0);}
+  .fragment.d1{transition-delay:.08s;} .fragment.d2{transition-delay:.16s;} .fragment.d3{transition-delay:.24s;} .fragment.d4{transition-delay:.32s;}
+
+  .qmark{font-family:var(--font-mono);font-size:12.5px;letter-spacing:.1em;color:var(--primary);text-transform:uppercase;}
+  .question-wrap{text-align:left;}
+
+  .cards2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px;}
+  .card{background:var(--bg-card);border:1px solid var(--line);border-radius:12px;padding:22px 22px;}
+  .card.alt{border-color:var(--secondary-dim);}
+  .card .kicker{font-family:var(--font-mono);font-size:11.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+  .card h3{font-size:19px;margin-bottom:8px;}
+  .card p{color:var(--text-dim);font-size:14.5px;margin:0;}
+  @media (max-width:720px){.cards2{grid-template-columns:1fr;}}
+
+  .blist{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:12px;}
+  .blist li{display:flex;gap:12px;align-items:flex-start;font-size:15.5px;color:var(--text-dim);}
+  .blist .ico{font-family:var(--font-mono);color:var(--primary);flex-shrink:0;}
+
+  .arch-tag{display:inline-block;font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;background:var(--primary-soft);color:var(--primary);border:1px solid var(--primary-dim);border-radius:20px;padding:4px 12px;margin-bottom:16px;}
+  .arch-diagram{background:var(--bg-card-2);border:1px solid var(--line);border-radius:12px;padding:22px;margin:20px 0;font-family:var(--font-mono);font-size:13px;}
+  .arch-layer{padding:10px 14px;border-radius:6px;margin-bottom:6px;text-align:center;color:var(--text);}
+  .arch-layer:last-child{margin-bottom:0;}
+  .arch-layer.hw{background:var(--line-soft);color:var(--text-dim);}
+  .arch-layer.kernel{background:rgba(27,135,143,.15);border:1px solid var(--primary-dim);}
+  .arch-layer.user{background:rgba(57,155,63,.1);border:1px solid var(--secondary-dim);}
+  .arch-layer.alertline{background:var(--alert-soft);border:1px solid var(--alert);color:var(--alert);}
+  .arch-layer.split{display:flex;gap:6px;}
+  .arch-layer.split > div{flex:1;padding:8px;background:rgba(57,155,63,.1);border:1px solid var(--secondary-dim);border-radius:6px;text-align:center;font-size:12px;}
+  .arch-arrow{text-align:center;font-size:16px;color:var(--text-faint);margin:2px 0;}
+  .arch-facts{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px;}
+  .fact-box{background:var(--bg-card);border:1px solid var(--line);border-radius:10px;padding:16px;}
+  .fact-box .lbl{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-faint);margin-bottom:6px;}
+  .fact-box p{margin:0;font-size:14px;color:var(--text-dim);}
+  .fact-box.good .lbl{color:var(--secondary);}
+  .fact-box.bad .lbl{color:var(--alert);}
+
+  .compare-table{width:100%;border-collapse:collapse;margin-top:18px;font-size:14px;}
+  .compare-table th,.compare-table td{border:1px solid var(--line);padding:11px 13px;text-align:left;vertical-align:top;}
+  .compare-table th{background:var(--bg-card-2);font-family:var(--font-mono);font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-dim);}
+  .compare-table td{color:var(--text-dim);}
+  .compare-table td.hl{color:var(--text);}
+  .compare-table tr td:first-child{font-family:var(--font-mono);color:var(--primary);font-size:13px;white-space:nowrap;}
+  @media (max-width:780px){.compare-table{font-size:12.5px;} .compare-table th,.compare-table td{padding:8px;}}
+
+  .term{background:var(--term-bg);border:1px solid var(--term-line);border-radius:10px;overflow:hidden;margin-top:18px;}
+  .term .bar{background:var(--term-bg);padding:8px 12px;display:flex;gap:6px;border-bottom:1px solid var(--term-line);}
+  .term .bar .dot{width:9px;height:9px;border-radius:50%;background:var(--term-line);}
+  .term .bar .dot:nth-child(1){background:#e0605f;} .term .bar .dot:nth-child(2){background:#e0b25f;} .term .bar .dot:nth-child(3){background:#5fbf6b;}
+  .term-body{padding:16px 18px;font-family:var(--font-mono);font-size:13.5px;color:var(--term-dim);min-height:170px;white-space:pre-wrap;line-height:1.55;}
+  .term-body .prompt{color:var(--term-prompt);}
+  .term-body .sys{color:var(--term-accent);}
+  .term-body .ok{color:var(--term-prompt);}
+  .term-body .err{color:#e0605f;}
+
+  .plan-track{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap;}
+  .plan-step{flex:1;min-width:150px;background:var(--bg-card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;}
+  .plan-step.alt{border-color:var(--primary-dim);}
+  .plan-step .t{font-family:var(--font-mono);font-size:11px;color:var(--primary);margin-bottom:6px;}
+  .plan-step h4{margin:0 0 4px;font-family:var(--font-display);font-size:15px;color:var(--text);}
+  .plan-step p{margin:0;font-size:13px;color:var(--text-dim);}
+
+  .read-list{display:flex;flex-direction:column;gap:14px;margin-top:10px;}
+  .read-item{display:flex;gap:14px;align-items:flex-start;background:var(--bg-card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;}
+  .read-item .tag{font-size:20px;flex-shrink:0;}
+  .read-item h4{margin:0 0 4px;font-size:15.5px;font-family:var(--font-display);color:var(--text);}
+  .read-item p{margin:0;font-size:13.5px;color:var(--text-dim);}
+  .read-item .pages{font-family:var(--font-mono);font-size:12px;color:var(--primary);}
+  .read-item.excl{border-color:var(--alert);background:var(--alert-soft);}
+  .read-item.excl h4{color:var(--alert);}
+
+  footer.endnote{text-align:center;padding:40px 20px 60px;font-family:var(--font-mono);font-size:11.5px;color:var(--text-faint);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">Sistemas Operacionais · <b>ADS23</b></div>
+  <div class="brand" id="slideCounter">01 / 14</div>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+</div>
+
+<nav class="dot-nav" id="dotNav"></nav>
+
+<section class="slide active" id="slide-0">
+  <div class="slide-inner">
+    <div class="eyebrow">Encontro 12 de 17 · Abertura da Unidade VI</div>
+    <h1 class="big glow">Shell: comandos,<br>arquivos e coringas</h1>
+    <p class="lead">A competência mais empregável desta disciplina — e a base do projeto final. A partir de hoje, o terminal deixa de ser ferramenta de diagnóstico e vira ferramenta de trabalho.</p>
+    <div class="meta">
+      <span>ADS23</span><span>IFCE Campus Horizonte</span><span>Prof. José Stelio Sampaio Bastos Neto</span>
+    </div>
+    <div class="hint">↓ role pra avançar · use os pontos à direita pra navegar direto</div>
+  </div>
+</section>
+
+<section class="slide" id="slide-1">
+  <div class="slide-inner">
+    <div class="eyebrow">Aviso importante</div>
+    <h2 class="slide-title">Hoje o encontro começa com avaliação</h2>
+    <p class="lead">Os primeiros ~40 minutos são a <b>N1 da 2ª etapa</b>: uma prática avaliada curta sobre memória e E/S — o conteúdo dos Encontros 9, 10 e 11. Depois dela, começamos a Unidade VI normalmente.</p>
+    <div class="cards2">
+      <div class="card fragment">
+        <div class="kicker">Primeira parte</div>
+        <h3>N1 · prática avaliada (~40 min)</h3>
+        <p>Diagnóstico de memória e E/S no terminal, individual. Sem consulta a colegas; consulta ao material permitida conforme orientação em sala.</p>
+      </div>
+      <div class="card alt fragment d1">
+        <div class="kicker">Resto da aula</div>
+        <h3>Unidade VI · shell</h3>
+        <p>Conteúdo novo, com prática — e sem relação com a avaliação da primeira parte.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="slide-2">
+  <div class="slide-inner question-wrap">
+    <div class="qmark">Pergunta pra turma</div>
+    <h1 class="big" style="margin-top:18px;">Você precisa renomear <span class="glow" style="color:var(--primary)">400 arquivos</span>,<br>cada um com um padrão diferente.<br>Quanto tempo isso leva?</h1>
+    <p class="lead fragment" style="margin:20px auto 0;">No mouse, arrastando e clicando: uma tarde inteira. No shell: uma linha.</p>
+  </div>
+</section>
+
+<section class="slide" id="slide-3">
+  <div class="slide-inner">
+    <div class="arch-tag">Situando o shell</div>
+    <h2 class="slide-title">O shell é um programa comum — e é isso que o torna poderoso</h2>
+    <p class="lead">O shell não faz parte do núcleo do SO. Ele é apenas um programa que lê o que você digita, pede ao kernel que execute, e mostra o resultado. É por isso que existem vários shells diferentes e você pode trocar de um para outro.</p>
+    <div class="arch-diagram">
+      <div class="arch-layer user">Você — digita um comando</div>
+      <div class="arch-arrow">↓</div>
+      <div class="arch-layer user">Shell (bash) — interpreta, expande coringas, monta pipes</div>
+      <div class="arch-arrow">↓ chamadas de sistema (Encontro 3)</div>
+      <div class="arch-layer kernel">Kernel — cria processos, lê arquivos, acessa dispositivos</div>
+      <div class="arch-arrow">↓</div>
+      <div class="arch-layer hw">Hardware</div>
+    </div>
+    <p class="lead fragment" style="margin-top:18px;font-size:14.5px;">Reparem que o shell usa exatamente as <b>chamadas de sistema</b> que vocês rastrearam com <code>strace</code> no Encontro 3.</p>
+  </div>
+</section>
+
+<section class="slide" id="slide-4">
+  <div class="slide-inner">
+    <div class="eyebrow">O essencial</div>
+    <h2 class="slide-title">Navegação e inspeção: onde estou, o que tem aqui</h2>
+    <table class="compare-table fragment">
+      <tr><th>Comando</th><th>O que faz</th><th>Variação útil</th></tr>
+      <tr><td>pwd</td><td class="hl">Mostra o diretório atual</td><td>—</td></tr>
+      <tr><td>ls</td><td class="hl">Lista o conteúdo</td><td><code>ls -lah</code> — detalhes, ocultos, legível</td></tr>
+      <tr><td>cd</td><td class="hl">Muda de diretório</td><td><code>cd -</code> volta ao anterior</td></tr>
+      <tr><td>cat / less</td><td class="hl">Mostra conteúdo de arquivo</td><td><code>less</code> pagina arquivos grandes</td></tr>
+      <tr><td>head / tail</td><td class="hl">Início / fim de um arquivo</td><td><code>tail -f</code> acompanha log ao vivo</td></tr>
+    </table>
+    <p class="lead fragment d1" style="margin-top:18px;font-size:14.5px;">O <code>tail -f</code> é, sozinho, o comando mais usado em sustentação — acompanhar um log enquanto o problema acontece.</p>
+  </div>
+</section>
+
+<section class="slide" id="slide-5">
+  <div class="slide-inner">
+    <div class="eyebrow">Manipulação</div>
+    <h2 class="slide-title">Criar, copiar, mover, apagar</h2>
+    <table class="compare-table fragment">
+      <tr><th>Comando</th><th>O que faz</th><th>Cuidado</th></tr>
+      <tr><td>mkdir -p</td><td class="hl">Cria diretório (e os pais, se faltarem)</td><td>—</td></tr>
+      <tr><td>touch</td><td class="hl">Cria arquivo vazio / atualiza data</td><td>—</td></tr>
+      <tr><td>cp -r</td><td class="hl">Copia (o <code>-r</code> para diretórios)</td><td>Sobrescreve sem perguntar</td></tr>
+      <tr><td>mv</td><td class="hl">Move — e também <b>renomeia</b></td><td>Sobrescreve sem perguntar</td></tr>
+      <tr><td>rm -r</td><td class="hl">Remove diretório e conteúdo</td><td><b style="color:var(--alert)">Não existe lixeira. É definitivo.</b></td></tr>
+    </table>
+    <p class="lead fragment d1" style="margin-top:18px;font-size:14.5px;">Regra de sobrevivência: antes de um <code>rm</code> com coringa, rode o mesmo padrão com <code>ls</code> primeiro. Veja o que <i>seria</i> apagado antes de apagar.</p>
+  </div>
+</section>
+
+<section class="slide" id="slide-6">
+  <div class="slide-inner">
+    <div class="arch-tag">O multiplicador de força</div>
+    <h2 class="slide-title">Coringas: um padrão, muitos arquivos</h2>
+    <p class="lead">Aqui está a resposta da pergunta do slide 2. Coringas (<i>globbing</i>) são expandidos <b>pelo shell</b> antes do comando rodar — o comando nem sabe que houve coringa; ele recebe a lista já pronta.</p>
+    <table class="compare-table fragment">
+      <tr><th>Coringa</th><th>Casa com</th><th>Exemplo</th></tr>
+      <tr><td>*</td><td class="hl">Qualquer sequência de caracteres</td><td><code>*.log</code> — todos os .log</td></tr>
+      <tr><td>?</td><td class="hl">Exatamente um caractere</td><td><code>arq?.txt</code> — arq1.txt, arqA.txt</td></tr>
+      <tr><td>[...]</td><td class="hl">Um caractere do conjunto</td><td><code>arq[123].txt</code></td></tr>
+      <tr><td>{a,b}</td><td class="hl">Cada alternativa da lista</td><td><code>rel.{txt,pdf}</code></td></tr>
+    </table>
+    <p class="lead fragment d1" style="margin-top:18px;font-size:14.5px;">Como quem expande é o shell, <code>echo *.log</code> mostra exatamente o que qualquer comando receberia — a forma mais segura de testar um padrão.</p>
+  </div>
+</section>
+
+<section class="slide" id="slide-7">
+  <div class="slide-inner">
+    <div class="eyebrow">Procurando</div>
+    <h2 class="slide-title">Encontrar arquivos e encontrar conteúdo</h2>
+    <div class="cards2">
+      <div class="card fragment">
+        <div class="kicker"><code>find</code></div>
+        <h3>Procura arquivos <i>pelo nome</i> ou atributo</h3>
+        <p>Percorre a árvore de diretórios inteira. Filtra por nome, tamanho, data, tipo — e pode executar ações sobre o que encontrar.</p>
+      </div>
+      <div class="card alt fragment d1">
+        <div class="kicker"><code>grep</code></div>
+        <h3>Procura <i>dentro</i> do conteúdo</h3>
+        <p>Já usado desde o Encontro 5 com pipes. Com <code>-r</code> percorre diretórios, com <code>-n</code> mostra a linha exata.</p>
+      </div>
+    </div>
+    <p class="lead fragment d2" style="margin-top:20px;font-size:14.5px;">A combinação dos dois — <code>find</code> para localizar, <code>grep</code> para filtrar conteúdo — resolve a maioria das buscas do dia a dia.</p>
+  </div>
+</section>
+
+<section class="slide" id="slide-8">
+  <div class="slide-inner">
+    <div class="eyebrow">Retomando o Encontro 6</div>
+    <h2 class="slide-title">Pipes e redirecionamento, agora como ferramenta de trabalho</h2>
+    <p class="lead">Vocês já conhecem <code>|</code>, <code>&gt;</code> e <code>2&gt;</code> desde o Encontro 6. O que muda hoje é o uso: não mais para observar o sistema, mas para <b>produzir resultado</b>.</p>
+    <table class="compare-table fragment">
+      <tr><th>Operador</th><th>O que faz</th></tr>
+      <tr><td>&gt;</td><td class="hl">Redireciona a saída para arquivo, <b>substituindo</b> o conteúdo</td></tr>
+      <tr><td>&gt;&gt;</td><td class="hl">Redireciona <b>acrescentando</b> ao final — o que se usa em log</td></tr>
+      <tr><td>2&gt;</td><td class="hl">Redireciona só os erros (stderr, Encontro 6)</td></tr>
+      <tr><td>|</td><td class="hl">Encana a saída de um comando na entrada do próximo</td></tr>
+    </table>
+    <p class="lead fragment d1" style="margin-top:18px;font-size:14.5px;">A confusão entre <code>&gt;</code> e <code>&gt;&gt;</code> é a causa mais comum de "meu script apagou o log inteiro".</p>
+  </div>
+</section>
+
+<section class="slide" id="slide-9">
+  <div class="slide-inner">
+    <div class="eyebrow">Por que isso importa pra quem trabalha com software</div>
+    <h2 class="slide-title">Onde o shell aparece na sua carreira</h2>
+    <div class="cards2">
+      <div class="card fragment">
+        <div class="kicker">Não é opcional</div>
+        <h3>Servidor não tem interface gráfica</h3>
+        <p>Qualquer máquina em nuvem, container ou pipeline de CI se opera por linha de comando. Não há alternativa por mouse.</p>
+      </div>
+      <div class="card alt fragment d1">
+        <div class="kicker">Diferencial real</div>
+        <h3>É o que separa quem espera de quem resolve</h3>
+        <p>Diagnosticar, automatizar e corrigir sem depender de terceiros — a competência mais visível em sustentação, DevOps e cloud.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="slide-10">
+  <div class="slide-inner">
+    <div class="eyebrow">Eixo do curso</div>
+    <h2 class="slide-title">Todo container é, por dentro, um shell esperando comandos</h2>
+    <p class="lead">Vocês já usaram <code>docker exec</code> no Encontro 5 sem pensar muito nele. Agora dá pra ver o que estava acontecendo: aquele comando abre um shell dentro do container — e tudo que vocês aprenderem hoje funciona lá dentro também.</p>
+    <div class="cards2">
+      <div class="card fragment">
+        <div class="kicker">No host</div>
+        <h3>Shell da sua VM</h3>
+        <p>Ferramentas completas, sistema de arquivos inteiro, seus arquivos pessoais.</p>
+      </div>
+      <div class="card alt fragment d1">
+        <div class="kicker">No container</div>
+        <h3>Shell mínimo e isolado</h3>
+        <p>Muitas imagens (como <code>alpine</code>) trazem só o essencial — e é justamente aí que dominar os comandos básicos faz diferença.</p>
+      </div>
+    </div>
+    <p class="lead fragment d2" style="margin-top:20px;font-size:14.5px;">Diagnosticar um container quebrado é, quase sempre, entrar nele com <code>docker exec -it ... sh</code> e usar exatamente os comandos de hoje.</p>
+  </div>
+</section>
+
+<section class="slide" id="slide-11" data-anim="shdemo">
+  <div class="slide-inner">
+    <div class="eyebrow">Prévia da prática</div>
+    <h2 class="slide-title">Coringas, cópia, busca — e o shell dentro do container</h2>
+    <p class="lead">Uma sequência real: listar com padrão, organizar arquivos, e procurar conteúdo dentro deles.</p>
+    <div class="term">
+      <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+      <div class="term-body" id="shBody"></div>
+    </div>
+    <p class="lead" style="margin-top:16px;font-size:14px;">Cada uma dessas linhas vira um passo do roteiro de laboratório de hoje.</p>
+  </div>
+</section>
+
+<section class="slide" id="slide-12">
+  <div class="slide-inner">
+    <div class="eyebrow">Mão na massa</div>
+    <h2 class="slide-title">De navegar a manipular em lote</h2>
+    <div class="plan-track">
+      <div class="plan-step fragment">
+        <div class="t">FUNDAMENTOS</div>
+        <h4>Navegação, arquivos e coringas</h4>
+        <p>Criar uma estrutura de teste, manipular em lote com coringas, e buscar com <code>find</code> e <code>grep</code>.</p>
+      </div>
+      <div class="plan-step alt fragment d1">
+        <div class="t">REFORÇO DOCKER</div>
+        <h4>Shell dentro do container</h4>
+        <p>Entrar num container com <code>docker exec -it</code> e usar os mesmos comandos lá dentro.</p>
+      </div>
+    </div>
+    <p class="lead fragment d2" style="margin-top:22px;">O roteiro de laboratório detalha os passos, com dicas se algo travar.</p>
+  </div>
+</section>
+
+<section class="slide" id="slide-13">
+  <div class="slide-inner">
+    <div class="eyebrow">Para ler</div>
+    <h2 class="slide-title">Leitura da semana</h2>
+    <div class="read-list">
+      <div class="read-item fragment">
+        <div class="tag">🟢</div>
+        <div>
+          <h4>Laureano — Comandos Básicos + Comandos para diretórios e arquivos</h4>
+          <p>A referência direta dos comandos de hoje — vale manter aberto durante a prática. <span class="pages">p. 33–38 e 43–53</span></p>
+        </div>
+      </div>
+      <div class="read-item fragment d1">
+        <div class="tag">🔵</div>
+        <div>
+          <h4>Tanenbaum — O interpretador de comandos (shell)</h4>
+          <p>Duas páginas que situam o shell na arquitetura do SO — o conteúdo do slide 3. <span class="pages">p. 32–33</span></p>
+        </div>
+      </div>
+      <div class="read-item fragment d2">
+        <div class="tag">⚪</div>
+        <div>
+          <h4>Laureano — Permissões + Comandos avançados</h4>
+          <p>Adiantamento útil: permissões voltam com força no Encontro 14, na automação. <span class="pages">p. 62–69 e 59–61</span></p>
+        </div>
+      </div>
+    </div>
+    <p class="lead" style="margin-top:22px;font-size:14px;">O quiz da semana verifica essa leitura e recolhe suas observações da prática — tudo no mesmo instrumento.</p>
+  </div>
+</section>
+
+<footer class="endnote">Sistemas Operacionais · ADS23 · IFCE Campus Horizonte · Encontro 12 de 17</footer>
+
+<script>
+(function(){
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const dotNav = document.getElementById('dotNav');
+  const counter = document.getElementById('slideCounter');
+  const progressFill = document.getElementById('progressFill');
+  const total = slides.length;
+
+  slides.forEach((s,i)=>{
+    const a = document.createElement('a');
+    a.href = '#'+s.id;
+    const tip = document.createElement('span');
+    tip.className = 'tip';
+    tip.textContent = String(i+1).padStart(2,'0');
+    a.appendChild(tip);
+    dotNav.appendChild(a);
+  });
+  const dots = Array.from(dotNav.querySelectorAll('a'));
+
+  function setActive(idx){
+    dots.forEach((d,i)=>d.classList.toggle('active', i===idx));
+    counter.textContent = String(idx+1).padStart(2,'0') + ' / ' + String(total).padStart(2,'0');
+  }
+
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      const idx = slides.indexOf(entry.target);
+      if(entry.isIntersecting){
+        if(entry.intersectionRatio > 0.5) setActive(idx);
+        entry.target.querySelectorAll('.fragment').forEach(f=>f.classList.add('visible'));
+      }
+    });
+  }, {threshold:[0,0.5,1]});
+  slides.forEach(s=>io.observe(s));
+
+  window.addEventListener('scroll', ()=>{
+    const scrolled = window.scrollY;
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    progressFill.style.width = (max>0 ? (scrolled/max*100) : 0) + '%';
+  });
+
+  document.addEventListener('keydown', (e)=>{
+    const activeIdx = dots.findIndex(d=>d.classList.contains('active'));
+    if(e.key === 'ArrowDown' || e.key === ' '){
+      e.preventDefault();
+      slides[Math.min(activeIdx+1, total-1)].scrollIntoView({behavior:'smooth'});
+    } else if(e.key === 'ArrowUp'){
+      e.preventDefault();
+      slides[Math.max(activeIdx-1, 0)].scrollIntoView({behavior:'smooth'});
+    }
+  });
+
+  setActive(0);
+
+  const demoLines = [
+    ['$ ls -lh /var/log/*.log', 'prompt'],
+    ['-rw-r----- 1 syslog adm 312K syslog.log', 'sys'],
+    ['$ cp -r projeto/ backup_projeto/', 'prompt'],
+    ['$ find /etc -name "*.conf" | head -3', 'prompt'],
+    ['/etc/ssh/sshd_config.conf', 'ok'],
+    ['$ grep -rn "erro" /var/log/meu.log', 'prompt'],
+    ['42:  [ERRO] falha ao conectar', 'ok'],
+  ];
+  const shBody = document.getElementById('shBody');
+  let demoStarted = false;
+  function typeLine(i){
+    if(i >= demoLines.length) return;
+    const [txt, cls] = demoLines[i];
+    const span = document.createElement('div');
+    span.className = cls;
+    shBody.appendChild(span);
+    let c = 0;
+    const iv = setInterval(()=>{
+      span.textContent = txt.slice(0, c+1);
+      c++;
+      if(c >= txt.length){
+        clearInterval(iv);
+        setTimeout(()=>typeLine(i+1), 110);
+      }
+    }, 14);
+  }
+  const demoIo = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      if(entry.isIntersecting && !demoStarted){
+        demoStarted = true;
+        typeLine(0);
+      }
+    });
+  }, {threshold:0.4});
+  demoIo.observe(document.getElementById('slide-11'));
+})();
+</script>
+
+</body>
+</html>

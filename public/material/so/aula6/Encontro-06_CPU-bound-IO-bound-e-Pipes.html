@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Encontro 6 · CPU-bound × I/O-bound e Pipes — Sistemas Operacionais ADS23</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* paleta clara institucional (IFCE) — ver "Paleta visual dos materiais HTML" na memória do curso */
+    --bg:#fbfaf5;
+    --bg-panel:#f3f1e8;
+    --bg-card:#ffffff;
+    --bg-card-2:#f3f1e8;
+    --line:#e2ddd0;
+    --line-soft:#ece8db;
+    --primary:#1b878f;        /* teal — títulos, badges, destaques */
+    --primary-dim:#8fc7ca;    /* teal claro — bordas/divisores sutis */
+    --primary-soft:rgba(27,135,143,.09);
+    --primary-glow:rgba(27,135,143,.35);
+    --secondary:#399b3f;      /* verde IF — apoio técnico */
+    --secondary-dim:#a8d4ab;
+    --secondary-soft:rgba(57,155,63,.08);
+    --alert:#cd191e;          /* vermelho IF — alerta pontual */
+    --text:#20241f;
+    --text-dim:#5b6058;
+    --text-faint:#8b9088;
+    --font-display:'Space Grotesk',sans-serif;
+    --font-body:'IBM Plex Sans',sans-serif;
+    --font-mono:'IBM Plex Mono',monospace;
+    /* sub-paleta escura reservada — blocos de código/terminal permanecem escuros por contraste técnico */
+    --term-bg:#10161f;
+    --term-line:#212b3a;
+    --term-dim:#8d96a8;
+    --term-prompt:#7ee787;
+    --term-accent:#5fd9d3;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-body);line-height:1.65;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3{font-family:var(--font-display);font-weight:600;color:var(--text);letter-spacing:-.01em;margin:0;}
+  a{color:var(--primary);}
+  code{font-family:var(--font-mono);background:var(--primary-soft);color:var(--primary);padding:1px 6px;border-radius:4px;font-size:.92em;}
+  ::selection{background:var(--primary-soft);color:var(--text);}
+
+  .topbar{
+    position:sticky;top:0;z-index:30;background:rgba(251,250,245,.94);backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);padding:12px 22px;
+    display:flex;align-items:center;justify-content:space-between;gap:14px;
+  }
+  .topbar .brand{font-family:var(--font-mono);font-size:12.5px;color:var(--text-dim);letter-spacing:.03em;}
+  .topbar .brand b{color:var(--primary);}
+  .progress-track{position:absolute;left:0;bottom:-1px;height:2px;width:100%;background:var(--line-soft);}
+  .progress-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--primary),var(--secondary));transition:width .15s linear;}
+
+  .dot-nav{position:fixed;right:18px;top:50%;transform:translateY(-50%);z-index:30;display:flex;flex-direction:column;gap:9px;}
+  .dot-nav a{width:9px;height:9px;border-radius:50%;background:var(--line);border:1px solid var(--line);display:block;transition:.2s;position:relative;}
+  .dot-nav a:hover{background:var(--text-faint);}
+  .dot-nav a.active{background:var(--primary);border-color:var(--primary);box-shadow:0 0 8px var(--primary-glow);}
+  .dot-nav a .tip{position:absolute;right:18px;top:50%;transform:translateY(-50%);white-space:nowrap;font-family:var(--font-mono);font-size:11px;color:var(--text-dim);background:var(--bg-panel);border:1px solid var(--line);padding:3px 8px;border-radius:5px;opacity:0;pointer-events:none;transition:.15s;}
+  .dot-nav a:hover .tip{opacity:1;}
+  @media (max-width:780px){.dot-nav{display:none;}}
+
+  .slide{min-height:100vh;display:flex;align-items:center;padding:70px 22px;border-bottom:1px solid var(--line-soft);position:relative;}
+  .slide-inner{max-width:920px;margin:0 auto;width:100%;}
+  .eyebrow{font-family:var(--font-mono);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+  .eyebrow::before{content:'';width:22px;height:1px;background:var(--primary-dim);}
+  .slide-title{font-size:clamp(24px,3.4vw,38px);margin-bottom:22px;}
+  .lead{font-size:17.5px;color:var(--text-dim);max-width:680px;}
+  .big{font-size:clamp(36px,6.4vw,64px);line-height:1.05;}
+  .glow{text-shadow:0 0 34px var(--primary-glow);}
+  .meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:26px;font-family:var(--font-mono);font-size:12.5px;color:var(--text-faint);}
+  .meta span{padding-left:16px;border-left:1px solid var(--line);}
+  .meta span:first-child{padding-left:0;border-left:none;}
+  .hint{margin-top:40px;font-family:var(--font-mono);font-size:11.5px;color:var(--text-faint);}
+
+  .fragment{opacity:0;transform:translateY(14px);transition:opacity .55s ease,transform .55s ease;}
+  .fragment.visible{opacity:1;transform:translateY(0);}
+  .fragment.d1{transition-delay:.08s;} .fragment.d2{transition-delay:.16s;} .fragment.d3{transition-delay:.24s;} .fragment.d4{transition-delay:.32s;}
+
+  .qmark{font-family:var(--font-mono);font-size:12.5px;letter-spacing:.1em;color:var(--primary);text-transform:uppercase;}
+  .question-wrap{text-align:left;}
+
+  .cards2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px;}
+  .card{background:var(--bg-card);border:1px solid var(--line);border-radius:12px;padding:22px 22px;}
+  .card.alt{border-color:var(--secondary-dim);}
+  .card .kicker{font-family:var(--font-mono);font-size:11.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+  .card h3{font-size:19px;margin-bottom:8px;}
+  .card p{color:var(--text-dim);font-size:14.5px;margin:0;}
+  @media (max-width:720px){.cards2{grid-template-columns:1fr;}}
+
+  .blist{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:12px;}
+  .blist li{display:flex;gap:12px;align-items:flex-start;font-size:15.5px;color:var(--text-dim);}
+  .blist .ico{font-family:var(--font-mono);color:var(--primary);flex-shrink:0;}
+
+  /* diagramas de camadas */
+  .arch-tag{display:inline-block;font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;background:var(--primary-soft);color:var(--primary);border:1px solid var(--primary-dim);border-radius:20px;padding:4px 12px;margin-bottom:16px;}
+  .arch-diagram{background:var(--bg-card-2);border:1px solid var(--line);border-radius:12px;padding:22px;margin:20px 0;font-family:var(--font-mono);font-size:13px;}
+  .arch-layer{padding:10px 14px;border-radius:6px;margin-bottom:6px;text-align:center;color:var(--text);}
+  .arch-layer:last-child{margin-bottom:0;}
+  .arch-layer.hw{background:var(--line-soft);color:var(--text-dim);}
+  .arch-layer.kernel{background:rgba(27,135,143,.15);border:1px solid var(--primary-dim);}
+  .arch-layer.user{background:rgba(57,155,63,.1);border:1px solid var(--secondary-dim);}
+  .arch-layer.split{display:flex;gap:6px;}
+  .arch-layer.split > div{flex:1;padding:8px;background:rgba(57,155,63,.1);border:1px solid var(--secondary-dim);border-radius:6px;text-align:center;font-size:12px;}
+  .arch-arrow{text-align:center;font-size:16px;color:var(--text-faint);margin:2px 0;}
+  .arch-facts{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px;}
+  .fact-box{background:var(--bg-card);border:1px solid var(--line);border-radius:10px;padding:16px;}
+  .fact-box .lbl{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-faint);margin-bottom:6px;}
+  .fact-box p{margin:0;font-size:14px;color:var(--text-dim);}
+  .fact-box.good .lbl{color:var(--secondary);}
+  .fact-box.bad .lbl{color:var(--alert);}
+
+  /* pipeline visual */
+  .pipe-track{display:flex;align-items:center;gap:0;margin-top:22px;flex-wrap:wrap;}
+  .pipe-box{background:var(--bg-card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;font-family:var(--font-mono);font-size:13px;text-align:center;flex:1;min-width:140px;}
+  .pipe-box .cmd{color:var(--primary);font-weight:600;}
+  .pipe-box .desc{color:var(--text-dim);font-size:12px;margin-top:6px;}
+  .pipe-arrow{font-size:20px;color:var(--text-faint);padding:0 10px;flex-shrink:0;}
+  @media (max-width:720px){.pipe-track{flex-direction:column;} .pipe-arrow{transform:rotate(90deg);padding:6px;}}
+
+  /* tabelas de comparação */
+  .compare-table{width:100%;border-collapse:collapse;margin-top:18px;font-size:14px;}
+  .compare-table th,.compare-table td{border:1px solid var(--line);padding:11px 13px;text-align:left;vertical-align:top;}
+  .compare-table th{background:var(--bg-card-2);font-family:var(--font-mono);font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-dim);}
+  .compare-table td{color:var(--text-dim);}
+  .compare-table td.hl{color:var(--text);}
+  .compare-table tr td:first-child{font-family:var(--font-mono);color:var(--primary);font-size:13px;white-space:nowrap;}
+  @media (max-width:780px){.compare-table{font-size:12.5px;} .compare-table th,.compare-table td{padding:8px;}}
+
+  .term{background:var(--term-bg);border:1px solid var(--term-line);border-radius:10px;overflow:hidden;margin-top:18px;}
+  .term .bar{background:var(--term-bg);padding:8px 12px;display:flex;gap:6px;border-bottom:1px solid var(--term-line);}
+  .term .bar .dot{width:9px;height:9px;border-radius:50%;background:var(--term-line);}
+  .term .bar .dot:nth-child(1){background:#e0605f;} .term .bar .dot:nth-child(2){background:#e0b25f;} .term .bar .dot:nth-child(3){background:#5fbf6b;}
+  .term-body{padding:16px 18px;font-family:var(--font-mono);font-size:13.5px;color:var(--term-dim);min-height:170px;white-space:pre-wrap;line-height:1.55;}
+  .term-body .prompt{color:var(--term-prompt);}
+  .term-body .sys{color:var(--term-accent);}
+  .term-body .ok{color:var(--term-prompt);}
+
+  .plan-track{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap;}
+  .plan-step{flex:1;min-width:150px;background:var(--bg-card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;}
+  .plan-step .t{font-family:var(--font-mono);font-size:11px;color:var(--primary);margin-bottom:6px;}
+  .plan-step h4{margin:0 0 4px;font-family:var(--font-display);font-size:15px;color:var(--text);}
+  .plan-step p{margin:0;font-size:13px;color:var(--text-dim);}
+
+  .read-list{display:flex;flex-direction:column;gap:14px;margin-top:10px;}
+  .read-item{display:flex;gap:14px;align-items:flex-start;background:var(--bg-card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;}
+  .read-item .tag{font-size:20px;flex-shrink:0;}
+  .read-item h4{margin:0 0 4px;font-size:15.5px;font-family:var(--font-display);color:var(--text);}
+  .read-item p{margin:0;font-size:13.5px;color:var(--text-dim);}
+  .read-item .pages{font-family:var(--font-mono);font-size:12px;color:var(--primary);}
+
+  .n1-banner{margin-top:18px;background:var(--primary-soft);border:1px solid var(--primary-dim);border-radius:10px;padding:14px 18px;font-size:14px;color:var(--text-dim);}
+  .n1-banner b{color:var(--primary);}
+
+  footer.endnote{text-align:center;padding:40px 20px 60px;font-family:var(--font-mono);font-size:11.5px;color:var(--text-faint);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">Sistemas Operacionais · <b>ADS23</b></div>
+  <div class="brand" id="slideCounter">01 / 14</div>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+</div>
+
+<nav class="dot-nav" id="dotNav"></nav>
+
+<!-- 0. CAPA -->
+<section class="slide active" id="slide-0">
+  <div class="slide-inner">
+    <div class="eyebrow">Encontro 6 de 17</div>
+    <h1 class="big glow">CPU-bound × I/O-bound<br>e Pipes</h1>
+    <p class="lead">Por que dois processos "pesados" podem consumir a máquina de formas completamente diferentes — e como encanar a saída de um processo direto pra entrada de outro.</p>
+    <div class="meta">
+      <span>ADS23</span><span>IFCE Campus Horizonte</span><span>Prof. José Stelio Sampaio Bastos Neto</span>
+    </div>
+    <div class="n1-banner">📋 Hoje também é dia de <b>entrega parcial do portfólio</b> — confira o roteiro de laboratório pro checklist de entrega.</div>
+    <div class="hint">↓ role pra avançar · use os pontos à direita pra navegar direto</div>
+  </div>
+</section>
+
+<!-- 1. RECAP -->
+<section class="slide" id="slide-1">
+  <div class="slide-inner">
+    <div class="eyebrow">De onde viemos</div>
+    <h2 class="slide-title">PID, estados, hierarquia — hoje, o comportamento de cada processo</h2>
+    <div class="cards2">
+      <div class="card fragment">
+        <div class="kicker">Encontro 5</div>
+        <h3>Processos têm estado</h3>
+        <p>Rodando, pronto, bloqueado — e um processo alterna entre eles o tempo todo, decidido pelo SO.</p>
+      </div>
+      <div class="card alt fragment d1">
+        <div class="kicker">Hoje</div>
+        <h3>Nem todo processo alterna do mesmo jeito</h3>
+        <p>Alguns processos ficam quase sempre rodando. Outros passam a maior parte do tempo bloqueados. Essa diferença tem nome.</p>
+      </div>
+    </div>
+    <p class="lead fragment d2" style="margin-top:26px;">E, no fim da aula, vocês vão conectar processos entre si com <b style="color:var(--primary)">pipes</b> — a mesma sintaxe <code>|</code> que já usam desde o Encontro 5, agora explicada por dentro.</p>
+  </div>
+</section>
+
+<!-- 2. PERGUNTA MOTIVADORA -->
+<section class="slide" id="slide-2">
+  <div class="slide-inner question-wrap">
+    <div class="qmark">Pergunta pra turma</div>
+    <h1 class="big" style="margin-top:18px;">Por que compactar um arquivo grande deixa a CPU <span class="glow" style="color:var(--primary)">no talo</span>,<br>enquanto copiar esse mesmo arquivo pro pendrive quase não mexe na CPU?</h1>
+    <p class="lead fragment" style="margin:20px auto 0;">Os dois processos "trabalham bastante". Só que trabalham de jeitos diferentes.</p>
+  </div>
+</section>
+
+<!-- 3. CPU-BOUND x I/O-BOUND -->
+<section class="slide" id="slide-3">
+  <div class="slide-inner">
+    <div class="arch-tag">Conceito-base</div>
+    <h2 class="slide-title">Todo processo é uma sequência de surtos de CPU e de E/S</h2>
+    <p class="lead">Nenhum processo só calcula ou só espera E/S o tempo inteiro — ele alterna entre os dois. O que muda é a <b>proporção</b>.</p>
+    <div class="cards2">
+      <div class="card fragment">
+        <div class="kicker">CPU-bound</div>
+        <h3>Surtos longos de CPU, poucas pausas de E/S</h3>
+        <p>Compactar um arquivo, calcular hash, renderizar vídeo — o processo raramente para pra esperar disco ou rede.</p>
+      </div>
+      <div class="card alt fragment d1">
+        <div class="kicker">I/O-bound</div>
+        <h3>Surtos curtos de CPU, muita espera de E/S</h3>
+        <p>Copiar um arquivo, baixar algo da rede, ler um banco de dados — a CPU faz pouco, a maior parte do tempo é esperando o disco/rede responder.</p>
+      </div>
+    </div>
+    <p class="lead fragment d2" style="margin-top:20px;font-size:14.5px;">É exatamente por isso que compactar "trava" a CPU (ela fica no estado <b style="color:var(--primary)">rodando</b> quase sempre), enquanto copiar deixa a CPU ociosa boa parte do tempo (o processo fica <b style="color:var(--text)">bloqueado</b>, esperando o disco).</p>
+  </div>
+</section>
+
+<!-- 4. POR QUE ISSO IMPORTA PRO ESCALONADOR -->
+<section class="slide" id="slide-4">
+  <div class="slide-inner">
+    <div class="eyebrow">A pergunta que sustenta o escalonamento</div>
+    <h2 class="slide-title">O escalonador precisa saber lidar com os dois tipos ao mesmo tempo</h2>
+    <p class="lead">Se o SO desse a CPU só pra processos CPU-bound até eles terminarem, todo processo I/O-bound (como digitar num editor de texto) pareceria travado — inaceitável pra qualquer usuário.</p>
+    <div class="arch-facts">
+      <div class="fact-box good">
+        <div class="lbl">Boa prática de escalonamento</div>
+        <p>Favorecer processos I/O-bound com prioridade momentânea — eles usam pouca CPU e devolvem o controle rápido, mantendo o sistema responsivo.</p>
+      </div>
+      <div class="fact-box bad">
+        <div class="lbl">Risco se ignorado</div>
+        <p>Processos CPU-bound monopolizando a CPU deixam toda a interface do sistema lenta e "travada" pra quem está usando o computador.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 5. MULTIPLEXAÇÃO DO PROCESSADOR -->
+<section class="slide" id="slide-5">
+  <div class="slide-inner">
+    <div class="eyebrow">Como o SO reparte a CPU</div>
+    <h2 class="slide-title">Multiplexação: um núcleo, vários processos, fatias de tempo</h2>
+    <p class="lead">Com um número limitado de núcleos e dezenas (às vezes centenas) de processos, o SO reparte a CPU em fatias de tempo curtíssimas — trocando de processo tão rápido que, pra nós, parece que tudo roda "ao mesmo tempo".</p>
+    <div class="arch-diagram">
+      <div class="arch-layer split"><div>Processo A</div><div>Processo B</div><div>Processo C</div></div>
+      <div class="arch-layer kernel">Escalonador — decide quem roda em cada fatia de tempo</div>
+      <div class="arch-layer hw">1 núcleo de CPU</div>
+    </div>
+    <p class="lead fragment" style="margin-top:18px;font-size:14.5px;">Isso é <b style="color:var(--primary)">concorrência</b> na prática: vários processos avançando "juntos", mesmo que só um de verdade use a CPU em cada instante.</p>
+  </div>
+</section>
+
+<!-- 6. QUANDO ESCALONAR -->
+<section class="slide" id="slide-6">
+  <div class="slide-inner">
+    <div class="eyebrow">O gatilho da troca</div>
+    <h2 class="slide-title">Quatro momentos em que o escalonador entra em ação</h2>
+    <ul class="blist">
+      <li class="fragment"><span class="ico">▸</span><span>Um <b style="color:var(--text)">processo novo</b> é criado — precisa entrar na fila.</span></li>
+      <li class="fragment d1"><span class="ico">▸</span><span>Um processo <b style="color:var(--text)">termina</b> — a CPU fica livre pra outro.</span></li>
+      <li class="fragment d2"><span class="ico">▸</span><span>Um processo <b style="color:var(--text)">bloqueia</b> pedindo E/S — ele sai da CPU antes de ser expulso.</span></li>
+      <li class="fragment d3"><span class="ico">▸</span><span>Uma <b style="color:var(--text)">interrupção de relógio</b> avisa que a fatia de tempo do processo atual acabou.</span></li>
+    </ul>
+    <p class="lead fragment d4" style="margin-top:20px;font-size:14.5px;">Reparem: um processo I/O-bound costuma sair da CPU sozinho (item 3) — é por isso que ele "atrapalha" menos o resto do sistema.</p>
+  </div>
+</section>
+
+<!-- 7. E/S PADRÃO -->
+<section class="slide" id="slide-7">
+  <div class="slide-inner">
+    <div class="eyebrow">Mudando de assunto: como um processo conversa</div>
+    <h2 class="slide-title">Todo processo nasce com três "canais" abertos</h2>
+    <p class="lead">Antes de conectar processos entre si, é preciso entender que todo processo já nasce com três fluxos de E/S padrão, numerados pelo Linux.</p>
+    <table class="compare-table fragment">
+      <tr><th>Canal</th><th>Descritor</th><th>Uso comum</th></tr>
+      <tr><td>stdin</td><td class="hl">0</td><td class="hl">Entrada padrão — normalmente o teclado</td></tr>
+      <tr><td>stdout</td><td class="hl">1</td><td class="hl">Saída padrão — normalmente a tela</td></tr>
+      <tr><td>stderr</td><td class="hl">2</td><td class="hl">Saída de erro — também a tela, mas separada da saída normal</td></tr>
+    </table>
+    <p class="lead fragment d1" style="margin-top:18px;font-size:14.5px;">Separar stdout de stderr é o motivo de <code>comando 2&gt; erros.txt</code> só capturar os erros, deixando a saída normal na tela.</p>
+  </div>
+</section>
+
+<!-- 8. PIPES -->
+<section class="slide" id="slide-8">
+  <div class="slide-inner">
+    <div class="eyebrow">O poder de encanar processos</div>
+    <h2 class="slide-title">Pipe: o stdout de um processo vira o stdin do próximo</h2>
+    <p class="lead">O caractere <code>|</code> pega a saída padrão (stdout) de um comando e conecta direto na entrada padrão (stdin) do próximo — sem passar por nenhum arquivo intermediário.</p>
+    <div class="pipe-track fragment">
+      <div class="pipe-box"><div class="cmd">ps aux</div><div class="desc">stdout: lista de processos</div></div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-box"><div class="cmd">grep bash</div><div class="desc">stdin ← stdout anterior</div></div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-box"><div class="cmd">wc -l</div><div class="desc">stdin ← stdout anterior</div></div>
+    </div>
+    <p class="lead fragment d1" style="margin-top:20px;font-size:14.5px;">Vocês já usam pipe desde o Encontro 5 (<code>ps aux | grep</code>) — hoje isso ganha nome e explicação técnica.</p>
+  </div>
+</section>
+
+<!-- 9. EXEMPLO DE PIPE EXPLICADO -->
+<section class="slide" id="slide-9">
+  <div class="slide-inner">
+    <div class="eyebrow">Por dentro do encanamento</div>
+    <h2 class="slide-title">Cada pedaço do pipeline é, na verdade, um processo próprio</h2>
+    <p class="lead">Quando vocês rodam <code>ps aux | grep bash | wc -l</code>, o shell cria <b>três processos</b> ao mesmo tempo, já conectados: o stdout do primeiro alimenta o stdin do segundo, e assim por diante.</p>
+    <div class="arch-diagram">
+      <div class="arch-layer user">ps aux (processo 1) — gera a lista completa</div>
+      <div class="arch-layer kernel">grep bash (processo 2) — filtra, recebendo do processo 1</div>
+      <div class="arch-layer hw">wc -l (processo 3) — conta linhas, recebendo do processo 2</div>
+    </div>
+    <p class="lead fragment" style="margin-top:18px;font-size:14.5px;">Isso também explica por que <code>ps aux | grep bash</code> sempre mostra uma linha "a mais": o próprio <code>grep</code> é um processo novo, e ele aparece procurando por si mesmo.</p>
+  </div>
+</section>
+
+<!-- 10. GANCHO DOCKER: DOCKER STATS -->
+<section class="slide" id="slide-10">
+  <div class="slide-inner">
+    <div class="eyebrow">Eixo do curso</div>
+    <h2 class="slide-title">Ver, ao vivo, o consumo de CPU/memória de um container</h2>
+    <p class="lead">Assim como o <code>top</code> mostra consumo de processos comuns, o Docker tem sua própria ferramenta pra ver o consumo de containers em tempo real.</p>
+    <div class="cards2">
+      <div class="card fragment">
+        <div class="kicker"><code>top</code></div>
+        <h3>Vê processos do host inteiro</h3>
+        <p>Inclui o processo do container, mas misturado com todos os outros processos do sistema.</p>
+      </div>
+      <div class="card alt fragment d1">
+        <div class="kicker"><code>docker stats</code></div>
+        <h3>Vê só os containers, um por linha</h3>
+        <p>%CPU, uso de memória (e limite), E/S de rede e disco — organizados por container, atualizando ao vivo.</p>
+      </div>
+    </div>
+    <p class="lead fragment d2" style="margin-top:20px;font-size:14.5px;">Vocês vão usar isso na prática de hoje pra comparar visualmente um container CPU-bound com um container quase ocioso.</p>
+  </div>
+</section>
+
+<!-- 11. TERMINAL SIMULADO -->
+<section class="slide" id="slide-11" data-anim="cpuiodemo">
+  <div class="slide-inner">
+    <div class="eyebrow">Prévia da prática</div>
+    <h2 class="slide-title">Do processo CPU-bound ao <code style="font-size:.8em;">docker stats</code></h2>
+    <p class="lead">Uma sequência real: um processo consumindo CPU no talo, um pipe contando processos, e o consumo de um container ao vivo.</p>
+    <div class="term">
+      <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+      <div class="term-body" id="cpuioBody"></div>
+    </div>
+    <p class="lead" style="margin-top:16px;font-size:14px;">Cada uma dessas linhas vira um passo do roteiro de laboratório de hoje.</p>
+  </div>
+</section>
+
+<!-- 12. MAPA DA PRÁTICA -->
+<section class="slide" id="slide-12">
+  <div class="slide-inner">
+    <div class="eyebrow">Mão na massa</div>
+    <h2 class="slide-title">De observar comportamento a encanar processos</h2>
+    <div class="plan-track">
+      <div class="plan-step fragment">
+        <div class="t">DIAGNÓSTICO</div>
+        <h4>CPU-bound × I/O-bound + pipes</h4>
+        <p>Rodar um processo de cada tipo, observar no <code>top</code>, e encanar comandos com <code>|</code>.</p>
+      </div>
+      <div class="plan-step alt fragment d1" style="border-color:var(--primary-dim);">
+        <div class="t">REFORÇO DOCKER</div>
+        <h4><code>docker stats</code></h4>
+        <p>Comparar visualmente o consumo de dois containers diferentes, ao vivo.</p>
+      </div>
+    </div>
+    <p class="lead fragment d2" style="margin-top:22px;">O roteiro de laboratório detalha os passos, com dicas se algo travar — e inclui o checklist de entrega do portfólio parcial de hoje.</p>
+  </div>
+</section>
+
+<!-- 13. LEITURA -->
+<section class="slide" id="slide-13">
+  <div class="slide-inner">
+    <div class="eyebrow">Para ler</div>
+    <h2 class="slide-title">Leitura da semana</h2>
+    <div class="read-list">
+      <div class="read-item fragment">
+        <div class="tag">🟢</div>
+        <div>
+          <h4>Laureano — Multiplexação do processador + E/S padrão de um processo</h4>
+          <p>A base teórica de hoje: como a CPU é repartida, e os três canais de E/S de todo processo. <span class="pages">p. 106–108 e 120–126</span></p>
+        </div>
+      </div>
+      <div class="read-item fragment d1">
+        <div class="tag">🔵</div>
+        <div>
+          <h4>Tanenbaum — Escalonamento (recorte introdutório)</h4>
+          <p>Comportamento de processos, surtos de CPU × E/S, e quando o escalonador entra em ação. <span class="pages">p. 103–107</span></p>
+        </div>
+      </div>
+      <div class="read-item fragment d2">
+        <div class="tag">⚪</div>
+        <div>
+          <h4>Tanenbaum (completo) + Laureano — Prioridades e Escalonamento no Linux</h4>
+          <p>Pra quem quer se aprofundar além do que cai no quiz. <span class="pages">p. 103–115 e 127–132</span></p>
+        </div>
+      </div>
+    </div>
+    <p class="lead" style="margin-top:22px;font-size:14px;">O quiz da semana verifica essa leitura e recolhe suas observações da prática — tudo no mesmo instrumento.</p>
+  </div>
+</section>
+
+<footer class="endnote">Sistemas Operacionais · ADS23 · IFCE Campus Horizonte · Encontro 6 de 17</footer>
+
+<script>
+(function(){
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const dotNav = document.getElementById('dotNav');
+  const counter = document.getElementById('slideCounter');
+  const progressFill = document.getElementById('progressFill');
+  const total = slides.length;
+
+  slides.forEach((s,i)=>{
+    const a = document.createElement('a');
+    a.href = '#'+s.id;
+    const tip = document.createElement('span');
+    tip.className = 'tip';
+    tip.textContent = String(i+1).padStart(2,'0');
+    a.appendChild(tip);
+    dotNav.appendChild(a);
+  });
+  const dots = Array.from(dotNav.querySelectorAll('a'));
+
+  function setActive(idx){
+    dots.forEach((d,i)=>d.classList.toggle('active', i===idx));
+    counter.textContent = String(idx+1).padStart(2,'0') + ' / ' + String(total).padStart(2,'0');
+  }
+
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      const idx = slides.indexOf(entry.target);
+      if(entry.isIntersecting){
+        if(entry.intersectionRatio > 0.5) setActive(idx);
+        entry.target.querySelectorAll('.fragment').forEach(f=>f.classList.add('visible'));
+      }
+    });
+  }, {threshold:[0,0.5,1]});
+  slides.forEach(s=>io.observe(s));
+
+  window.addEventListener('scroll', ()=>{
+    const scrolled = window.scrollY;
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    progressFill.style.width = (max>0 ? (scrolled/max*100) : 0) + '%';
+  });
+
+  document.addEventListener('keydown', (e)=>{
+    const activeIdx = dots.findIndex(d=>d.classList.contains('active'));
+    if(e.key === 'ArrowDown' || e.key === ' '){
+      e.preventDefault();
+      const next = slides[Math.min(activeIdx+1, total-1)];
+      next.scrollIntoView({behavior:'smooth'});
+    } else if(e.key === 'ArrowUp'){
+      e.preventDefault();
+      const prev = slides[Math.max(activeIdx-1, 0)];
+      prev.scrollIntoView({behavior:'smooth'});
+    }
+  });
+
+  setActive(0);
+
+  // cpu/io/docker demo preview animation
+  const demoLines = [
+    ['$ yes > /dev/null &', 'prompt'],
+    ['[1] 5231', 'ok'],
+    ['$ top', 'prompt'],
+    ['%CPU 99.7  COMMAND yes', 'sys'],
+    ['$ ps aux | grep bash | wc -l', 'prompt'],
+    ['2', 'ok'],
+    ['$ docker stats --no-stream', 'prompt'],
+    ['NAME     CPU %   MEM USAGE', 'sys'],
+    ['cpuload  98.30%  1.2MiB / 3.8GiB', 'ok'],
+  ];
+  const cpuioBody = document.getElementById('cpuioBody');
+  let demoStarted = false;
+  function typeLine(i){
+    if(i >= demoLines.length) return;
+    const [txt, cls] = demoLines[i];
+    const span = document.createElement('div');
+    span.className = cls;
+    cpuioBody.appendChild(span);
+    let c = 0;
+    const iv = setInterval(()=>{
+      span.textContent = txt.slice(0, c+1);
+      c++;
+      if(c >= txt.length){
+        clearInterval(iv);
+        setTimeout(()=>typeLine(i+1), 110);
+      }
+    }, 14);
+  }
+  const demoSlide = document.getElementById('slide-11');
+  const demoIo = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      if(entry.isIntersecting && !demoStarted){
+        demoStarted = true;
+        typeLine(0);
+      }
+    });
+  }, {threshold:0.4});
+  demoIo.observe(demoSlide);
+})();
+</script>
+
+</body>
+</html>
