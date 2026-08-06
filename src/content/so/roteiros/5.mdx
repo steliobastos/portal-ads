@@ -1,0 +1,342 @@
+<Abertura duracao="~55 min" titulo="Diagnóstico de processos — e o PID duplo do container">
+
+Hoje você localiza processos de verdade com `ps` e `top`, revisita o `/proc` do Encontro 2 sob uma
+nova luz, e fecha com o reforço Docker: o mesmo processo visto de dentro e de fora de um container.
+
+</Abertura>
+
+<Partes>
+  <Parte rotulo="Passos 1–4">Diagnóstico com ps/top/proc</Parte>
+  <Parte rotulo="Passos 5–8">Reforço Docker: PID duplo</Parte>
+</Partes>
+
+<Passo numero={1} de={8} titulo="A fotografia de tudo que está rodando">
+
+<Intro>`ps aux` lista todos os processos do sistema num instante só — a primeira ferramenta de diagnóstico do dia.</Intro>
+
+<Comando passo={1} cmd="ps aux">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    Lista todos os processos rodando agora, com colunas como USER, PID, %CPU, %MEM, STAT e COMMAND.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    É o primeiro comando que qualquer profissional roda quando quer saber "o que está acontecendo"
+    numa máquina.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal comando="ps aux">{`USER   PID  %CPU %MEM STAT  COMMAND
+root     1   0.0  0.1  Ss    /sbin/init
+root   842   0.2  0.4  Ss    systemd-journald
+aluno 1930   0.0  0.3  Ss    bash
+aluno 2044   0.0  0.1  R+    ps aux`}</Terminal>
+
+  <Esperar>
+    uma lista longa — dezenas de linhas, mesmo numa VM "vazia". Reparem no PID 1 (`init`) e no
+    processo do próprio `ps aux` aparecendo na lista (STAT "R+", rodando agora).
+  </Esperar>
+
+  <Dica titulo="A lista é grande demais, não sei o que procurar">
+
+  Normal — `ps aux` mostra tudo por padrão. No próximo passo você vai filtrar.
+
+  </Dica>
+
+</Comando>
+
+</Passo>
+
+<Passo numero={2} de={8} titulo="Encontrando um processo específico">
+
+<Intro>Em vez de ler a lista inteira, filtre pelo nome do processo que você procura.</Intro>
+
+<Comando passo={2} cmd="ps aux | grep bash">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    O `|` (pipe) encana a saída do `ps aux` pro `grep`, que filtra só as linhas contendo "bash".
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    É assim que, na prática, alguém confirma se um processo específico (um servidor, um script)
+    está rodando ou não.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal comando="ps aux | grep bash">{`aluno 1930   0.0  0.3  Ss    bash
+aluno 2051   0.0  0.0  S+    grep bash`}</Terminal>
+
+  <Esperar>
+    a linha do seu próprio terminal (`bash`) e, curiosamente, uma linha do próprio `grep bash` que
+    você acabou de rodar — ele também é um processo, e apareceu procurando por si mesmo.
+  </Esperar>
+
+</Comando>
+
+<Rascunho encontro={5} numero={1}>
+  qual a diferença entre o que `ps aux` mostra e o que `top` (passo 4) mostra? Cite uma vantagem de cada um.
+</Rascunho>
+
+</Passo>
+
+<Passo numero={3} de={8} titulo="A versão crua, direto do /proc">
+
+<Intro>Lembra do Encontro 2? Todo PID também é uma pasta dentro de `/proc`. Vamos confirmar isso com o PID do seu próprio terminal.</Intro>
+
+<Comando passo={3} cmd="cat /proc/$$/status | head -5">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    `$$` é uma variável especial do shell que vale o PID do próprio terminal em que você está
+    digitando.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    Prova que `ps` não é mágica — ele só lê e organiza arquivos que já existem dentro de
+    `/proc/<pid>/`.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal comando="cat /proc/$$/status | head -5">{`Name:   bash
+State:  S (sleeping)
+Tgid:   1930
+Pid:    1930
+PPid:   1721`}</Terminal>
+
+  <Esperar>
+    o campo "Name" deve ser `bash` (ou o shell que você estiver usando), e o "Pid" deve bater com o
+    número que apareceu no `ps aux | grep bash` do passo anterior.
+  </Esperar>
+
+  <Dica titulo='O que significa "State: S (sleeping)"?'>
+
+  É o estado "bloqueado" do slide 5 — seu terminal está parado esperando você digitar algo (uma
+  forma de E/S). Assim que você aperta uma tecla, ele volta pra fila de pronto e depois roda.
+
+  </Dica>
+
+</Comando>
+
+</Passo>
+
+<Passo numero={4} de={8} titulo="O vídeo ao vivo">
+
+<Intro>Agora troque a fotografia parada por uma visão que atualiza sozinha.</Intro>
+
+<Comando passo={4} cmd="top">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    Mostra os processos ao vivo, atualizando a cada segundo, ordenados por quem consome mais CPU
+    agora.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    É a ferramenta que qualquer pessoa usa pra descobrir, em tempo real, o que está consumindo os
+    recursos de uma máquina.
+
+    </Caixa>
+  </Explica>
+
+  <Esperar>
+    uma tela cheia, atualizando sozinha. Repare na linha "load average" no topo — a fila média de
+    processos esperando CPU nos últimos 1, 5 e 15 minutos. Aperte `q` pra sair.
+  </Esperar>
+
+  <Dica titulo="A tela do top parece confusa">
+
+  Ignore a maioria das colunas por enquanto — foque em `%CPU`, `%MEM` e `COMMAND`. O resto vem com
+  a prática.
+
+  </Dica>
+
+</Comando>
+
+</Passo>
+
+<Divisor>Reforço Docker · PID duplo</Divisor>
+
+<Passo numero={5} de={8} titulo="Subindo um container em segundo plano">
+
+<Intro>Agora vamos criar um processo de propósito — um container rodando `sleep` — pra comparar como ele aparece de dentro e de fora.</Intro>
+
+<Comando passo={5} cmd="docker run -d --name meuproc alpine sleep 300">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    `-d` ("detached") sobe o container em segundo plano. `sleep 300` só espera 300 segundos, sem
+    fazer mais nada — um processo fácil de rastrear.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    Cria um processo isolado, com nome fácil de filtrar (`meuproc`), pra comparar as duas visões do
+    próximo passo.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal comando="docker run -d --name meuproc alpine sleep 300">{`8f2c91a7e6b04d3e...`}</Terminal>
+
+  <Esperar>
+    um código longo (o ID do container) impresso na tela, e o comando volta pro seu prompt
+    imediatamente — o `-d` não prende seu terminal.
+  </Esperar>
+
+</Comando>
+
+</Passo>
+
+<Passo numero={6} de={8} titulo="O processo visto de fora (no host)">
+
+<Intro>O container roda como um processo comum do ponto de vista do seu Linux — vamos encontrá-lo com as mesmas ferramentas de sempre.</Intro>
+
+<Comando passo={6} cmd="ps aux | grep sleep">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    Filtra a lista de processos do host procurando por "sleep" — o comando que está rodando dentro
+    do container.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    Prova que, visto de fora, o container não é nada especial — é só mais um processo na lista do
+    host, com um PID qualquer.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal comando="ps aux | grep sleep">{`root  48213  0.0  0.0  Ss    sleep 300`}</Terminal>
+
+  <Esperar>
+    um PID qualquer (nesse exemplo, 48213) — provavelmente um número alto, parecido com qualquer
+    outro processo do host. **Anote esse número**, você vai compará-lo no próximo passo.
+  </Esperar>
+
+</Comando>
+
+</Passo>
+
+<Passo numero={7} de={8} titulo="O mesmo processo visto de dentro (no container)">
+
+<Intro>Agora entramos no próprio container e rodamos o mesmo tipo de comando lá dentro.</Intro>
+
+<Comando passo={7} cmd="docker exec meuproc ps aux">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    `docker exec` roda um comando **dentro** de um container que já está de pé — aqui, o próprio
+    `ps aux`.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    É o momento em que o namespace de PID aparece na prática — o "aha" da aula de hoje.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal comando="docker exec meuproc ps aux">{`PID   USER     COMMAND
+    1 root     sleep 300`}</Terminal>
+
+  <Esperar>
+    o mesmo processo `sleep 300` — só que agora com **PID 1**, não o número que você anotou no
+    passo 6. É o mesmo processo, dois números diferentes, dependendo de quem está perguntando.
+  </Esperar>
+
+  <Dica titulo='docker exec deu erro "container not found"'>
+
+  Confirme que o container ainda está rodando com `docker ps`. Se ele já tiver terminado
+  (improvável em 300 segundos), repita o passo 5.
+
+  </Dica>
+
+</Comando>
+
+<Rascunho encontro={5} numero={2}>
+  compare o PID do passo 6 (fora) com o PID do passo 7 (dentro). Por que eles são diferentes, mesmo sendo o mesmo processo?
+</Rascunho>
+
+</Passo>
+
+<Passo numero={8} de={8} titulo="Encerrando e limpando">
+
+<Intro>Antes de fechar, vamos parar e remover o container criado neste roteiro.</Intro>
+
+<Comando passo={8} cmd="docker stop meuproc && docker rm meuproc">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    `docker stop` encerra o container (não precisa esperar os 300 segundos). `docker rm` remove o
+    registro dele.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    Boa prática básica: não deixar containers de teste "esquecidos" rodando ou ocupando espaço.
+
+    </Caixa>
+  </Explica>
+
+  <Esperar>
+    o nome `meuproc` impresso duas vezes (uma pra cada comando), confirmando a parada e a remoção.
+  </Esperar>
+
+</Comando>
+
+<Rascunho encontro={5} numero={3}>
+  livre: algo que te surpreendeu ou uma dúvida que sobrou de hoje.
+</Rascunho>
+
+</Passo>
+
+<Exemplos>
+  <Exemplo tipo="fraca">
+
+  "O PID de dentro do container era diferente do PID de fora."
+
+  </Exemplo>
+  <Exemplo tipo="forte">
+
+  "De fora, o `sleep` apareceu como PID 48213 — um número comum, misturado com todos os outros
+  processos do host. De dentro, apareceu como PID 1, porque o container tem seu próprio namespace
+  de PID: ele conta os processos começando do zero, isolado do host."
+
+  </Exemplo>
+</Exemplos>
+
+<Teoria>
+
+Os passos 1–4 são o modelo de processo e os três estados do slide 5 (Tanenbaum p. 59–67), e a
+ponte com `/proc` do slide 9 (Laureano p. 99–106). Os passos 5–7 são o namespace de PID do
+slide 10 — a mesma peça técnica (`namespaces`) mencionada de leve no Encontro 4, agora vista na
+prática.
+
+</Teoria>
+
+<Checklist encontro={5}>
+  <Item id="ps-aux">Rodei `ps aux` e identifiquei pelo menos 3 colunas diferentes</Item>
+  <Item id="grep">Filtrei um processo específico com `ps aux | grep`</Item>
+  <Item id="proc">Comparei `ps aux` com `cat /proc/$$/status`</Item>
+  <Item id="top">Observei o `top` ao vivo e identifiquei o load average</Item>
+  <Item id="pid-duplo">Subi um container e comparei o PID visto de fora e de dentro</Item>
+  <Item id="observacoes">Preenchi as 3 observações acima (vou colar no quiz semanal)</Item>
+</Checklist>

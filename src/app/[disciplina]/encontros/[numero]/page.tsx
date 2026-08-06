@@ -6,6 +6,7 @@ import { ListaMateriais, materiaisDo } from "@/components/material";
 import { Cartao, Selo, TituloSecao } from "@/components/ui";
 import { conteudoDa, slugsPublicados } from "@/content";
 import { dataExtensa } from "@/lib/datas";
+import { temRoteiro } from "@/lib/roteiros";
 
 type Props = { params: Promise<{ disciplina: string; numero: string }> };
 
@@ -42,7 +43,14 @@ export default async function PaginaEncontro({ params }: Props) {
   if (!achado) notFound();
 
   const { conteudo, encontro } = achado;
-  const materiais = materiaisDo(slug, encontro.pasta);
+
+  // Migração gradual: existindo o roteiro em MDX, ele substitui o HTML avulso
+  // na lista — os dois nunca aparecem juntos, para o aluno não escolher entre
+  // duas versões do mesmo material.
+  const roteiroNativo = await temRoteiro(slug, encontro.numero);
+  const materiais = materiaisDo(slug, encontro.pasta).filter(
+    (m) => !(roteiroNativo && m.tipo === "roteiro"),
+  );
   const rotulo = encontro.numero === 0 ? "Semana 0" : `Encontro ${encontro.numero}`;
 
   const indice = conteudo.encontros.findIndex((e) => e.numero === encontro.numero);
@@ -114,6 +122,30 @@ export default async function PaginaEncontro({ params }: Props) {
 
       <section>
         <TituloSecao sobretitulo="Material do encontro">Para estudar</TituloSecao>
+
+        {roteiroNativo && (
+          <Link
+            href={`/${slug}/encontros/${encontro.numero}/roteiro`}
+            className="group mb-3 flex items-start gap-3 rounded-xl border border-primary-dim bg-card p-4 transition-colors hover:border-primary"
+          >
+            <span
+              aria-hidden
+              className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary font-mono text-white"
+            >
+              ⌘
+            </span>
+            <span className="min-w-0">
+              <span className="block font-medium text-ink group-hover:text-primary">
+                Roteiro de laboratório
+              </span>
+              <span className="mt-0.5 block text-sm text-ink-dim">
+                Os comandos passo a passo, com dicas para quando travar — e campos que guardam suas
+                observações enquanto você trabalha.
+              </span>
+            </span>
+          </Link>
+        )}
+
         <ListaMateriais arquivos={materiais} />
       </section>
 
