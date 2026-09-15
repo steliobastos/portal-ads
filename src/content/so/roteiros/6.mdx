@@ -41,12 +41,12 @@ Além da prática, hoje as **equipes do relatório Raio-X** se formam: duplas ou
   <Terminal>{`$ yes > /dev/null &
 [1] 5231
 $ top
-%Cpu(s): 99.7 us
-  PID  USER  %CPU  %MEM COMMAND
- 5231  aluno 99.3   0.0  yes`}</Terminal>
+%Cpu(s): 50.2 us,  0.3 sy,  0.0 ni, 49.5 id,  0.0 wa
+  PID  USER  S  %CPU  %MEM COMMAND
+ 5231  aluno R  99.3   0.0  yes`}</Terminal>
 
   <Esperar>
-    no `top`, o processo `yes` deve aparecer perto de 100% de CPU (de um núcleo), sozinho no topo da lista. Aperte `q` pra sair do `top` — o `yes` continua rodando em segundo plano.
+    na lista, o `yes` aparece perto de **100%** de CPU, com estado `R` (rodando), sozinho no topo. Na linha `%Cpu(s)` lá em cima, porém, o total fica perto de **50%**: a sua VM tem 2 núcleos, e o `yes` ocupa um só. Aperte `1` dentro do `top` para ver cada núcleo separado. Aperte `q` pra sair — o `yes` continua rodando em segundo plano.
   </Esperar>
 
   <Dica titulo="Como eu paro o yes depois?">
@@ -63,29 +63,35 @@ $ top
 
 <Intro>Agora um processo que mexe bastante com disco, mas usa pouca CPU — a espera é do disco, não do processador.</Intro>
 
-<Comando passo={2} cmd="dd if=/dev/zero of=arquivo_grande bs=1M count=1000; sync">
+<Comando passo={2} cmd="dd if=/dev/zero of=arquivo_grande bs=1M count=1000 oflag=direct">
 
   <Explica>
     <Caixa titulo="O que é">
 
-    `dd` copia 1000 blocos de 1 MB cheios de zeros pra um arquivo novo — cria ~1 GB de dado gravado em disco. `sync` garante que tudo foi realmente escrito.
+    `dd` copia 1000 blocos de 1 MB cheios de zeros pra um arquivo novo — cria ~1 GB gravado em disco. O `oflag=direct` manda escrever **direto no disco**, sem passar pela memória antes.
 
     </Caixa>
     <Caixa titulo="Por que importa">
 
-    Processo claramente I/O-bound: o gargalo é a velocidade do disco, não da CPU — por isso o consumo de CPU fica baixo mesmo "trabalhando".
+    Processo claramente I/O-bound: o gargalo é a velocidade do disco, não da CPU. O `dd` passa a maior parte do tempo bloqueado, esperando cada bloco ser gravado.
 
     </Caixa>
   </Explica>
 
-  <Terminal>{`$ dd if=/dev/zero of=arquivo_grande bs=1M count=1000; sync
+  <Terminal>{`$ dd if=/dev/zero of=arquivo_grande bs=1M count=1000 oflag=direct
 1000+0 registros de entrada
 1000+0 registros de saída
-1048576000 bytes (1,0 GB) copiados`}</Terminal>
+1048576000 bytes (1,0 GB) copiados, 6,1 s, 172 MB/s`}</Terminal>
 
   <Esperar>
-    se você rodar `top` em outro terminal enquanto o `dd` executa, o processo aparece consumindo bem menos CPU que o `yes` do passo 1 — mesmo movendo 1 GB de dado.
+    abra um segundo terminal com `top` **antes** de rodar o `dd`. Enquanto ele grava, o `dd` aparece com CPU bem menor que a do `yes`, quase sempre com estado `D` (esperando o disco), e o valor de `wa` na linha `%Cpu(s)` sobe: é a CPU ociosa esperando E/S.
   </Esperar>
+
+  <Dica titulo="Por que o oflag=direct? E se eu tirar?">
+
+  Sem ele, o Linux grava primeiro na RAM (o cache de páginas) e só depois descarrega no disco, em segundo plano. O `dd` termina rápido e aparece **gastando CPU**, porque o trabalho dele virou copiar memória. A espera pelo disco fica escondida num processo do kernel. Experimente sem o `oflag=direct` e compare: é um ótimo assunto para a observação livre.
+
+  </Dica>
 
   <Dica titulo="Não deu tempo de ver o dd rodando no top">
 
@@ -210,9 +216,9 @@ statsdemo  0.00%   1.2MiB / 3.8GiB    906B / 0B`}</Terminal>
 
 <Passo numero={6} de={6} titulo="Encerrando e limpando">
 
-<Intro>Antes de fechar, pare e remova o container criado neste roteiro (e o processo yes do passo 1, se ainda estiver rodando).</Intro>
+<Intro>Antes de fechar, pare e remova o container criado neste roteiro, apague o arquivo de 1 GB do passo 2 e encerre o yes do passo 1, se ainda estiver rodando.</Intro>
 
-<Comando passo={6} cmd="docker stop statsdemo && docker rm statsdemo">
+<Comando passo={6} cmd="docker stop statsdemo && docker rm statsdemo && rm arquivo_grande erro.txt">
 
   <Explica>
     <Caixa titulo="O que é">
@@ -222,7 +228,7 @@ statsdemo  0.00%   1.2MiB / 3.8GiB    906B / 0B`}</Terminal>
     </Caixa>
     <Caixa titulo="Por que importa">
 
-    Boa prática básica: não deixar processos ou containers de teste "esquecidos" consumindo recursos depois da aula.
+    Boa prática básica: não deixar processos, containers ou arquivos de teste "esquecidos" consumindo recursos depois da aula. O `arquivo_grande` sozinho ocupa 1 GB do disco de 25 GB da VM.
 
     </Caixa>
   </Explica>
@@ -247,7 +253,7 @@ statsdemo  0.00%   1.2MiB / 3.8GiB    906B / 0B`}</Terminal>
   </Exemplo>
   <Exemplo tipo="forte">
 
-  "O yes ficou perto de 100% de CPU porque é puramente CPU-bound — só calcula e imprime, sem nunca parar pra esperar nada. Já o dd, mesmo movendo 1 GB pro disco, ficou com CPU baixa, porque o gargalo real era a velocidade de escrita do disco, não o processamento."
+  "O yes ficou perto de 100% de CPU, em estado R, porque é puramente CPU-bound — só calcula e imprime, sem nunca parar pra esperar nada. Já o dd com oflag=direct, mesmo movendo 1 GB pro disco, ficou com CPU baixa e em estado D, enquanto o wa subia: o gargalo real era a velocidade de escrita do disco, não o processamento."
 
   </Exemplo>
 </Exemplos>

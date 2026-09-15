@@ -355,10 +355,10 @@ export const QUIZZES: Quiz[] = [
           "Um processo novo é criado",
           "Um processo termina sua execução",
           "Um processo bloqueia esperando por E/S",
-          "O usuário move o mouse na tela, sem qualquer outro evento do sistema"
+          "Um processo soma duas variáveis que já estão na sua própria memória"
         ],
         "correta": 3,
-        "justificativa": "Os quatro gatilhos clássicos de escalonamento são: processo novo, processo que termina, processo que bloqueia por E/S, e a interrupção de relógio (fim da fatia de tempo). O simples movimento do mouse, isolado, não é por si só um desses gatilhos."
+        "justificativa": "O escalonador decide quando um processo é criado, quando termina, quando bloqueia esperando E/S e quando chega uma interrupção de E/S (Tanenbaum, 2.4.1); nos sistemas preemptivos, também a cada interrupção de relógio que encerra a fatia de tempo. Somar duas variáveis na própria memória não gera chamada de sistema nem interrupção: o processo simplesmente continua na CPU."
       },
       {
         "enunciado": "Por que o comando `ls arquivo_inexistente 2> erro.txt` não mostra nenhuma mensagem de erro na tela?",
