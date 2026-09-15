@@ -54,9 +54,10 @@ export const AVALIACOES: Avaliacao[] = [
   {
     nota: "N1",
     etapa: 1,
-    data: "2026-09-18",
+    // A data é a do prazo de envio; as equipes se formam no Encontro 6.
+    data: "2026-09-24",
     encontro: 6,
-    instrumento: "Entrega parcial do relatório de diagnóstico + portfólio de quizzes",
+    instrumento: "Raio-X parcial (seções 1 a 4), em equipe, enviado pelo portal",
   },
   {
     nota: "N2",
@@ -105,7 +106,7 @@ export const REGRAS = [
   {
     titulo: "Leitura vira nota",
     texto:
-      "Cada quiz de verificação alimenta o portfólio (N1 de cada etapa). Nos relatórios e defesas, conecte a prática ao conceito lido — citando a seção, sem copiar o texto.",
+      "Os quizzes semanais formam o portfólio, que vale 20% da nota de cada etapa. Nos relatórios e defesas, conecte a prática ao conceito lido — citando a seção, sem copiar o texto.",
   },
   {
     titulo: "Encontro 16 é amortecedor",

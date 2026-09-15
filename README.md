@@ -17,7 +17,7 @@ web moderna — o código é público de propósito, para ser lido em Programaç
 | Estilo | Tailwind CSS v4, com a paleta institucional em `src/app/globals.css` |
 | Conteúdo | Módulos TypeScript tipados em `src/content/`; roteiros em MDX (`@next/mdx` + `remark-gfm`) |
 | Deploy | Vercel (plano Hobby) |
-| Banco (fase 3) | Supabase — PostgreSQL + Auth |
+| Banco | Supabase — PostgreSQL + Auth, acessado só pelo servidor (`@supabase/supabase-js`, `@supabase/ssr`), com validação em Zod |
 
 ## Como rodar
 
@@ -75,7 +75,8 @@ src/
   lib/
     datas.ts                        formatação de datas em pt-BR
     site.ts                         endereço público do site (metadata, sitemap)
-public/material/<disciplina>/<pasta>/   slides, roteiros e quizzes em HTML
+public/material/<disciplina>/<pasta>/   slides em HTML avulso
+supabase/migrations/                    SQL do banco (aplicado no painel do Supabase)
 ```
 
 ### Por que o índice de material é gerado
@@ -109,6 +110,61 @@ navegador dele (`localStorage`), não no servidor.
 `scripts/converter-roteiro.mjs` fez a conversão inicial a partir do HTML. Ele **relata** todo bloco
 que não reconhece em vez de descartá-lo em silêncio — omissão em material didático é pior que erro
 visível, porque ninguém nota que um passo sumiu.
+
+### Quiz semanal
+
+Cada encontro com leitura tem um quiz em `/so/encontros/<n>/quiz`: perguntas de múltipla escolha
+sobre a leitura e as observações do laboratório, num envio só. O conteúdo fica em
+`src/content/so/quizzes.ts`, versionado; o banco guarda só os envios.
+
+- **O navegador nunca fala com o banco.** O formulário chama uma Server Action
+  (`src/lib/acoes-quiz.ts`), que valida com Zod, corrige no servidor e grava com a chave secreta.
+  A página não recebe o gabarito nem as justificativas; eles só voltam na resposta ao envio.
+- **RLS ligada e sem nenhuma política** na tabela `submissoes_quiz`: a chave pública não lê nem
+  grava nada nela.
+- **Cada envio é uma linha nova.** Vale o acerto do primeiro envio (reenviar depois de ver as
+  justificativas não melhora a nota) e as observações do último (o aluno pode voltar para
+  completá-las).
+- As observações usam a mesma chave de `localStorage` dos rascunhos do roteiro: o que o aluno
+  escreveu durante a prática chega preenchido. Nome e matrícula **não** ficam guardados, porque os
+  computadores do laboratório são compartilhados.
+- `/professor` é o painel: login pelo Supabase Auth, aceito só para o e-mail de `PROFESSOR_EMAIL`.
+  Tem três abas: envios por quiz (com as marcas do professor), portfólio consolidado por etapa e
+  relatórios entregues, com exportação `.csv`.
+
+Os quizzes começaram como HTML avulso que gravava com `window.storage`, uma API que só existe
+dentro dos artefatos do Claude. Publicados no portal, eles não salvavam nada. Por isso saíram de
+`public/material/`, e os endereços antigos redirecionam para o quiz nativo (`next.config.ts`).
+
+**Sem as variáveis do Supabase o portal funciona normalmente**: os quizzes aparecem, mas o envio
+avisa que ainda não está ativo.
+
+### Portfólio, prazos e relatório
+
+As regras de nota de SO vivem em `src/content/so/avaliacao.ts`: pesos de cada etapa, valor de cada
+quiz, descarte do pior, prazos e rubricas. A página de avaliação, a página do quiz, o enunciado do
+projeto e o painel leem dali. Mudar um peso ou prazo é mudar esse arquivo.
+
+- **Prazo do quiz:** quinta-feira seguinte ao encontro, 23:59 de Horizonte, salvo prazo especial.
+  Envio atrasado é aceito e marcado; vale zero no portfólio até o professor aceitar o atraso.
+- **Cálculo** em `src/lib/portfolio.ts`, com funções puras. A leitura do banco para o painel fica
+  em `src/lib/painel-quiz.ts`.
+- **Enunciado do projeto** em `src/content/so/projetos/<etapa>.mdx`, publicado em
+  `/so/projeto/<etapa>`, com o formulário de envio do PDF.
+- **Envio do PDF em dois tempos** (`src/lib/acoes-entrega.ts`): o servidor gera uma URL assinada
+  de uso único para um caminho no bucket privado `relatorios`, e o navegador envia direto ao
+  Supabase. Isso contorna o limite de 4,5 MB do corpo das funções da Vercel. Depois o servidor
+  confere que o arquivo chegou e registra a entrega. O professor baixa por URL assinada de 60 s.
+
+#### Configurar o banco (uma vez por ambiente)
+
+1. Crie um projeto em <https://supabase.com> (região São Paulo).
+2. **SQL Editor**: rode, em ordem, os arquivos de `supabase/migrations/`.
+3. **Authentication → Sign In / Providers**: desligue *Allow new users to sign up*.
+4. **Authentication → Users → Add user**: crie o usuário do professor (e-mail + senha, com
+   *Auto Confirm User*).
+5. Copie `.env.example` para `.env.local` e preencha. Na Vercel, cadastre as mesmas variáveis e
+   faça um novo deploy.
 
 ### Por que o material recebe um botão injetado
 
@@ -147,6 +203,10 @@ minuto. Branches ganham URL de preview automaticamente.
 | Variável | Onde | Para quê |
 |---|---|---|
 | `NEXT_PUBLIC_SITE_URL` | opcional | Endereço absoluto do site. Só é necessária quando houver **domínio próprio** — na Vercel, `src/lib/site.ts` já usa `VERCEL_PROJECT_PRODUCTION_URL` automaticamente. Em desenvolvimento, o padrão é `http://localhost:3000`. |
+| `SUPABASE_URL` | quiz | Endereço do projeto Supabase |
+| `SUPABASE_PUBLISHABLE_KEY` | quiz | Chave pública, usada só no login do professor |
+| `SUPABASE_SECRET_KEY` | quiz | Chave secreta, que ignora a RLS. Só no servidor |
+| `PROFESSOR_EMAIL` | quiz | Único e-mail com acesso a `/professor` |
 
 O endereço absoluto alimenta o `metadataBase` (prévia do link em WhatsApp e Classroom), o
 `sitemap.xml` e o `robots.txt`.
@@ -155,11 +215,10 @@ O endereço absoluto alimenta o `metadataBase` (prévia do link em WhatsApp e Cl
 
 - [x] **Fase 1** — esqueleto, identidade visual, conteúdo dos 17 encontros, material servido,
       favicon, prévia de compartilhamento, `sitemap.xml`/`robots.txt` e deploy na Vercel
-- [ ] **Fase 2** — migrar os HTMLs para MDX, com componentes React reaproveitáveis.
-      **Os 18 roteiros e guias estão migrados.** Restam os quizzes, que dependem do banco
-      (fase 3). Os slides seguem como HTML avulso por decisão: são apresentação, não documento
-- [ ] **Fase 3** — quiz nativo com Supabase: aluno envia por rota server-side, vê só o próprio
-      resultado; painel do professor autenticado, com exportação para planilha
+- [x] **Fase 2** — os 18 roteiros e guias migrados para MDX. Os slides seguem como HTML avulso
+      por decisão: são apresentação, não documento
+- [x] **Fase 3** — quiz nativo com Supabase: envio por Server Action, correção no servidor,
+      painel do professor autenticado com exportação para planilha
 - [ ] **Fase 4** — testes (Vitest + Playwright) e CI no GitHub Actions
 
 ## Material do professor

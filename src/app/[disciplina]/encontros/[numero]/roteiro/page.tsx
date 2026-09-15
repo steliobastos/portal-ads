@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BotaoLink } from "@/components/ui";
-import { conteudoDa, slugsPublicados } from "@/content";
+import { conteudoDa, quizDo, slugsPublicados } from "@/content";
 import { carregarRoteiro } from "@/content/roteiros";
 import { encontrosComRoteiro } from "@/lib/roteiros";
 
@@ -71,6 +71,11 @@ export default async function PaginaRoteiro({ params }: Props) {
       <Roteiro />
 
       <div className="mt-12 flex flex-wrap gap-3 border-t border-line pt-8">
+        {quizDo(slug, encontro.numero) && (
+          <BotaoLink href={`/${slug}/encontros/${encontro.numero}/quiz`}>
+            Ir para o quiz da semana →
+          </BotaoLink>
+        )}
         <BotaoLink href={`/${slug}/encontros/${encontro.numero}`} variante="secundario">
           ← Voltar ao {rotulo.toLowerCase()}
         </BotaoLink>

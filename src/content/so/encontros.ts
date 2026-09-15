@@ -211,7 +211,9 @@ export const ENCONTROS: Encontro[] = [
     marco: {
       nota: "N1",
       etapa: 1,
-      instrumento: "Entrega parcial do relatório de diagnóstico + portfólio de quizzes",
+      instrumento:
+        "Formação das equipes do Raio-X. A entrega parcial (seções 1 a 4) é enviada pelo portal até a quinta-feira seguinte.",
+      projeto: true,
     },
     leituras: [
       {
@@ -276,6 +278,7 @@ export const ENCONTROS: Encontro[] = [
       nota: "N2",
       etapa: 1,
       instrumento: "Relatório Raio-X (duplas/trios) + defesa 5–6 min + container ao vivo",
+      projeto: true,
     },
     leituras: [
       {
@@ -536,6 +539,7 @@ export const ENCONTROS: Encontro[] = [
       nota: "N2",
       etapa: 2,
       instrumento: "Projeto final (toolkit + README) + apresentação com timebox de ~10 min",
+      projeto: true,
     },
     leituras: [
       {

@@ -25,6 +25,25 @@ export type Aviso = {
 
 export const AVISOS: Aviso[] = [
   {
+    data: "2026-09-15",
+    titulo: "Raio-X: o enunciado do projeto da 1ª etapa está no ar",
+    texto:
+      "As equipes se formam no Encontro 6. A entrega parcial (seções 1 a 4) vale como N1 e é enviada em PDF pelo portal até 24/09, às 23:59. Os prazos, os critérios e o formulário de envio estão na página do projeto.",
+    etiqueta: "Avaliação",
+    disciplina: "so",
+    href: "/so/projeto/1",
+    fixado: true,
+  },
+  {
+    data: "2026-09-15",
+    titulo: "Quizzes funcionando — os dos Encontros 1 a 6 ficam abertos até 24/09",
+    texto:
+      "Os quizzes agora gravam as respostas de verdade, dentro do portal. Quem anotou as respostas dos primeiros encontros pode enviá-las até 24/09, às 23:59. Os quizzes formam o portfólio, que vale 20% da nota de cada etapa.",
+    etiqueta: "Portal",
+    disciplina: "so",
+    href: "/so/avaliacao#portfolio",
+  },
+  {
     data: "2026-08-06",
     titulo: "O portal entrou no ar",
     texto:

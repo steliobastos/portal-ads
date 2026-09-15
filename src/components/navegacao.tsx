@@ -5,7 +5,8 @@ import { usePathname } from "next/navigation";
 import { MENU_GLOBAL, type ItemMenu } from "@/content/portal";
 import { cx } from "./ui";
 
-const HREFS_GLOBAIS = new Set(MENU_GLOBAL.map((i) => i.href));
+// A área do professor é rota global, mas fora do menu — não pode acender "Disciplinas".
+const HREFS_GLOBAIS = new Set([...MENU_GLOBAL.map((i) => i.href), "/professor"]);
 
 /**
  * A seção do menu global correspondente ao caminho atual.

@@ -338,10 +338,14 @@
     <h2 class="slide-title">Dockerfile: a receita escrita em texto</h2>
     <p class="lead">Um <code>Dockerfile</code> é um roteiro simples, linha por linha, de como montar uma imagem a partir de uma imagem-base.</p>
     <div class="dockerfile fragment">
-<span class="ln"><span class="kw">FROM</span> alpine:3.20         <span class="cm"># imagem-base: um Linux mínimo</span></span>
-<span class="ln"><span class="kw">COPY</span> ola.sh /ola.sh        <span class="cm"># copia um arquivo seu pra dentro da imagem</span></span>
-<span class="ln"><span class="kw">RUN</span> chmod +x /ola.sh       <span class="cm"># roda um comando DURANTE a construção</span></span>
-<span class="ln"><span class="kw">CMD</span> ["/ola.sh"]            <span class="cm"># comando padrão QUANDO o container inicia</span></span>
+<span class="ln"><span class="cm"># imagem-base: um Linux mínimo</span></span>
+<span class="ln"><span class="kw">FROM</span> alpine:3.20</span>
+<span class="ln"><span class="cm"># copia um arquivo seu pra dentro da imagem</span></span>
+<span class="ln"><span class="kw">COPY</span> ola.sh /ola.sh</span>
+<span class="ln"><span class="cm"># roda um comando DURANTE a construção</span></span>
+<span class="ln"><span class="kw">RUN</span> chmod +x /ola.sh</span>
+<span class="ln"><span class="cm"># comando padrão QUANDO o container inicia</span></span>
+<span class="ln"><span class="kw">CMD</span> ["/ola.sh"]</span>
     </div>
     <p class="lead fragment d1" style="margin-top:18px;font-size:14.5px;">Reparem a diferença entre <code>RUN</code> (acontece uma vez, na hora de <i>construir</i> a imagem) e <code>CMD</code> (acontece toda vez que um container <i>novo</i> nasce dessa imagem).</p>
   </div>

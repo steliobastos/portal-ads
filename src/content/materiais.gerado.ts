@@ -22,11 +22,6 @@ export const MATERIAIS: Record<string, ArquivoMaterial[]> = {
       "tipo": "roteiro",
       "arquivo": "Roteiro-Aluno_Encontro-01.html",
       "href": "/material/so/aula1/Roteiro-Aluno_Encontro-01.html"
-    },
-    {
-      "tipo": "quiz",
-      "arquivo": "Quiz_Encontro-01.html",
-      "href": "/material/so/aula1/Quiz_Encontro-01.html"
     }
   ],
   "so/aula10": [
@@ -39,11 +34,6 @@ export const MATERIAIS: Record<string, ArquivoMaterial[]> = {
       "tipo": "roteiro",
       "arquivo": "Roteiro-Aluno_Encontro-10.html",
       "href": "/material/so/aula10/Roteiro-Aluno_Encontro-10.html"
-    },
-    {
-      "tipo": "quiz",
-      "arquivo": "Quiz_Encontro-10.html",
-      "href": "/material/so/aula10/Quiz_Encontro-10.html"
     }
   ],
   "so/aula11": [
@@ -56,11 +46,6 @@ export const MATERIAIS: Record<string, ArquivoMaterial[]> = {
       "tipo": "roteiro",
       "arquivo": "Roteiro-Aluno_Encontro-11.html",
       "href": "/material/so/aula11/Roteiro-Aluno_Encontro-11.html"
-    },
-    {
-      "tipo": "quiz",
-      "arquivo": "Quiz_Encontro-11.html",
-      "href": "/material/so/aula11/Quiz_Encontro-11.html"
     }
   ],
   "so/aula12": [
@@ -73,11 +58,6 @@ export const MATERIAIS: Record<string, ArquivoMaterial[]> = {
       "tipo": "roteiro",
       "arquivo": "Roteiro-Aluno_Encontro-12.html",
       "href": "/material/so/aula12/Roteiro-Aluno_Encontro-12.html"
-    },
-    {
-      "tipo": "quiz",
-      "arquivo": "Quiz_Encontro-12.html",
-      "href": "/material/so/aula12/Quiz_Encontro-12.html"
     }
   ],
   "so/aula13": [
@@ -90,11 +70,6 @@ export const MATERIAIS: Record<string, ArquivoMaterial[]> = {
       "tipo": "roteiro",
       "arquivo": "Roteiro-Aluno_Encontro-13.html",
       "href": "/material/so/aula13/Roteiro-Aluno_Encontro-13.html"
-    },
-    {
-      "tipo": "quiz",
-      "arquivo": "Quiz_Encontro-13.html",
-      "href": "/material/so/aula13/Quiz_Encontro-13.html"
     }
   ],
   "so/aula14": [
@@ -107,11 +82,6 @@ export const MATERIAIS: Record<string, ArquivoMaterial[]> = {
       "tipo": "roteiro",
       "arquivo": "Roteiro-Aluno_Encontro-14.html",
       "href": "/material/so/aula14/Roteiro-Aluno_Encontro-14.html"
-    },
-    {
-      "tipo": "quiz",
-      "arquivo": "Quiz_Encontro-14.html",
-      "href": "/material/so/aula14/Quiz_Encontro-14.html"
     }
   ],
   "so/aula15": [
@@ -145,11 +115,6 @@ export const MATERIAIS: Record<string, ArquivoMaterial[]> = {
       "tipo": "roteiro",
       "arquivo": "Roteiro-Aluno_Encontro-02.html",
       "href": "/material/so/aula2/Roteiro-Aluno_Encontro-02.html"
-    },
-    {
-      "tipo": "quiz",
-      "arquivo": "Quiz_Encontro-02.html",
-      "href": "/material/so/aula2/Quiz_Encontro-02.html"
     }
   ],
   "so/aula3": [
@@ -162,11 +127,6 @@ export const MATERIAIS: Record<string, ArquivoMaterial[]> = {
       "tipo": "roteiro",
       "arquivo": "Roteiro-Aluno_Encontro-03.html",
       "href": "/material/so/aula3/Roteiro-Aluno_Encontro-03.html"
-    },
-    {
-      "tipo": "quiz",
-      "arquivo": "Quiz_Encontro-03.html",
-      "href": "/material/so/aula3/Quiz_Encontro-03.html"
     }
   ],
   "so/aula4": [
@@ -179,11 +139,6 @@ export const MATERIAIS: Record<string, ArquivoMaterial[]> = {
       "tipo": "roteiro",
       "arquivo": "Roteiro-Aluno_Encontro-04.html",
       "href": "/material/so/aula4/Roteiro-Aluno_Encontro-04.html"
-    },
-    {
-      "tipo": "quiz",
-      "arquivo": "Quiz_Encontro-04.html",
-      "href": "/material/so/aula4/Quiz_Encontro-04.html"
     }
   ],
   "so/aula5": [
@@ -196,11 +151,6 @@ export const MATERIAIS: Record<string, ArquivoMaterial[]> = {
       "tipo": "roteiro",
       "arquivo": "Roteiro-Aluno_Encontro-05.html",
       "href": "/material/so/aula5/Roteiro-Aluno_Encontro-05.html"
-    },
-    {
-      "tipo": "quiz",
-      "arquivo": "Quiz_Encontro-05.html",
-      "href": "/material/so/aula5/Quiz_Encontro-05.html"
     }
   ],
   "so/aula6": [
@@ -213,11 +163,6 @@ export const MATERIAIS: Record<string, ArquivoMaterial[]> = {
       "tipo": "roteiro",
       "arquivo": "Roteiro-Aluno_Encontro-06.html",
       "href": "/material/so/aula6/Roteiro-Aluno_Encontro-06.html"
-    },
-    {
-      "tipo": "quiz",
-      "arquivo": "Quiz_Encontro-06.html",
-      "href": "/material/so/aula6/Quiz_Encontro-06.html"
     }
   ],
   "so/aula7": [
@@ -230,11 +175,6 @@ export const MATERIAIS: Record<string, ArquivoMaterial[]> = {
       "tipo": "roteiro",
       "arquivo": "Roteiro-Aluno_Encontro-07.html",
       "href": "/material/so/aula7/Roteiro-Aluno_Encontro-07.html"
-    },
-    {
-      "tipo": "quiz",
-      "arquivo": "Quiz_Encontro-07.html",
-      "href": "/material/so/aula7/Quiz_Encontro-07.html"
     }
   ],
   "so/aula8": [
@@ -254,11 +194,6 @@ export const MATERIAIS: Record<string, ArquivoMaterial[]> = {
       "tipo": "roteiro",
       "arquivo": "Roteiro-Aluno_Encontro-09.html",
       "href": "/material/so/aula9/Roteiro-Aluno_Encontro-09.html"
-    },
-    {
-      "tipo": "quiz",
-      "arquivo": "Quiz_Encontro-09.html",
-      "href": "/material/so/aula9/Quiz_Encontro-09.html"
     }
   ]
 };

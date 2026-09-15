@@ -31,6 +31,8 @@ export type Marco = {
   nota: "N1" | "N2";
   etapa: 1 | 2;
   instrumento: string;
+  /** O marco faz parte do projeto integrador: a página do encontro leva ao enunciado. */
+  projeto?: boolean;
 };
 
 export type Encontro = {
@@ -51,6 +53,51 @@ export type Encontro = {
   docker?: string;
   marco?: Marco;
   leituras: Leitura[];
+};
+
+export type PerguntaQuiz = {
+  enunciado: string;
+  alternativas: string[];
+  /** Índice da alternativa correta. Nunca chega ao navegador antes do envio. */
+  correta: number;
+  justificativa: string;
+};
+
+export type ObservacaoQuiz = {
+  enunciado: string;
+  /** Mínimo de caracteres — a observação é avaliada pelo professor, não corrigida. */
+  minimo: number;
+};
+
+/** Instrumento semanal: verificação de leitura + observações do laboratório. */
+export type Quiz = {
+  encontro: number;
+  leituras: { fonte: string; paginas: string }[];
+  perguntas: PerguntaQuiz[];
+  observacoes: ObservacaoQuiz[];
+};
+
+export type FaseEntrega = "parcial" | "final";
+
+/** Composição da nota de uma disciplina: pesos, portfólio, entregas e rubricas. */
+export type RegrasNota = {
+  etapas: {
+    etapa: 1 | 2;
+    /** Os pesos de uma etapa somam 1. Cada componente é avaliado de 0 a 10. */
+    componentes: { id: "portfolio" | "N1" | "N2"; nome: string; peso: number; detalhe: string }[];
+  }[];
+  portfolio: {
+    /** Pontos pelo crédito na leitura (2 de 3 acertos no primeiro envio). */
+    valorLeitura: number;
+    /** Pontos pelas observações, salvo se o professor marcar como insuficientes. */
+    valorObservacoes: number;
+    /** Quantos dos piores quizzes de cada etapa não entram na nota. */
+    descartaPiores: number;
+    /** Prazos que fogem da regra "quinta seguinte ao encontro, 23:59". */
+    prazosEspeciais: { encontros: number[]; prazo: string }[];
+  };
+  entregas: { etapa: 1 | 2; fase: FaseEntrega; nome: string; secoes: string; prazo: string }[];
+  rubricas: { nota: string; titulo: string; criterios: { nome: string; peso: number }[] }[];
 };
 
 export type Unidade = {

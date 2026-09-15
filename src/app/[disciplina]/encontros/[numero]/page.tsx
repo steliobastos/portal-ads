@@ -4,7 +4,8 @@ import { notFound } from "next/navigation";
 import { ItemLeitura, LegendaFaixas } from "@/components/leitura";
 import { ListaMateriais, materiaisDo } from "@/components/material";
 import { Cartao, Selo, TituloSecao } from "@/components/ui";
-import { conteudoDa, slugsPublicados } from "@/content";
+import { conteudoDa, quizDo, slugsPublicados } from "@/content";
+import { carregarProjeto } from "@/content/roteiros";
 import { dataExtensa } from "@/lib/datas";
 import { temRoteiro } from "@/lib/roteiros";
 
@@ -50,10 +51,19 @@ export default async function PaginaEncontro({ params }: Props) {
   // o mesmo papel com nomes diferentes (as semanas de projeto e os dias de
   // avaliação nunca tiveram roteiro de laboratório).
   const roteiroNativo = await temRoteiro(slug, encontro.numero);
+  // O quiz em HTML avulso não salvava nada fora dos artefatos do Claude (usava
+  // `window.storage`) e saiu de `public/material/`; o filtro fica para o caso
+  // de algum voltar a ser copiado para lá.
+  const quizNativo = quizDo(slug, encontro.numero) !== undefined;
   const materiais = materiaisDo(slug, encontro.pasta).filter(
-    (m) => !(roteiroNativo && (m.tipo === "roteiro" || m.tipo === "guia")),
+    (m) =>
+      !(roteiroNativo && (m.tipo === "roteiro" || m.tipo === "guia")) &&
+      !(quizNativo && m.tipo === "quiz"),
   );
   const rotulo = encontro.numero === 0 ? "Semana 0" : `Encontro ${encontro.numero}`;
+  const temEnunciado =
+    encontro.marco?.projeto === true &&
+    (await carregarProjeto(slug, encontro.marco.etapa)) !== null;
 
   const indice = conteudo.encontros.findIndex((e) => e.numero === encontro.numero);
   const anterior = conteudo.encontros[indice - 1];
@@ -113,12 +123,21 @@ export default async function PaginaEncontro({ params }: Props) {
             Avaliação · {encontro.marco.nota} da {encontro.marco.etapa}ª etapa
           </Selo>
           <p className="mt-3 text-ink">{encontro.marco.instrumento}</p>
-          <Link
-            href={`/${slug}/avaliacao`}
-            className="mt-2 inline-block text-sm text-primary hover:underline"
-          >
-            Ver critérios de avaliação →
-          </Link>
+          {temEnunciado ? (
+            <Link
+              href={`/${slug}/projeto/${encontro.marco.etapa}`}
+              className="mt-2 inline-block text-sm font-medium text-primary hover:underline"
+            >
+              Enunciado, prazos e envio do relatório →
+            </Link>
+          ) : (
+            <Link
+              href={`/${slug}/avaliacao`}
+              className="mt-2 inline-block text-sm text-primary hover:underline"
+            >
+              Ver critérios de avaliação →
+            </Link>
+          )}
         </Cartao>
       )}
 
@@ -143,6 +162,29 @@ export default async function PaginaEncontro({ params }: Props) {
               <span className="mt-0.5 block text-sm text-ink-dim">
                 Os comandos passo a passo, com dicas para quando travar — e campos que guardam suas
                 observações enquanto você trabalha.
+              </span>
+            </span>
+          </Link>
+        )}
+
+        {quizNativo && (
+          <Link
+            href={`/${slug}/encontros/${encontro.numero}/quiz`}
+            className="group mb-3 flex items-start gap-3 rounded-xl border border-primary-dim bg-card p-4 transition-colors hover:border-primary"
+          >
+            <span
+              aria-hidden
+              className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary font-mono text-white"
+            >
+              ✓
+            </span>
+            <span className="min-w-0">
+              <span className="block font-medium text-ink group-hover:text-primary">
+                Quiz da semana
+              </span>
+              <span className="mt-0.5 block text-sm text-ink-dim">
+                Verificação de leitura + suas observações de laboratório, num envio só. Vale para o
+                portfólio da N1.
               </span>
             </span>
           </Link>

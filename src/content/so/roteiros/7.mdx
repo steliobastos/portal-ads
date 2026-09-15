@@ -11,9 +11,9 @@ Hoje você roda um script simples que expõe o bug de concorrência na prática 
 
 <Aviso titulo="⏭️ Preparando o próximo marco — N2">
 
-A **N2 da 1ª etapa** acontece no Encontro 8: relatório "Raio-X" em dupla/trio, defesa de 5–6 minutos, e o container do projeto rodando ao vivo durante a apresentação.
+A **N2 da 1ª etapa** acontece no Encontro 8: relatório "Raio-X" em dupla/trio, defesa de 5–6 minutos, e o container Raio-X da equipe rodando ao vivo durante a apresentação. Tudo está no [enunciado](/so/projeto/1).
 
-Os passos 4 e 5 de hoje são justamente o ensaio desse momento — quanto mais suave ficar aqui, menos risco no dia que vale nota.
+Os passos 4 e 5 de hoje são justamente o ensaio desse momento — quanto mais suave ficar aqui, menos risco no dia que vale nota. A condição de corrida dos passos 1 a 3 é a seção 6 do relatório.
 
 </Aviso>
 
@@ -146,14 +146,14 @@ Resultado esperado: 1000 | Resultado obtido: 861`}</Terminal>
 
 <Passo numero={4} de={5} titulo="Primeiro ensaio: build → run → demonstração → stop">
 
-<Intro>Reúna-se com sua dupla/trio da N2. Usando o Dockerfile do projeto de vocês, cronometre o ciclo completo do zero.</Intro>
+<Intro>Reúna-se com sua dupla/trio do Raio-X. Usando o `Dockerfile` e o `raio-x.sh` do [enunciado](/so/projeto/1), cronometre o ciclo completo do zero.</Intro>
 
-<Comando passo={4} cmd="docker build -t equipe-n2 . → docker run -d --name n2demo equipe-n2 → demonstração → docker stop n2demo && docker rm n2demo">
+<Comando passo={4} cmd="docker build -t raio-x-equipe . → docker run --rm raio-x-equipe → sh raio-x.sh (na VM) → explicar as diferenças">
 
   <Explica>
     <Caixa titulo="O que é">
 
-    O mesmo ciclo que vocês vão executar ao vivo durante a defesa da N2 — construir a imagem, subir o container, mostrar funcionando, e encerrar.
+    O mesmo ciclo que vocês vão executar ao vivo durante a defesa da N2 — construir a imagem, rodar o container, e comparar o raio-x visto de dentro com o visto da VM. O `--rm` apaga o container assim que ele termina.
 
     </Caixa>
     <Caixa titulo="Por que importa">
@@ -167,9 +167,9 @@ Resultado esperado: 1000 | Resultado obtido: 861`}</Terminal>
     anote o tempo total do ciclo e qualquer erro encontrado. É normal a primeira tentativa não sair perfeita — é exatamente pra isso que o ensaio existe.
   </Esperar>
 
-  <Dica titulo="Nosso projeto ainda não tem um Dockerfile pronto">
+  <Dica titulo="Nossa equipe ainda não montou o container">
 
-  Use este momento pra montar ao menos um Dockerfile mínimo (como o do Encontro 4) rodando alguma parte do projeto — mesmo incompleto, já revela problemas de ambiente cedo.
+  Comece pelo ponto de partida mínimo do enunciado: são dois arquivos curtos, os mesmos do Encontro 4 com outro script. Ensaiar com a versão mínima já revela problemas de ambiente cedo; a equipe aprimora depois.
 
   </Dica>
 

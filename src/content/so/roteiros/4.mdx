@@ -207,10 +207,16 @@ CONTAINER ID   IMAGE     COMMAND                  STATUS                     NAM
   <Arquivo nome="ola.sh">{`#!/bin/sh
 echo "Ola do meu primeiro container!"`}</Arquivo>
 
-  <Arquivo nome="Dockerfile">{`FROM alpine:3.20         # imagem-base
-COPY ola.sh /ola.sh        # copia seu script pra dentro da imagem
-RUN chmod +x /ola.sh       # dá permissão de execução (acontece 1x, na construção)
-CMD ["/ola.sh"]            # roda toda vez que um container nascer daqui`}</Arquivo>
+  <Arquivo nome="Dockerfile">{`# imagem-base
+FROM alpine:3.20
+# copia seu script pra dentro da imagem
+COPY ola.sh /ola.sh
+# dá permissão de execução (acontece 1x, na construção)
+RUN chmod +x /ola.sh
+# roda toda vez que um container nascer daqui
+CMD ["/ola.sh"]`}</Arquivo>
+
+  <Nota rotulo="Atenção">no `Dockerfile`, comentário só vale em linha própria, começando com `#`. Escrito no fim de uma instrução, o `#` vira parte dela e o `docker build` falha.</Nota>
 
   <Esperar>
     você pode criar os arquivos com `nano ola.sh` e `nano Dockerfile` (ou o editor de sua preferência) e colar o conteúdo acima exatamente. Os dois arquivos precisam estar na mesma pasta.

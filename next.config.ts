@@ -1,8 +1,26 @@
 import createMDX from "@next/mdx";
 import type { NextConfig } from "next";
+import { ENCONTROS } from "./src/content/so/encontros";
+import { QUIZZES } from "./src/content/so/quizzes";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  /**
+   * Os quizzes em HTML avulso saíram de `public/material/` na Fase 3 (gravavam
+   * com `window.storage`, que não existe fora dos artefatos do Claude). Link
+   * antigo que ficou num grupo de WhatsApp ou no Classroom cai no quiz nativo
+   * em vez de dar 404.
+   */
+  async redirects() {
+    return QUIZZES.map((q) => {
+      const pasta = ENCONTROS.find((e) => e.numero === q.encontro)!.pasta;
+      const arquivo = `Quiz_Encontro-${String(q.encontro).padStart(2, "0")}.html`;
+      return {
+        source: `/material/so/${pasta}/${arquivo}`,
+        destination: `/so/encontros/${q.encontro}/quiz`,
+        permanent: true,
+      };
+    });
+  },
 };
 
 /**

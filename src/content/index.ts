@@ -1,11 +1,15 @@
 import { DISCIPLINAS, DISCIPLINAS_ATIVAS, buscarDisciplina } from "./disciplinas";
 import { ENCONTROS } from "./so/encontros";
 import { AVALIACOES, ETAPAS, REGRAS, SEM_AULA, UNIDADES } from "./so/curso";
-import type { Avaliacao, Disciplina, Encontro, Unidade } from "./tipos";
+import { QUIZZES } from "./so/quizzes";
+import { REGRAS_NOTA } from "./so/avaliacao";
+import type { Avaliacao, Disciplina, Encontro, Quiz, RegrasNota, Unidade } from "./tipos";
 
 export type ConteudoDisciplina = {
   disciplina: Disciplina;
   encontros: Encontro[];
+  quizzes: Quiz[];
+  regrasNota: RegrasNota;
   unidades: Unidade[];
   avaliacoes: Avaliacao[];
   etapas: typeof ETAPAS;
@@ -21,6 +25,8 @@ const CONTEUDO: Record<string, ConteudoDisciplina> = {
   so: {
     disciplina: buscarDisciplina("so")!,
     encontros: ENCONTROS,
+    quizzes: QUIZZES,
+    regrasNota: REGRAS_NOTA,
     unidades: UNIDADES,
     avaliacoes: AVALIACOES,
     etapas: ETAPAS,
@@ -31,6 +37,10 @@ const CONTEUDO: Record<string, ConteudoDisciplina> = {
 
 export function conteudoDa(slug: string): ConteudoDisciplina | undefined {
   return CONTEUDO[slug];
+}
+
+export function quizDo(slug: string, numero: number): Quiz | undefined {
+  return CONTEUDO[slug]?.quizzes.find((q) => q.encontro === numero);
 }
 
 /** Slugs que geram páginas — só disciplinas ativas e com conteúdo carregado. */

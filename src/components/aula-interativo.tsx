@@ -57,6 +57,8 @@ export function Rascunho({
   children: ReactNode;
 }) {
   const id = useId();
+  // A mesma chave que o quiz usa: o que o aluno rascunha aqui já aparece
+  // preenchido no quiz da semana, e vice-versa.
   const [texto, setTexto] = useLocal(`roteiro:${encontro}:obs${numero}`);
   const suficiente = texto.length >= MINIMO_CARACTERES;
 

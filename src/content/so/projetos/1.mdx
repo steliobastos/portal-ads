@@ -1,0 +1,295 @@
+<Abertura sobretitulo="Projeto integrador · 1ª etapa" titulo="Raio-X do sistema">
+
+Sua equipe vai investigar por dentro um sistema operacional real, a máquina virtual Ubuntu montada
+na Semana 0, e escrever um relatório que mostra como ele funciona. É um diagnóstico, não uma
+pesquisa: cada afirmação vem acompanhada do comando que a comprova.
+
+</Abertura>
+
+<Destaque titulo="Você já começou" tom="positivo">
+
+Os laboratórios dos Encontros 1 a 7 são as seções deste relatório. Os comandos que você rodou e as
+observações que escreveu nos quizzes são a matéria-prima. O trabalho agora é refazer a investigação
+na VM da equipe, organizar e aprofundar.
+
+</Destaque>
+
+<Secao sobretitulo="Visão geral" titulo="Como funciona">
+
+<Cartoes>
+  <Cartao rotulo="Equipe" titulo="Duplas ou trios">
+
+  Formadas no Encontro 6. A equipe entrega um relatório só, mas na defesa qualquer integrante pode
+  ser chamado a explicar qualquer seção.
+
+  </Cartao>
+  <Cartao rotulo="Duas entregas" titulo="Parcial e final">
+
+  A **parcial** traz as seções 1 a 4 e recebe devolutiva. A **final** traz as sete seções, com o que
+  foi apontado na parcial já corrigido, mais o container Raio-X.
+
+  </Cartao>
+  <Cartao rotulo="Formato" titulo="PDF enviado por esta página">
+
+  Um arquivo de até 15 MB. O formulário está no fim da página, junto com os prazos. Pode reenviar:
+  vale o envio mais recente.
+
+  </Cartao>
+  <Cartao rotulo="Defesa" titulo="Encontro 8">
+
+  De 5 a 6 minutos de apresentação, com o container da equipe rodando ao vivo, seguidos de 2 a 3
+  minutos de perguntas.
+
+  </Cartao>
+</Cartoes>
+
+</Secao>
+
+<Secao sobretitulo="O objeto" titulo="Que sistema a equipe investiga">
+
+<Intro>
+
+A VM Ubuntu de **um** dos integrantes, escolhida pela equipe e declarada na capa do relatório. Todas
+as evidências saem dessa mesma máquina: é isso que faz do relatório o raio-x de um sistema, e não
+uma colagem de prints de máquinas diferentes. O container da seção 3 roda dentro dela.
+
+</Intro>
+
+<Dica titulo="E se a VM escolhida quebrar no meio do caminho?">
+
+Troquem para a VM de outro integrante e registrem a troca no relatório. Refaçam na máquina nova as
+evidências que dependem dela (as da seção 1, principalmente). Honestidade sobre o que aconteceu vale
+mais do que um relatório que esconde a troca.
+
+</Dica>
+
+</Secao>
+
+<Secao sobretitulo="O conteúdo" titulo="As sete seções">
+
+<Intro>
+
+Os comandos abaixo são **pontos de partida**, não uma lista a cumprir. A pergunta-guia de cada seção
+é o que o relatório precisa responder; os comandos são o jeito de chegar lá.
+
+</Intro>
+
+<Painel titulo="1 · Identificação do sistema">
+
+**Vem dos Encontros 1 e 2.** Qual distribuição e versão, qual kernel, qual máquina e qual usuário.
+Que hardware o sistema enxerga: modelo e núcleos da CPU, memória total e disponível, disco e
+partições.
+
+**Partida:** `uname -a` · `cat /etc/os-release` · `hostname` · `whoami` · `lscpu` · `free -h` ·
+`df -h` · `cat /proc/cpuinfo` · `cat /proc/meminfo`
+
+**Conceitos para conectar:** o SO como máquina estendida e como gerenciador de recursos; o `/proc`
+como sistema de arquivos virtual.
+
+**Pergunta-guia:** que recursos este sistema gerencia, e quanto de cada um ele tem para distribuir?
+
+</Painel>
+
+<Painel titulo="2 · Arquitetura e chamadas de sistema">
+
+**Vem do Encontro 3.** Que arquitetura de núcleo o Linux usa e o que isso implica. O caminho que um
+comando comum percorre até o kernel.
+
+**Partida:** `strace -c ls` · `strace -e trace=openat,write cat /etc/hostname` · o mesmo resumo
+`-c` para dois programas diferentes, comparados
+
+**Conceitos para conectar:** núcleo monolítico × micronúcleo; modo usuário × modo núcleo; chamada
+de sistema.
+
+**Pergunta-guia:** o que um programa simples precisa pedir ao kernel para funcionar?
+
+</Painel>
+
+<Painel titulo="3 · Virtualização">
+
+**Vem dos Encontros 3 e 4.** Como a VM existe e o que ela enxerga do hardware real. A diferença entre
+VM e container, **medida**, não só descrita. A imagem que a equipe construiu.
+
+**Partida:** `hostnamectl` · `systemd-detect-virt` · `time docker run --rm alpine echo oi` ·
+`docker images` · o `Dockerfile` do container Raio-X (ver abaixo)
+
+**Conceitos para conectar:** hipervisor tipo 1 × tipo 2; imagem × container; por que o container
+compartilha o kernel do sistema hospedeiro.
+
+**Pergunta-guia:** nesta máquina, o que é físico, o que é virtual e o que é só isolado?
+
+</Painel>
+
+<Painel titulo="4 · Processos">
+
+**Vem do Encontro 5.** Quantos processos existem e quem é o PID 1. A árvore de pais e filhos do seu
+próprio terminal. Os estados dos processos. O mesmo processo visto de dentro e de fora de um
+container.
+
+**Partida:** `ps aux` · `ps -ef --forest` · `top` · `cat /proc/$$/status` ·
+`docker exec <container> ps aux`
+
+**Conceitos para conectar:** processo × programa; estados e transições; PPID e hierarquia; o
+namespace de PID.
+
+**Pergunta-guia:** o que está rodando nesta máquina agora, e quem começou cada coisa?
+
+</Painel>
+
+<Painel titulo="5 · Carga e comunicação">
+
+**Vem do Encontro 6.** Um processo CPU-bound e um I/O-bound, provocados e medidos. Processos
+encadeados por pipes. O consumo de um container sob carga.
+
+**Partida:** `yes > /dev/null &` com `top` · `dd if=/dev/zero of=teste bs=1M count=500; sync` ·
+redirecionamento com `2>` · `ps aux | grep bash | wc -l` · `docker stats --no-stream`
+
+**Conceitos para conectar:** CPU-bound × I/O-bound; por que isso importa para o escalonador; entrada
+e saída padrão; pipe.
+
+**Pergunta-guia:** quando esta máquina fica lenta, quem espera pelo quê: pela CPU ou pela E/S?
+
+</Painel>
+
+<Painel titulo="6 · Concorrência">
+
+**Vem do Encontro 7.** A condição de corrida reproduzida com o script do Encontro 7, na VM da equipe.
+Os resultados de várias execuções, lado a lado. A região crítica apontada no próprio código.
+
+**Conceitos para conectar:** condição de corrida; região crítica; exclusão mútua; os quatro
+requisitos de uma boa solução.
+
+**Pergunta-guia:** por que o resultado muda de uma execução para outra, se o código é o mesmo?
+
+</Painel>
+
+<Painel titulo="7 · Diagnóstico e conclusão">
+
+A síntese. O que o raio-x revela sobre este sistema. Se ele tivesse de rodar uma aplicação sob
+carga, onde estaria o gargalo provável, com base nas evidências das seções anteriores. O que a
+investigação **não** conseguiu mostrar.
+
+Fechem com as **referências**: livro, capítulo ou seção, e página.
+
+</Painel>
+
+</Secao>
+
+<Secao sobretitulo="O método" titulo="Como escrever uma evidência">
+
+<Intro>Toda evidência do relatório tem quatro partes, nesta ordem:</Intro>
+
+<Lista>
+  <Ponto marca="1">**O comando** exatamente como foi rodado.</Ponto>
+  <Ponto marca="2">**A saída real**, da VM da equipe: print legível ou texto copiado, recortado ao trecho que importa. Tela inteira não é evidência, é ruído.</Ponto>
+  <Ponto marca="3">**O que ela mostra**, com as palavras da equipe.</Ponto>
+  <Ponto marca="4">**O conceito** que explica o que foi visto, com a fonte citada: livro e seção ou página. Citar é dizer de onde veio a ideia, não copiar o parágrafo.</Ponto>
+</Lista>
+
+</Secao>
+
+<Exemplos titulo="Evidência fraca × forte">
+  <Exemplo tipo="fraca" rotulo="Evidência fraca">
+
+  "Rodamos `ps aux` e apareceram vários processos. Processo é um programa em execução (Tanenbaum)."
+
+  </Exemplo>
+  <Exemplo tipo="forte" rotulo="Evidência forte">
+
+  "`ps aux | wc -l` devolveu 187 linhas, com a VM recém-ligada e só um terminal aberto: a máquina
+  já tinha cerca de 186 processos antes de rodarmos qualquer coisa. No `ps -ef --forest`, o nosso
+  `bash` descende do `systemd`, o PID 1. Isso ilustra a diferença entre programa, o arquivo em disco, e
+  processo, a execução com estado próprio (Tanenbaum, 2.1)."
+
+  </Exemplo>
+</Exemplos>
+
+<Secao sobretitulo="Entrega final" titulo="O container Raio-X">
+
+<Intro>
+
+A versão final inclui um container da equipe que faz o raio-x **de dentro**. É ele que sobe ao vivo
+na defesa, e é o ciclo que o ensaio do Encontro 7 treina. O ponto de partida mínimo:
+
+</Intro>
+
+<Arquivo nome="raio-x.sh">{`#!/bin/sh
+echo "== Raio-X visto de dentro =="
+echo "Hostname: $(hostname)"
+echo "Kernel:   $(uname -r)"
+echo "Meu PID:  $$"
+echo
+echo "== Processos que eu enxergo =="
+ps
+echo
+echo "== Memória que eu enxergo =="
+free -m`}</Arquivo>
+
+<Arquivo nome="Dockerfile">{`FROM alpine:3.20
+COPY raio-x.sh /raio-x.sh
+RUN chmod +x /raio-x.sh
+CMD ["/raio-x.sh"]`}</Arquivo>
+
+<Terminal>{`$ docker build -t raio-x-equipe .
+$ docker run --rm raio-x-equipe
+$ sh raio-x.sh`}</Terminal>
+
+<Intro>
+
+A demonstração compara as duas saídas, a do container e a da VM, e explica cada diferença: por que
+o kernel é o mesmo, e por que o hostname e os PIDs mudam. A equipe pode e deve ir além do mínimo.
+
+</Intro>
+
+<Dica titulo="Desafio: a memória que o container enxerga">
+
+Rode o container com `--memory 64m` e compare a saída do `free -m` com a de antes. O número muda? Se
+não muda, por que o limite continua valendo mesmo assim? A resposta aparece por inteiro no
+Encontro 10, mas quem investigar agora chega à defesa com uma ótima pergunta para responder.
+
+</Dica>
+
+</Secao>
+
+<Secao sobretitulo="Forma" titulo="Formato do relatório">
+
+<Lista>
+  <Ponto marca="•">**PDF de até 15 MB.** Se passar, reduza a resolução dos prints ou recorte-os melhor.</Ponto>
+  <Ponto marca="•">**Capa:** nome da equipe, nome e matrícula dos integrantes, e de quem é a VM investigada.</Ponto>
+  <Ponto marca="•">**Tamanho:** não há mínimo. Como referência, uma versão final completa costuma ficar entre 6 e 10 páginas.</Ponto>
+  <Ponto marca="•">**Texto da equipe.** Conceito de livro entra citado e explicado com as palavras de vocês, nunca copiado.</Ponto>
+</Lista>
+
+</Secao>
+
+<Secao sobretitulo="Dúvidas comuns" titulo="Perguntas frequentes">
+
+<Painel titulo="Cada integrante precisa ter a própria VM?">
+
+Não. As evidências saem de uma VM só. Mas todos precisam saber rodar e explicar os comandos: na
+defesa, a pergunta pode ir para qualquer integrante.
+
+</Painel>
+
+<Painel titulo="Posso usar as observações que escrevi nos quizzes?">
+
+Sim, elas são suas. No relatório, porém, as saídas precisam ser da VM da equipe: refaçam os
+comandos nela.
+
+</Painel>
+
+<Painel titulo="A parcial conta nota?">
+
+Conta: é a N1 da etapa. Também serve de checkpoint. O que o professor apontar na devolutiva precisa
+aparecer corrigido na versão final.
+
+</Painel>
+
+<Painel titulo="E se a equipe perder o prazo?">
+
+O formulário continua aceitando o envio, mas ele fica marcado como atrasado. Como o atraso será
+tratado é decisão do professor.
+
+</Painel>
+
+</Secao>

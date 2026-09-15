@@ -23,6 +23,12 @@ export function Rodape() {
             código-fonte no GitHub ↗
             <span className="sr-only"> (abre em nova aba)</span>
           </a>
+          <Link
+            href="/professor"
+            className="mt-1 block font-mono text-xs text-ink-faint hover:text-primary"
+          >
+            área do professor
+          </Link>
         </div>
 
         <nav aria-label="Seções do portal">

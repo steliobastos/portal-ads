@@ -37,6 +37,29 @@ export function dataExtensa(iso: string): string {
   return `${d.getDate()} de ${MESES[d.getMonth()]} de ${d.getFullYear()}`;
 }
 
+/**
+ * "24/09 às 23:59", no horário do campus, para instantes com fuso (prazos,
+ * envios). O servidor da Vercel roda em UTC e o navegador pode estar em
+ * qualquer lugar: o fuso é fixado, não herdado de quem renderiza.
+ */
+export function momentoCampus(iso: string, comDiaDaSemana = false): string {
+  const d = new Date(iso);
+  const partes = new Intl.DateTimeFormat("pt-BR", {
+    timeZone: "America/Fortaleza",
+    weekday: comDiaDaSemana ? "long" : undefined,
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).formatToParts(d);
+  const v = (tipo: string) => partes.find((p) => p.type === tipo)?.value ?? "";
+  const semana = comDiaDaSemana ? `${v("weekday")}, ` : "";
+  return `${semana}${v("day")}/${v("month")} às ${v("hour")}:${v("minute")}`;
+}
+
+/** Tamanho máximo do PDF de relatório — o mesmo configurado no bucket do Supabase. */
+export const LIMITE_PDF_BYTES = 15 * 1024 * 1024;
+
 export type SituacaoEncontro = "concluido" | "proximo" | "futuro";
 
 /**
