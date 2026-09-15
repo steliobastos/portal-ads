@@ -36,7 +36,7 @@ Os passos 4 e 5 de hoje são justamente o ensaio desse momento — quanto mais s
     </Caixa>
   </Explica>
 
-  <Terminal>{`#!/bin/bash
+  <Arquivo nome="contador_concorrente.sh">{`#!/bin/bash
 echo 0 > saldo.txt
 
 incrementa() {
@@ -51,10 +51,10 @@ incrementa &
 incrementa &
 wait
 
-echo "Resultado esperado: 1000 | Resultado obtido: $(cat saldo.txt)"`}</Terminal>
+echo "Resultado esperado: 1000 | Resultado obtido: $(cat saldo.txt)"`}</Arquivo>
 
   <Esperar>
-    cole esse conteúdo no `nano`, salve (`Ctrl+O`, Enter, `Ctrl+X`) e rode `chmod +x contador_concorrente.sh` antes do próximo passo. As linhas em destaque são a região crítica — guarde isso pro passo 3.
+    cole esse conteúdo no `nano`, salve (`Ctrl+O`, Enter, `Ctrl+X`) e rode `chmod +x contador_concorrente.sh` antes do próximo passo. Repare nas três linhas dentro do `for` — `valor=$(cat saldo.txt)`, `valor=$((valor + 1))` e `echo $valor > saldo.txt`: elas são a região crítica, e voltam no passo 3.
   </Esperar>
 
   <Dica titulo="Não tenho o nano instalado, e agora?">
@@ -89,13 +89,19 @@ echo "Resultado esperado: 1000 | Resultado obtido: $(cat saldo.txt)"`}</Terminal
   <Terminal>{`$ ./contador_concorrente.sh
 Resultado esperado: 1000 | Resultado obtido: 742
 $ ./contador_concorrente.sh
-Resultado esperado: 1000 | Resultado obtido: 1000
+Resultado esperado: 1000 | Resultado obtido: 311
 $ ./contador_concorrente.sh
 Resultado esperado: 1000 | Resultado obtido: 861`}</Terminal>
 
   <Esperar>
-    resultados diferentes a cada execução, quase sempre abaixo de 1000 — algumas atualizações foram "perdidas" porque os dois processos leram o mesmo valor antigo de `saldo.txt` antes de qualquer um gravar de volta.
+    resultados diferentes a cada execução, quase sempre abaixo de 1000 — algumas atualizações foram "perdidas" porque os dois processos leram o mesmo valor antigo de `saldo.txt` antes de qualquer um gravar de volta. Os seus números não vão bater com os do exemplo, e isso é justamente o ponto.
   </Esperar>
+
+  <Dica titulo="Deu um número muito baixo, tipo 40. O script quebrou?">
+
+  Não: é uma segunda corrida escondida na mesma região crítica. O `>` do `echo $valor > saldo.txt` **esvazia** o arquivo antes de escrever o número. Se o outro processo faz o `cat` exatamente nesse instante, lê um arquivo vazio; o bash trata vazio como zero, e o saldo volta para 1. É o mesmo bug, com um estrago maior.
+
+  </Dica>
 
   <Dica titulo="Meu resultado deu sempre 1000, não vejo o bug">
 
@@ -120,7 +126,7 @@ Resultado esperado: 1000 | Resultado obtido: 861`}</Terminal>
   <Explica>
     <Caixa titulo="O que é">
 
-    As três linhas destacadas em vermelho no passo 1: ler o saldo, calcular o novo valor, gravar de volta.
+    As três linhas dentro do `for` no passo 1: ler o saldo (`cat`), calcular o novo valor (`$((valor + 1))`), gravar de volta (`echo ... >`).
 
     </Caixa>
     <Caixa titulo="Por que importa">
