@@ -55,7 +55,7 @@ export const AVALIACOES: Avaliacao[] = [
     nota: "N1",
     etapa: 1,
     // A data é a do prazo de envio; as equipes se formam no Encontro 6.
-    data: "2026-09-24",
+    data: "2026-09-25",
     encontro: 6,
     instrumento: "Raio-X parcial (seções 1 a 4), em equipe, enviado pelo portal",
   },

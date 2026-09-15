@@ -53,7 +53,7 @@ export const REGRAS_NOTA: RegrasNota = {
       fase: "parcial",
       nome: "Raio-X parcial",
       secoes: "seções 1 a 4",
-      prazo: "2026-09-24T23:59:59-03:00",
+      prazo: "2026-09-25T23:59:59-03:00",
     },
     {
       etapa: 1,
@@ -63,6 +63,19 @@ export const REGRAS_NOTA: RegrasNota = {
       prazo: "2026-10-01T23:59:59-03:00",
     },
   ],
+
+  // ROD do IFCE, arts. 97 a 100 — cursos de graduação em regime de créditos.
+  mediaFinal: {
+    pesos: [2, 3],
+    aprovacao: 7,
+    minimoParaFinal: 3,
+    aprovacaoAposFinal: 5,
+    frequenciaMinima: 75,
+    fonte: {
+      titulo: "Regulamento da Organização Didática (ROD) do IFCE, arts. 97 a 100",
+      url: "https://portal.ifce.edu.br/documents/3261/ROD_atualizado.pdf",
+    },
+  },
 
   rubricas: [
     {

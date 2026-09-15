@@ -223,6 +223,8 @@ O endereço absoluto alimenta o `metadataBase` (prévia do link em WhatsApp e Cl
 
 ## Material do professor
 
-Roteiros de condução, checklists e rubricas de correção **não** são publicados aqui: ficam na
-pasta de trabalho da disciplina. Quando a autenticação existir (fase 3), passam a viver numa área
-restrita.
+Roteiros de condução, checklists e rubricas ficam em `curso/`, **fora do git**: o repositório é
+público. Por isso não entram no build. `npm run professor:publicar`, rodado só na máquina do
+professor (usa o `.env.local`), espelha `curso/**/*.md` num bucket **privado** do Supabase. A aba
+Roteiros de `/professor` lê de lá, com sessão conferida. Editou um roteiro? Rode o script de novo;
+não precisa de deploy.

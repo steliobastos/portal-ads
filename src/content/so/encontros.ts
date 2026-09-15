@@ -212,7 +212,7 @@ export const ENCONTROS: Encontro[] = [
       nota: "N1",
       etapa: 1,
       instrumento:
-        "Formação das equipes do Raio-X. A entrega parcial (seções 1 a 4) é enviada pelo portal até a quinta-feira seguinte.",
+        "Formação das equipes do Raio-X. A entrega parcial (seções 1 a 4) é enviada pelo portal até a sexta-feira seguinte.",
       projeto: true,
     },
     leituras: [

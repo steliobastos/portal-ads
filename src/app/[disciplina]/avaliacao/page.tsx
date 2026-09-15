@@ -40,7 +40,7 @@ export default async function PaginaAvaliacao({ params }: Props) {
   if (!conteudo) notFound();
 
   const { regrasNota } = conteudo;
-  const { portfolio } = regrasNota;
+  const { portfolio, mediaFinal } = regrasNota;
   const comEnunciado = await Promise.all(PROJETO.map((p) => carregarProjeto(slug, p.etapa)));
 
   return (
@@ -114,6 +114,59 @@ export default async function PaginaAvaliacao({ params }: Props) {
           <span className="font-medium text-ink">Exemplo, 1ª etapa:</span> portfólio 9,2, Raio-X
           parcial 7,0 e Raio-X final 8,0 dão{" "}
           <span className="font-mono">0,2 × 9,2 + 0,2 × 7,0 + 0,6 × 8,0 = 8,0</span>.
+        </p>
+      </section>
+
+      <section id="media-final" className="scroll-mt-24">
+        <TituloSecao
+          sobretitulo="Regra do IFCE"
+          descricao="As duas notas de etapa viram a média da disciplina pela regra do regulamento institucional, que vale para todas as disciplinas de graduação."
+        >
+          Da nota das etapas à aprovação
+        </TituloSecao>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Cartao>
+            <p className="font-mono text-xs tracking-wide text-ink-faint uppercase">Média parcial</p>
+            <p className="mt-2 font-mono text-lg text-ink">
+              MP = ({mediaFinal.pesos[0]} × 1ª etapa + {mediaFinal.pesos[1]} × 2ª etapa) ÷{" "}
+              {mediaFinal.pesos[0] + mediaFinal.pesos[1]}
+            </p>
+            <p className="mt-2 text-sm text-ink-dim">A 2ª etapa pesa mais.</p>
+          </Cartao>
+          <Cartao>
+            <p className="font-mono text-xs tracking-wide text-ink-faint uppercase">Aprovação direta</p>
+            <p className="mt-2 text-lg text-ink">
+              MP ≥ {decimal(mediaFinal.aprovacao)} e frequência ≥ {mediaFinal.frequenciaMinima}%
+            </p>
+            <p className="mt-2 text-sm text-ink-dim">Nesse caso, a média final é a própria MP.</p>
+          </Cartao>
+          <Cartao>
+            <p className="font-mono text-xs tracking-wide text-ink-faint uppercase">Avaliação final</p>
+            <p className="mt-2 text-lg text-ink">
+              Se {decimal(mediaFinal.minimoParaFinal)} ≤ MP &lt; {decimal(mediaFinal.aprovacao)}
+            </p>
+            <p className="mt-2 text-sm text-ink-dim">
+              A média final passa a ser (MP + AF) ÷ 2, e aprova com{" "}
+              {decimal(mediaFinal.aprovacaoAposFinal)} ou mais. Abaixo de{" "}
+              {decimal(mediaFinal.minimoParaFinal)}, não há avaliação final.
+            </p>
+          </Cartao>
+        </div>
+        <p className="mt-4 max-w-3xl text-sm text-ink-dim">
+          <span className="font-medium text-ink">Atenção aos nomes:</span> no regulamento e no
+          sistema acadêmico, “N1” e “N2” são as notas da 1ª e da 2ª etapa. Nesta disciplina, N1 e N2
+          também nomeiam os dois momentos de avaliação <em>dentro</em> de cada etapa — e a nota que
+          vai para o sistema é a composição mostrada acima. Fonte:{" "}
+          <a
+            href={mediaFinal.fonte.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary hover:underline"
+          >
+            {mediaFinal.fonte.titulo}
+            <span className="sr-only"> (abre em nova aba)</span>
+          </a>
+          .
         </p>
       </section>
 

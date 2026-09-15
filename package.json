@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "material:indexar": "node scripts/indexar-materiais.mjs",
     "material:voltar": "node scripts/injetar-volta-ao-portal.mjs",
-    "material:preparar": "npm run material:voltar && npm run material:indexar"
+    "material:preparar": "npm run material:voltar && npm run material:indexar",
+    "professor:publicar": "node --env-file=.env.local scripts/publicar-professor.mjs"
   },
   "dependencies": {
     "@mdx-js/loader": "^3.1.1",
@@ -21,6 +22,7 @@
     "next": "^15.5.25",
     "react": "19.1.0",
     "react-dom": "19.1.0",
+    "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
     "server-only": "^0.0.1",
     "zod": "^4.6.5"

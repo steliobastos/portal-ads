@@ -28,7 +28,7 @@ export const AVISOS: Aviso[] = [
     data: "2026-09-15",
     titulo: "Raio-X: o enunciado do projeto da 1ª etapa está no ar",
     texto:
-      "As equipes se formam no Encontro 6. A entrega parcial (seções 1 a 4) vale como N1 e é enviada em PDF pelo portal até 24/09, às 23:59. Os prazos, os critérios e o formulário de envio estão na página do projeto.",
+      "As equipes se formam no Encontro 6. A entrega parcial (seções 1 a 4) vale como N1 e é enviada em PDF pelo portal até sexta, 25/09, às 23:59. Os prazos, os critérios e o formulário de envio estão na página do projeto.",
     etiqueta: "Avaliação",
     disciplina: "so",
     href: "/so/projeto/1",

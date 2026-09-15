@@ -97,6 +97,19 @@ export type RegrasNota = {
     prazosEspeciais: { encontros: number[]; prazo: string }[];
   };
   entregas: { etapa: 1 | 2; fase: FaseEntrega; nome: string; secoes: string; prazo: string }[];
+  /** Como as notas das duas etapas viram média final — regra institucional, não do professor. */
+  mediaFinal: {
+    /** Pesos da 1ª e da 2ª etapa na média parcial. */
+    pesos: [number, number];
+    /** Média parcial que aprova direto, sem avaliação final. */
+    aprovacao: number;
+    /** Abaixo disso, reprova sem direito à avaliação final. */
+    minimoParaFinal: number;
+    /** Média final mínima depois da avaliação final: (MP + AF) ÷ 2. */
+    aprovacaoAposFinal: number;
+    frequenciaMinima: number;
+    fonte: { titulo: string; url: string };
+  };
   rubricas: { nota: string; titulo: string; criterios: { nome: string; peso: number }[] }[];
 };
 
