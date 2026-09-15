@@ -308,7 +308,7 @@
       <tr><td>lsblk</td><td class="hl">Quais discos e partições existem, e onde estão montados?</td></tr>
       <tr><td>df -h</td><td class="hl">Quanto espaço resta em cada sistema de arquivos montado?</td></tr>
       <tr><td>du -sh</td><td class="hl">Quem está ocupando o espaço dentro de um diretório?</td></tr>
-      <tr><td>iostat -x</td><td class="hl">O disco está sendo o gargalo agora? (colunas <code>%util</code> e <code>await</code>)</td></tr>
+      <tr><td>iostat -x</td><td class="hl">O disco está sendo o gargalo agora? (colunas <code>%util</code>, <code>r_await</code> e <code>w_await</code>)</td></tr>
     </table>
     <p class="lead fragment d1" style="margin-top:18px;font-size:14.5px;">A dupla <code>df</code> + <code>du</code> resolve o incidente mais comum de sustentação: <b>"o disco encheu"</b>.</p>
   </div>
@@ -479,12 +479,12 @@
     ['$ lsblk', 'prompt'],
     ['NAME   SIZE TYPE MOUNTPOINT', 'sys'],
     ['sda     25G disk', 'ok'],
-    ['|-sda1  24G part /', 'ok'],
+    ['└─sda2  25G part /', 'ok'],
     ['$ df -h /', 'prompt'],
-    ['/dev/sda1   24G  8.1G   15G  36% /', 'sys'],
+    ['/dev/sda2   25G  8.1G   16G  35% /', 'sys'],
     ['$ iostat -x 1 2', 'prompt'],
-    ['Device  r/s   w/s  %util  await', 'sys'],
-    ['sda    0.42  3.18   1.20   4.83', 'ok'],
+    ['Device  r/s   w/s  w_await  %util', 'sys'],
+    ['sda    0.42  3.18     4.83   1.20', 'ok'],
   ];
   const ioBody = document.getElementById('ioBody');
   let demoStarted = false;

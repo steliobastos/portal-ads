@@ -29,14 +29,16 @@ Hoje você mapeia os discos da máquina, aprende a dupla de comandos que resolve
   </Explica>
 
   <Terminal>{`$ lsblk
-NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
-sda      8:0     0   25G  0 disk
-|-sda1   8:1     0   24G  0 part /
-\`-sda2   8:2     0    1G  0 part [SWAP]
-sr0     11:0     1 1024M  0 rom`}</Terminal>
+NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
+loop0    7:0    0    74M  1 loop /snap/core22/1564
+loop1    7:1    0   505M  1 loop /snap/gnome-42-2204/176
+sda      8:0    0    25G  0 disk
+├─sda1   8:1    0     1M  0 part
+└─sda2   8:2    0    25G  0 part /
+sr0     11:0    1  1024M  0 rom`}</Terminal>
 
   <Esperar>
-    o disco da sua VM (provavelmente `sda`, ~25G conforme configurado na Semana 0), dividido em partições. Repare que a partição de swap aparece aqui — é o mesmo swap dos Encontros 9 e 10, agora visto como estrutura de disco.
+    o disco da sua VM (provavelmente `sda`, ~25G conforme configurado na Semana 0), com uma partição grande montada em `/`. As linhas `loop` no topo são os pacotes **snap**, cada um um arquivo montado como se fosse um disco — mais um exemplo de "tudo é arquivo". E o swap dos Encontros 9 e 10 **não** aparece: no Ubuntu 24.04 ele é um arquivo (`/swap.img`) dentro da partição `/`, não uma partição própria.
   </Esperar>
 
 </Comando>
@@ -64,7 +66,7 @@ sr0     11:0     1 1024M  0 rom`}</Terminal>
 
   <Terminal>{`$ df -h
 Filesystem      Size  Used Avail Use% Mounted on
-/dev/sda1        24G  8.1G   15G  36% /
+/dev/sda2        25G  8.1G   16G  35% /
 tmpfs           1.9G     0  1.9G   0% /dev/shm`}</Terminal>
 
   <Esperar>
@@ -165,7 +167,7 @@ brw-rw---- 1 root disk 8, 0 /dev/sda`}</Terminal>
   <Explica>
     <Caixa titulo="O que é">
 
-    Estatísticas estendidas de E/S, 3 amostras de 1 segundo. As colunas-chave são `%util` (o quanto o disco está ocupado) e `await` (tempo médio de espera por operação, em ms).
+    Estatísticas estendidas de E/S, 3 amostras de 1 segundo. As colunas-chave são `%util` (o quanto do tempo o disco teve trabalho em andamento) e `r_await`/`w_await` (tempo médio de cada leitura/escrita, em ms, contando a espera na fila). A primeira amostra é a média desde que a VM ligou; olhe as seguintes.
 
     </Caixa>
     <Caixa titulo="Por que importa">
@@ -176,11 +178,11 @@ brw-rw---- 1 root disk 8, 0 /dev/sda`}</Terminal>
   </Explica>
 
   <Terminal>{`$ iostat -x 1 3
-Device   r/s    w/s   rkB/s   wkB/s  await  %util
-sda     0.42   3.18   18.60  126.40   4.83   1.20`}</Terminal>
+Device     r/s   rkB/s  r_await    w/s   wkB/s  w_await  aqu-sz  %util
+sda       0.42   18.60     0.61   3.18  126.40     4.83    0.02   1.20`}</Terminal>
 
   <Esperar>
-    `%util` baixo numa VM ociosa. Para ver o número subir, abra outro terminal e rode `dd if=/dev/zero of=teste bs=1M count=500; sync` enquanto o `iostat` roda — e depois apague o arquivo com `rm teste`.
+    `%util` baixo numa VM ociosa (a saída real tem mais colunas; procure estas). Para ver o número subir, abra outro terminal e rode `dd if=/dev/zero of=teste bs=1M count=500 oflag=direct` enquanto o `iostat` roda — e depois apague o arquivo com `rm teste`.
   </Esperar>
 
   <Dica titulo="iostat: comando não encontrado">
