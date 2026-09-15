@@ -788,7 +788,7 @@ export const QUIZZES: Quiz[] = [
           "Porque caminhos absolutos consomem menos memória durante a execução"
         ],
         "correta": 2,
-        "justificativa": "O cron executa num ambiente enxuto, com variáveis e diretório de trabalho diferentes dos de uma sessão interativa. Por isso o til (~) e caminhos relativos podem não apontar para onde o autor imagina — é a causa nº 1 de tarefas agendadas que silenciosamente não funcionam."
+        "justificativa": "O cron executa num ambiente enxuto: o PATH tem poucos diretórios, o .bashrc não é carregado e o diretório de trabalho é a pasta pessoal, não a pasta onde o script está. Um caminho relativo passa a apontar para outro lugar, e um comando fora do PATH reduzido não é encontrado — a causa nº 1 de tarefas agendadas que silenciosamente não funcionam."
       },
       {
         "enunciado": "Por que rodar scripts de automação com o máximo de privilégio (como root) \"porque é mais fácil\" é considerado prática de risco?",
@@ -799,7 +799,7 @@ export const QUIZZES: Quiz[] = [
           "Porque um erro no script — como um rm -rf com variável vazia — passa a ter poder de destruir o sistema inteiro, em vez de falhar de forma limitada"
         ],
         "correta": 3,
-        "justificativa": "O princípio do menor privilégio limita o estrago de um erro. Um rm -rf \"$DIR\"/ com $DIR vazio apaga a raiz quando executado como root — e é exatamente por isso que as regras de usar aspas e validar variáveis antes de agir não são preciosismo, e sim proteção."
+        "justificativa": "O princípio do menor privilégio limita o estrago de um erro. Um rm -rf \"$DIR\"/* com $DIR vazio vira rm -rf /* e, executado como root, apaga o conteúdo da raiz — como usuário comum, falharia na maior parte dos arquivos. É por isso que usar aspas, validar variáveis (set -u) e dar o mínimo de privilégio não são preciosismo, e sim proteção."
       }
     ],
     "observacoes": [
@@ -808,7 +808,7 @@ export const QUIZZES: Quiz[] = [
         "minimo": 40
       },
       {
-        "enunciado": "Por que o cron exige caminho absoluto? O que aconteceria se você usasse ~/backup.sh no agendamento?",
+        "enunciado": "Por que um script que funciona no terminal pode falhar quando roda pelo cron? Cite duas diferenças do ambiente do cron e como você se protegeu delas.",
         "minimo": 40
       },
       {

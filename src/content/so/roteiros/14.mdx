@@ -110,13 +110,20 @@ conteudo valioso
 $ rm -rf ~/dados_importantes
 $ ls ~/dados_importantes
 ls: não foi possível acessar: Arquivo ou diretório inexistente
-$ tar -xzf ~/backups/backup_*.tar.gz -C ~/
+$ ULTIMO=$(ls -t ~/backups/backup_*.tar.gz | head -1)
+$ tar -xzf "$ULTIMO" -C ~/
 $ cat ~/dados_importantes/arquivo1.txt
 conteudo valioso`}</Terminal>
 
   <Esperar>
     o conteúdo volta exatamente como estava. Se não voltar, seu backup tem um problema — e é **muito** melhor descobrir isso agora, num diretório de teste, do que em produção.
   </Esperar>
+
+  <Dica titulo="Por que o ULTIMO=$(ls -t ... | head -1)?">
+
+  Se você rodou o backup mais de uma vez, `backup_*.tar.gz` casa com **vários** arquivos. O `tar -xzf` trataria o segundo nome como algo a procurar **dentro** do primeiro, e falharia com um erro confuso. O `ls -t` ordena do mais novo para o mais antigo e o `head -1` fica só com o mais recente — que é o que se restaura num incidente.
+
+  </Dica>
 
   <Dica titulo="Estou com medo de apagar algo importante">
 
@@ -161,9 +168,15 @@ conteudo valioso`}</Terminal>
     use `*/2` hoje para não esperar até de madrugada. **Troque `SEU_USUARIO` pelo seu nome de usuário real** — descubra com `whoami`. Salve e confirme com `crontab -l`.
   </Esperar>
 
-  <Dica titulo="Por que caminho absoluto e não ~/backup.sh?">
+  <Dica titulo="Por que caminho absoluto?">
 
-  O cron roda num ambiente reduzido, sem as variáveis do seu shell interativo — o `~` pode não ser expandido como você espera. **Sempre use caminhos absolutos no cron.** Esse é o erro nº 1 de quem começa a agendar tarefas: "funciona no terminal mas não no cron", e a causa é quase sempre caminho relativo.
+  O cron roda num ambiente **reduzido**, bem diferente do seu terminal: o `PATH` tem só alguns diretórios, o seu `.bashrc` não é carregado, e o diretório de trabalho é a sua pasta pessoal — não a pasta onde o script está. Um caminho relativo passa a apontar para outro lugar, e um comando fora do `PATH` reduzido não é encontrado. **Sempre use caminhos absolutos no cron e dentro dos scripts agendados.** É a origem do erro nº 1 de quem começa a agendar tarefas: "funciona no terminal mas não no cron".
+
+  </Dica>
+
+  <Dica titulo="Cuidado com o % na linha do crontab">
+
+  No crontab, o `%` tem significado especial (quebra de linha). Uma linha como `0 3 * * * tar -czf /backups/b_$(date +%F).tar.gz ...` **não funciona**. Deixe o `date` dentro do script, como no `backup.sh`, ou escreva `\%` na linha do crontab.
 
   </Dica>
 
@@ -200,7 +213,7 @@ conteudo valioso`}</Terminal>
 
   <Dica titulo="O log não recebeu nenhuma linha nova">
 
-  Verifique nesta ordem: (1) o caminho no crontab está absoluto e correto? (2) o script tem `chmod +x`? (3) o serviço cron está ativo (`systemctl status cron`)? (4) rodou o script manualmente e funcionou? Se funciona manualmente mas não pelo cron, é quase certo que seja caminho relativo em algum ponto do script.
+  Verifique nesta ordem: (1) o caminho no crontab está absoluto e correto? (2) o script tem `chmod +x`? (3) o serviço cron está ativo (`systemctl status cron`)? (4) rodou o script manualmente e funcionou? (5) o cron tentou rodar? Veja com `grep CRON /var/log/syslog | tail`. Se funciona manualmente mas não pelo cron, a causa quase sempre é o ambiente reduzido: caminho relativo ou comando fora do `PATH` dentro do script.
 
   </Dica>
 
@@ -210,8 +223,8 @@ conteudo valioso`}</Terminal>
 
 </Comando>
 
-<Rascunho encontro={14} numero={2} exemplo="Ex: o cron roda num ambiente reduzido, então...">
-  por que o cron exige caminho absoluto? O que aconteceria se você usasse ~/backup.sh no agendamento?
+<Rascunho encontro={14} numero={2} exemplo="Ex: o cron roda num ambiente reduzido, com um PATH menor e...">
+  por que um script que funciona no terminal pode falhar quando roda pelo cron? Cite duas diferenças do ambiente do cron e como você se protegeu delas.
 </Rascunho>
 
 </Passo>

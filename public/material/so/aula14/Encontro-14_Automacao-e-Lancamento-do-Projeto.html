@@ -292,7 +292,7 @@
         <p>Menor privilégio necessário; caminhos absolutos no cron; validar variáveis antes de usá-las em <code>rm</code>; testar em ambiente descartável.</p>
       </div>
     </div>
-    <p class="lead fragment" style="margin-top:18px;font-size:14.5px;">O clássico <code>rm -rf "$DIR"/</code> com <code>$DIR</code> vazio apaga a raiz. Por isso a regra das aspas e da validação, do Encontro 13, não é preciosismo.</p>
+    <p class="lead fragment" style="margin-top:18px;font-size:14.5px;">O clássico <code>rm -rf "$DIR"/*</code> com <code>$DIR</code> vazio vira <code>rm -rf /*</code> e apaga tudo o que houver na raiz. Por isso a regra das aspas e da validação, do Encontro 13, não é preciosismo.</p>
   </div>
 </section>
 
