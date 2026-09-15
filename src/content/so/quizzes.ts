@@ -489,7 +489,7 @@ export const QUIZZES: Quiz[] = [
           "O processo foi morto pelo OOM Killer por ultrapassar o limite de memória disponível"
         ],
         "correta": 3,
-        "justificativa": "O código de saída 137 é a assinatura clássica de morte por OOM (o processo recebeu SIGKILL). Quando o container tem um limite de memória definido e o ultrapassa, o kernel o mata imediatamente — sem aviso e sem chance de salvar estado."
+        "justificativa": "137 é 128 + 9: o processo recebeu SIGKILL, o sinal que o OOM Killer usa. Entre as alternativas, é a única que produz esse código. Quando o container ultrapassa o limite de memória, o kernel o mata na hora, sem chance de salvar estado. Para ter certeza (um docker kill também dá 137), confira docker inspect: OOMKilled precisa ser true."
       }
     ],
     "observacoes": [
@@ -521,7 +521,7 @@ export const QUIZZES: Quiz[] = [
     ],
     "perguntas": [
       {
-        "enunciado": "Um servidor está com a CPU em 15%, o disco aparentemente calmo, e mesmo assim está extremamente lento. Qual diagnóstico é mais provável?",
+        "enunciado": "Um servidor está com a CPU em 15%, a aplicação quase não lê nem grava arquivos, e mesmo assim está extremamente lento. Qual diagnóstico é mais provável?",
         "alternativas": [
           "A CPU está superdimensionada e precisa ser reduzida",
           "Thrashing: falta RAM, e o sistema passa a maior parte do tempo trocando páginas entre memória e disco em vez de trabalhar",
@@ -529,7 +529,7 @@ export const QUIZZES: Quiz[] = [
           "É necessário desligar o swap para melhorar o desempenho"
         ],
         "correta": 1,
-        "justificativa": "CPU baixa não significa máquina ociosa — ela pode estar esperando disco. No thrashing, o SO expulsa páginas que serão pedidas de volta logo em seguida, criando um ciclo de page faults que consome o tempo do sistema sem produzir trabalho útil."
+        "justificativa": "CPU baixa não significa máquina ociosa — ela pode estar esperando disco. No thrashing, o SO expulsa páginas que serão pedidas de volta logo em seguida, criando um ciclo de page faults que consome o tempo do sistema sem produzir trabalho útil. O disco trabalha muito, mas com swap, não com os arquivos da aplicação — por isso quem olha só a aplicação não vê."
       },
       {
         "enunciado": "O que é um page fault, segundo a leitura?",

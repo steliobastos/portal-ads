@@ -141,7 +141,7 @@ procs -------memory------- ---swap--
 
   <Terminal>{`$ swapon --show && free -h | grep -i swap
 NAME      TYPE  SIZE  USED  PRIO
-/swapfile file  2.0G    0B   -2
+/swap.img file  2.0G    0B   -2
 Swap:     2.0Gi   0B  2.0Gi`}</Terminal>
 
   <Esperar>
@@ -163,7 +163,7 @@ Swap:     2.0Gi   0B  2.0Gi`}</Terminal>
   <Explica>
     <Caixa titulo="O que é">
 
-    O mesmo container, executado quatro vezes, com `--memory` cada vez menor: 256m → 128m → 64m → 32m.
+    O mesmo container, executado quatro vezes, com `--memory` cada vez menor: 256m → 128m → 64m → 32m. A carga é sempre a mesma: gravar 100 MB numa pasta `--tmpfs`, que vive **na RAM**. Gravar ali é ocupar memória do container, de forma previsível.
 
     </Caixa>
     <Caixa titulo="Por que importa">
@@ -175,31 +175,38 @@ Swap:     2.0Gi   0B  2.0Gi`}</Terminal>
 
   <Terminal>{`$ for M in 256m 128m 64m 32m; do
     echo "--- testando $M ---"
-    docker run --rm --memory=$M alpine sh -c "head -c 40m /dev/zero | wc -c" \\
+    docker run --rm --memory=$M --memory-swap=$M --tmpfs /dados:size=512m alpine \\
+      sh -c "head -c 100m /dev/zero > /dados/carga" \\
       && echo "OK em $M" || echo "FALHOU em $M"
   done
 --- testando 256m ---
-41943040
 OK em 256m
+--- testando 128m ---
+OK em 128m
 --- testando 64m ---
-41943040
-OK em 64m
+FALHOU em 64m
 --- testando 32m ---
 FALHOU em 32m`}</Terminal>
 
   <Esperar>
-    sucesso nos limites maiores e falha em algum ponto conforme aperta. **Anote o menor valor que ainda funcionou** — esse é o limite mínimo viável para essa carga.
+    sucesso nos limites maiores e falha em algum ponto conforme aperta. **Anote o menor valor que ainda funcionou** — esse é o limite mínimo viável para essa carga. Pode aparecer uma mensagem de erro de escrita ou nenhuma mensagem antes do "FALHOU": nos dois casos, o limite venceu.
   </Esperar>
+
+  <Dica titulo="Por que não usar só head -c 100m /dev/zero | wc -c?">
+
+  Porque não ocuparia memória nenhuma: os dados passam pelo pipe em pedaços pequenos e o `wc` só conta. O container passaria em qualquer limite. Para medir memória, a carga precisa **guardar** os dados — por isso o `tmpfs`.
+
+  </Dica>
 
   <Dica titulo="Funcionou em todos os valores, até 32m">
 
-  Sua carga é leve demais pra pressionar o limite. Aumente o consumo: troque `head -c 40m` por `head -c 100m` e rode de novo.
+  Confira se o `--memory-swap=$M` está no comando: sem ele, o container empurra o excesso para o swap em vez de falhar. Se estiver, aumente a carga para `head -c 200m` e rode de novo.
 
   </Dica>
 
 </Comando>
 
-<Rascunho encontro={10} numero={2} exemplo="Ex: funcionou até 64m e falhou em 32m; usar exatamente 64m seria arriscado porque...">
+<Rascunho encontro={10} numero={2} exemplo="Ex: funcionou até 128m e falhou em 64m; usar exatamente 128m seria arriscado porque...">
   qual foi o menor limite de memória em que o container ainda funcionou? Por que não seria prudente usar exatamente esse valor em produção?
 </Rascunho>
 
@@ -275,7 +282,7 @@ dimensionado   0.00%   1.1MiB / 128MiB      0.86%`}</Terminal>
   </Exemplo>
   <Exemplo tipo="forte">
 
-  "O menor limite viável foi 64m — abaixo disso o container foi morto por OOM. Mas usar exatamente 64m em produção seria arriscado: qualquer variação de carga, atualização de dependência ou pico de requisições ultrapassaria o teto e derrubaria o serviço. O sensato é deixar uma folga sobre o mínimo medido, justamente porque o valor foi obtido numa carga controlada e previsível, diferente do mundo real."
+  "O menor limite viável foi 128m — abaixo disso a carga de 100 MB não coube e o container falhou. Mas usar exatamente 128m em produção seria arriscado: qualquer variação de carga, atualização de dependência ou pico de requisições ultrapassaria o teto e derrubaria o serviço. O sensato é deixar uma folga sobre o mínimo medido, justamente porque o valor foi obtido numa carga controlada e previsível, diferente do mundo real."
 
   </Exemplo>
 </Exemplos>

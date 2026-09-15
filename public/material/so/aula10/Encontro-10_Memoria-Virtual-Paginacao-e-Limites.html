@@ -214,7 +214,7 @@
 <section class="slide" id="slide-2">
   <div class="slide-inner question-wrap">
     <div class="qmark">Pergunta pra turma</div>
-    <h1 class="big" style="margin-top:18px;">A CPU está em <span class="glow" style="color:var(--primary)">15%</span>.<br>O disco está quase parado.<br>E mesmo assim a máquina está <span class="glow" style="color:var(--alert)">insuportavelmente lenta</span>.</h1>
+    <h1 class="big" style="margin-top:18px;">A CPU está em <span class="glow" style="color:var(--primary)">15%</span>.<br>A aplicação quase não lê nem grava arquivos.<br>E mesmo assim a máquina está <span class="glow" style="color:var(--alert)">insuportavelmente lenta</span>.</h1>
     <p class="lead fragment" style="margin:20px auto 0;">Nada parece sobrecarregado — e nada responde. Onde está o gargalo?</p>
   </div>
 </section>
@@ -248,7 +248,7 @@
       <li class="fragment d2"><span class="ico">3</span><span>SO busca a página no disco e a carrega numa moldura.</span></li>
       <li class="fragment d3"><span class="ico">4</span><span>Processo <b style="color:var(--text)">retoma</b> exatamente de onde parou, sem saber de nada.</span></li>
     </ul>
-    <p class="lead fragment d4" style="margin-top:18px;font-size:14.5px;">Page fault não é erro — é operação normal. O problema é a <b>frequência</b>: cada um custa um acesso a disco, milhares de vezes mais lento que a RAM.</p>
+    <p class="lead fragment d4" style="margin-top:18px;font-size:14.5px;">Page fault não é erro — é operação normal. O problema é a <b>frequência</b> dos que precisam ir ao disco: cada um desses custa um acesso milhares de vezes mais lento que a RAM.</p>
   </div>
 </section>
 

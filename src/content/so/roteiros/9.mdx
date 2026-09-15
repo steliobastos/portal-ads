@@ -105,13 +105,14 @@ Cached:          1912440 kB`}</Terminal>
   </Explica>
 
   <Terminal>{`$ ps aux --sort=-%mem | head -6
-USER    PID  %CPU %MEM    RSS  COMMAND
-aluno  2417   0.3  4.2  167MB  firefox
-root    891   0.0  1.1   44MB  snapd
-aluno  1930   0.0  0.3   12MB  bash`}</Terminal>
+USER    PID %CPU %MEM     VSZ    RSS TTY  STAT COMMAND
+aluno  2417  0.3  4.2 2841096 167284 ?    Sl   /usr/lib/firefox/firefox
+aluno  1804  0.8  3.9 4105216 158920 ?    Ssl  /usr/bin/gnome-shell
+root    891  0.0  1.1 1534208  44120 ?    Ssl  /usr/lib/snapd/snapd
+aluno  1930  0.0  0.3   11520   5236 pts/0 Ss  bash`}</Terminal>
 
   <Esperar>
-    a coluna `RSS` (Resident Set Size) é a memória física realmente ocupada por aquele processo — é o número mais honesto pra comparar consumo entre processos. **Anote o PID do maior**, você vai usá-lo no próximo passo.
+    a coluna `RSS` (Resident Set Size), **em kB**, é a memória física ocupada por aquele processo; `VSZ` é o espaço de endereçamento reservado. RSS é o número a comparar entre processos. **Anote o PID do maior**, você vai usá-lo no próximo passo.
   </Esperar>
 
 </Comando>
@@ -163,12 +164,12 @@ VmStk:       132 kB`}</Terminal>
 
 <Intro>Agora vamos criar um container com um teto baixo de memória de propósito, e fazê-lo tentar ultrapassar esse teto.</Intro>
 
-<Comando passo={5} cmd='docker run -d --name memtest --memory=64m alpine sh -c "cat /dev/zero | head -c 500m | tail"'>
+<Comando passo={5} cmd='docker run -d --name memtest --memory=64m --memory-swap=64m alpine sh -c "cat /dev/zero | head -c 500m | tail"'>
 
   <Explica>
     <Caixa titulo="O que é">
 
-    `--memory=64m` limita o container a 64 MB. O comando interno tenta acumular 500 MB na memória — muito acima do teto.
+    `--memory=64m` limita o container a 64 MB de RAM, e `--memory-swap=64m` (o mesmo valor) proíbe o uso de swap além disso. O comando interno tenta acumular 500 MB na memória: o `tail` guarda tudo, porque espera uma quebra de linha que `/dev/zero` nunca manda.
 
     </Caixa>
     <Caixa titulo="Por que importa">
@@ -178,14 +179,20 @@ VmStk:       132 kB`}</Terminal>
     </Caixa>
   </Explica>
 
-  <Terminal>{`$ docker run -d --name memtest --memory=64m alpine sh -c "cat /dev/zero | head -c 500m | tail"
+  <Terminal>{`$ docker run -d --name memtest --memory=64m --memory-swap=64m alpine sh -c "cat /dev/zero | head -c 500m | tail"
 b7e2a90c4f13d8a5...`}</Terminal>
 
   <Aviso titulo="Importante">
 
-  **⚠️ Importante:** mantenha o `--memory=64m`. É o limite que garante que o estrago fique contido dentro do container — sem ele, esse mesmo comando pode travar sua VM inteira.
+  **⚠️ Importante:** mantenha os dois limites. São eles que garantem que o estrago fique contido dentro do container — sem eles, esse mesmo comando pode travar sua VM inteira.
 
   </Aviso>
+
+  <Dica titulo="Por que também o --memory-swap?">
+
+  Com só `--memory=64m`, o Docker deixa o container usar **mais** 64 MB de swap. O container não morre ao bater nos 64 MB: primeiro fica lento, jogando memória para o disco. Igualar os dois valores faz o teto ser de 64 MB mesmo, e o OOM acontecer na hora.
+
+  </Dica>
 
 </Comando>
 
@@ -205,7 +212,7 @@ b7e2a90c4f13d8a5...`}</Terminal>
     </Caixa>
     <Caixa titulo="Por que importa">
 
-    O código de saída **137** é a assinatura de morte por OOM — reconhecê-lo é competência direta de sustentação.
+    O código de saída **137** (128 + 9) quer dizer "morto com `SIGKILL`", o sinal que o OOM Killer usa. Junto com `OOMKilled: true`, é a assinatura de morte por falta de memória — reconhecê-la é competência direta de sustentação.
 
     </Caixa>
   </Explica>
@@ -215,12 +222,12 @@ NAME      IMAGE    STATUS
 memtest   alpine   Exited (137) 4 seconds ago`}</Terminal>
 
   <Esperar>
-    `Exited (137)`. Confirme ainda mais a fundo com `docker inspect memtest --format '{{.State.OOMKilled}}'` — deve retornar `true`.
+    `Exited (137)`. Confirme com `docker inspect memtest --format '{{.State.OOMKilled}}'` — deve retornar `true`. O 137 sozinho não basta: um `docker kill` também dá 137, mas com `OOMKilled` falso.
   </Esperar>
 
   <Dica titulo="Meu container terminou com código 0, sem OOM">
 
-  O comando interno pode ter terminado antes de acumular memória suficiente. Aumente o valor: troque `head -c 500m` por `head -c 900m` e repita o passo 5 (lembre de remover o container antigo primeiro com `docker rm memtest`).
+  Quase sempre é o swap: confira se você digitou o `--memory-swap=64m` no passo 5. Remova o container (`docker rm memtest`) e repita o passo 5 com os dois limites.
 
   </Dica>
 
@@ -271,7 +278,7 @@ memtest   alpine   Exited (137) 4 seconds ago`}</Terminal>
   </Exemplo>
   <Exemplo tipo="forte">
 
-  "O container saiu com código 137 e `OOMKilled: true`. Ele tentou acumular 500 MB, mas o `--memory=64m` impôs um teto de 64 MB; ao ultrapassá-lo, o kernel matou o processo imediatamente, sem chance de salvar estado. O importante é que o estrago ficou contido: a VM continuou funcionando normalmente, porque o limite isolou o problema naquele container."
+  "O container saiu com código 137 e `OOMKilled: true`. Ele tentou acumular 500 MB, mas o `--memory=64m`, sem swap extra, impôs um teto de 64 MB; ao ultrapassá-lo, o kernel matou o processo com `SIGKILL`, sem chance de salvar estado. O importante é que o estrago ficou contido: a VM continuou funcionando normalmente, porque o limite isolou o problema naquele container."
 
   </Exemplo>
 </Exemplos>
