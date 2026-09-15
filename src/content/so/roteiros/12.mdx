@@ -29,7 +29,7 @@ Como a primeira parte da aula foi a **N1 da 2ª etapa**, sobra menos tempo de la
     </Caixa>
     <Caixa titulo="Por que importa">
 
-    Já é um coringa em ação — nove arquivos criados com um comando só, em vez de nove `touch` separados.
+    Nove arquivos criados com um comando só, em vez de nove `touch` separados. Atenção: isso **ainda não é coringa**. As chaves inventam nomes, existam os arquivos ou não; o coringa do passo 2 só casa com arquivos que **já existem**.
 
     </Caixa>
   </Explica>
@@ -147,12 +147,15 @@ logs  logs_backup  notas.md  relatorio1.txt ...`}</Terminal>
 $ find ~/lab12 -name "*.log"
 /home/aluno/lab12/logs/sistema1.log
 /home/aluno/lab12/logs/sistema2.log
+/home/aluno/lab12/logs/sistema3.log
 /home/aluno/lab12/logs_backup/sistema1.log
+/home/aluno/lab12/logs_backup/sistema2.log
+/home/aluno/lab12/logs_backup/sistema3.log
 $ grep -rn "ERRO" ~/lab12
 /home/aluno/lab12/logs/sistema1.log:1:[ERRO] falha ao conectar`}</Terminal>
 
   <Esperar>
-    o `find` lista caminhos de arquivos; o `grep -rn` mostra **arquivo:linha:conteúdo**. Repare que o `find` encontrou também a cópia em `logs_backup/`, mas o `grep` só achou a mensagem onde ela realmente foi escrita.
+    o `find` lista caminhos de arquivos (a ordem pode variar); o `grep -rn` mostra **arquivo:linha:conteúdo**. Repare que o `find` encontrou também as cópias em `logs_backup/`, mas o `grep` só achou a mensagem onde ela realmente foi escrita — a cópia foi feita antes do `echo`. E note as aspas em `"*.log"`: sem elas, o **shell** expandiria o coringa antes, e o `find` receberia nomes em vez do padrão.
   </Esperar>
 
   <Dica titulo="Meu grep não encontrou nada">

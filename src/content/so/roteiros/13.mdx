@@ -139,7 +139,9 @@ fi`}</Terminal>
 
   <Dica titulo='Por que as aspas em "$USO" e "$LIMITE"?'>
 
-  Se por algum motivo a variável estiver vazia, sem aspas a linha vira `if [ -gt 80 ]` — erro de sintaxe que quebra o script. Com aspas, vira `if [ "" -gt "80" ]`, que falha de forma controlada. **Sempre use aspas em volta de variáveis dentro de testes** — é a regra que evita mais bugs em shell script.
+  Sem aspas, uma variável **vazia desaparece** da linha, e uma com **espaços vira várias palavras**. O caso mais traiçoeiro é o teste de texto: com `NOME` vazio, `[ -n $NOME ]` vira `[ -n ]`, que dá **verdadeiro** — o script conclui que há um nome quando não há. Com aspas, `[ -n "$NOME" ]` vira `[ -n "" ]`, que dá falso, como deveria. **Sempre use aspas em volta de variáveis** — é a regra que evita mais bugs em shell script.
+
+  Atenção a um limite da regra: no teste **numérico**, aspas não bastam. Se `USO` vier vazio, tanto `[ $USO -gt 80 ]` quanto `[ "$USO" -gt "80" ]` imprimem um erro, a condição fica falsa e o script cai no `else` — dizendo "OK" sem ter medido nada. Por isso um monitor sério confere antes se o valor é mesmo um número (é o desafio do fim do roteiro).
 
   </Dica>
 
@@ -183,7 +185,7 @@ for PONTO in / /home /tmp; do
 done`}</Terminal>
 
   <Esperar>
-    uma linha por ponto de montagem. O teste `-d` verifica se o diretório existe — assim o script não quebra numa máquina onde `/home` não seja partição separada. Esse tipo de defesa é o que diferencia script frágil de script confiável.
+    uma linha por caminho. O teste `-d` verifica se o diretório existe antes de consultar o `df` — assim o script não quebra se receber um caminho que não existe nesta máquina. Esse tipo de defesa é o que diferencia script frágil de script confiável. Repare também: se `/home` não for uma partição separada (o caso da sua VM), o `df` mostra o sistema de arquivos que o contém — o mesmo de `/` — e os dois aparecem com o mesmo espaço livre.
   </Esperar>
 
 </Comando>
@@ -279,7 +281,11 @@ else
 fi`}</Terminal>
 
   <Esperar>
-    depois de rodar, verifique o código de saída com `echo $?` — deve ser `0` se estiver OK. Teste também `./monitor.sh && echo "tudo certo"`: a segunda parte só executa se o script sair com 0, exatamente como o `&&` que vocês usam desde o Encontro 5.
+    depois de rodar, verifique o código de saída com `echo $?` — deve ser `0` se estiver OK. Teste também `~/monitor.sh && echo "tudo certo"`: a segunda parte só executa se o script sair com 0, exatamente como o `&&` que vocês usam desde o Encontro 5.
+  </Esperar>
+
+  <Esperar>
+    **Desafio:** faça o script sair com código `2` e uma mensagem de erro se `USO` não for um número (dica: `[[ "$USO" =~ ^[0-9]+$ ]]` testa se a variável só tem dígitos).
   </Esperar>
 
 </Comando>

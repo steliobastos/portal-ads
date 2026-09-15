@@ -718,15 +718,15 @@ export const QUIZZES: Quiz[] = [
         "justificativa": "A substituição de comando executa o que está dentro dos parênteses e substitui a expressão pela saída produzida. É o que permite um script reagir ao estado real da máquina — sem ela, o script só conseguiria imprimir resultados, nunca compará-los ou decidir a partir deles."
       },
       {
-        "enunciado": "Por que é recomendado escrever if [ \"$USO\" -gt \"$LIMITE\" ] com aspas, em vez de if [ $USO -gt $LIMITE ]?",
+        "enunciado": "Por que se recomenda escrever variáveis entre aspas, como em if [ -n \"$NOME\" ], em vez de if [ -n $NOME ]?",
         "alternativas": [
           "Porque as aspas fazem o script executar mais rápido",
-          "Porque sem aspas o bash converte os valores para texto e a comparação numérica falha",
+          "Porque sem aspas o bash converte os valores para número e a comparação de texto falha",
           "Porque as aspas são exigidas pela sintaxe e o script não roda sem elas",
-          "Porque se a variável estiver vazia, sem aspas a linha vira um teste malformado e quebra o script — com aspas, ela falha de forma controlada"
+          "Porque sem aspas uma variável vazia desaparece da linha: [ -n $NOME ] com NOME vazio vira [ -n ], que dá verdadeiro por engano — com aspas, vira [ -n \"\" ], que dá falso, como deveria"
         ],
         "correta": 3,
-        "justificativa": "Se a variável estiver vazia, sem aspas a expansão resulta em algo como [ -gt 80 ], que é sintaticamente inválido e interrompe o script. Com aspas, resulta em [ \"\" -gt \"80\" ], que falha de forma controlada. A mesma regra protege contra nomes de arquivo com espaços."
+        "justificativa": "Sem aspas, o shell remove a variável vazia e divide em várias palavras a que tem espaços. Com NOME vazio, [ -n $NOME ] vira [ -n ], e um teste com um único argumento é verdadeiro. Com aspas, o valor vazio continua sendo um argumento. A mesma regra protege comandos como rm \"$ARQUIVO\" quando o nome do arquivo tem espaço."
       },
       {
         "enunciado": "O que o código de saída de um script indica, e como ele é usado?",
