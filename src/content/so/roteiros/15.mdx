@@ -42,8 +42,13 @@ depurar.
 | Erro de sintaxe no `if` | Faltam espaços dentro de `[ ]` | Enc. 13, passo 3 |
 | docker run falha: nome já em uso | Container parado, não removido | use `docker ps -aq` |
 | Dados somem ao recriar o container | Falta volume montado | Enc. 11, passos 6–7 |
-| Container morre com código 137 | Limite de memória baixo demais | Enc. 9 e 10 |
-| Funciona no terminal, não no cron | Caminho relativo | Enc. 14, passo 3 |
+| Container morre com código 137 | Se `docker inspect` mostrar `OOMKilled: true`, limite de memória baixo demais | Enc. 9 e 10 |
+| Funciona no terminal, não no cron | Caminho relativo, comando fora do `PATH` do cron ou `%` na linha do crontab | Enc. 14, passo 3 |
+| `[: 12.34: integer expected` | O `-gt` só compara inteiros, e a porcentagem veio com decimal | Corte com `cut -d. -f1` |
+| Página nova não aparece depois do deploy | Volume montado **sobre** a pasta das páginas guarda a versão antiga | Ponha no volume só o que é dado, não o que vem na imagem |
+| `$'\r': command not found` | Script editado no Windows (fim de linha diferente) | `sed -i 's/\r$//' script.sh` |
+| `[[: not found` | Script rodado com `sh`, que no Ubuntu não é o bash | Rode com `bash script.sh` ou `./script.sh` |
+| `address already in use` | Outro processo ou container na mesma porta | `sudo ss -tlnp \| grep 8080` |
 
 </Secao>
 
