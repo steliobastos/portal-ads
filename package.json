@@ -11,7 +11,8 @@
     "material:indexar": "node scripts/indexar-materiais.mjs",
     "material:voltar": "node scripts/injetar-volta-ao-portal.mjs",
     "material:preparar": "npm run material:voltar && npm run material:indexar",
-    "professor:publicar": "node --env-file=.env.local scripts/publicar-professor.mjs"
+    "professor:publicar": "node --env-file=.env.local scripts/publicar-professor.mjs",
+    "turma:importar": "node --env-file=.env.local scripts/importar-turma.mjs"
   },
   "dependencies": {
     "@mdx-js/loader": "^3.1.1",

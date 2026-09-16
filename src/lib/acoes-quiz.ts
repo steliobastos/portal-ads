@@ -5,6 +5,7 @@ import { conteudoDa, quizDo } from "@/content";
 import { clienteAdmin } from "@/lib/supabase/servidor";
 import { passouDoPrazo, prazoDoQuiz } from "./portfolio";
 import { corrigir, problemaNoEnvio, type Correcao } from "./quiz";
+import { identificar } from "./turma";
 
 /**
  * Envio do quiz semanal.
@@ -18,23 +19,47 @@ import { corrigir, problemaNoEnvio, type Correcao } from "./quiz";
 const Envio = z.object({
   disciplina: z.string().max(20),
   encontro: z.number().int().min(0).max(99),
+  /** Preenchido quando o aluno se escolheu na lista da turma. */
+  alunoId: z.string().max(64).nullish(),
+  respostas: z.array(z.number().int()).max(20),
+  observacoes: z.array(z.string().max(5000, "Observação longa demais.")).max(20),
+});
+
+/**
+ * Quem enviou. Validado **depois** de resolver a lista da turma: quando o
+ * aluno se escolheu na lista, nome e matrícula vêm do banco, e o que o
+ * navegador mandou nesses dois campos é ignorado.
+ */
+const Aluno = z.object({
   nome: z.string().trim().min(3, "Informe seu nome completo.").max(120),
   matricula: z
     .string()
     .transform((m) => m.replace(/\s+/g, "").toUpperCase())
     .pipe(z.string().regex(/^[A-Z0-9]{4,20}$/, "Matrícula inválida: use só letras e números.")),
-  respostas: z.array(z.number().int()).max(20),
-  observacoes: z.array(z.string().max(5000, "Observação longa demais.")).max(20),
 });
 
 export type ResultadoEnvio =
   | { ok: true; correcao: Correcao; atrasado: boolean }
   | { ok: false; erro: string };
 
-export async function enviarQuiz(dados: z.input<typeof Envio>): Promise<ResultadoEnvio> {
+export async function enviarQuiz(
+  dados: z.input<typeof Envio> & Partial<z.input<typeof Aluno>>,
+): Promise<ResultadoEnvio> {
   const lido = Envio.safeParse(dados);
   if (!lido.success) return { ok: false, erro: lido.error.issues[0].message };
-  const envio = lido.data;
+
+  const identidade = await identificar(lido.data.disciplina, {
+    alunoId: lido.data.alunoId,
+    nome: dados.nome ?? "",
+    matricula: dados.matricula ?? "",
+  });
+  if (!identidade) {
+    return { ok: false, erro: "Esse nome não está mais na lista da turma. Recarregue a página." };
+  }
+  const aluno = Aluno.safeParse(identidade);
+  if (!aluno.success) return { ok: false, erro: aluno.error.issues[0].message };
+
+  const envio = { ...lido.data, ...aluno.data };
 
   const quiz = quizDo(envio.disciplina, envio.encontro);
   if (!quiz) return { ok: false, erro: "Este quiz não existe." };

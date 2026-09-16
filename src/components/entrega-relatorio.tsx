@@ -4,10 +4,10 @@ import { useEffect, useId, useState } from "react";
 import type { FaseEntrega } from "@/content/tipos";
 import { confirmarEntrega, prepararEntrega } from "@/lib/acoes-entrega";
 import { LIMITE_PDF_BYTES, momentoCampus } from "@/lib/datas";
+import { CampoAluno, identificado, useTurma, VAZIO, type Identificacao } from "./identificacao";
 import { cx } from "./ui";
 
 type Entrega = { fase: FaseEntrega; nome: string; secoes: string; prazo: string };
-type Integrante = { nome: string; matricula: string };
 type Recibo = { protocolo: number; enviadoEm: string; atrasado: boolean; nome: string };
 
 /**
@@ -29,10 +29,8 @@ export function EntregaRelatorio({
 }) {
   const [fase, setFase] = useState<FaseEntrega>(entregas[0].fase);
   const [equipe, setEquipe] = useState("");
-  const [integrantes, setIntegrantes] = useState<Integrante[]>([
-    { nome: "", matricula: "" },
-    { nome: "", matricula: "" },
-  ]);
+  const turma = useTurma(disciplina);
+  const [integrantes, setIntegrantes] = useState<Identificacao[]>([VAZIO, VAZIO]);
   const [arquivo, setArquivo] = useState<File | null>(null);
   const [etapaEnvio, setEtapaEnvio] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
@@ -49,8 +47,8 @@ export function EntregaRelatorio({
   const escolhida = entregas.find((e) => e.fase === fase)!;
   const enviando = etapaEnvio !== null;
 
-  function mudarIntegrante(i: number, campo: keyof Integrante, valor: string) {
-    setIntegrantes((lista) => lista.map((p, j) => (j === i ? { ...p, [campo]: valor } : p)));
+  function mudarIntegrante(i: number, valor: Identificacao) {
+    setIntegrantes((lista) => lista.map((p, j) => (j === i ? valor : p)));
   }
 
   async function enviar(evento: React.FormEvent) {
@@ -58,6 +56,9 @@ export function EntregaRelatorio({
     setErro(null);
     setRecibo(null);
 
+    if (!integrantes.every(identificado)) {
+      return setErro("Identifique todos os integrantes da equipe.");
+    }
     if (!arquivo) return setErro("Escolha o PDF do relatório.");
     // Alguns navegadores entregam `type` vazio: vale também a extensão.
     const ehPdf = arquivo.type === "application/pdf" || /\.pdf$/i.test(arquivo.name);
@@ -139,14 +140,19 @@ export function EntregaRelatorio({
         <legend className="mb-2 text-sm font-medium text-ink">Integrantes (2 ou 3)</legend>
         <div className="space-y-3">
           {integrantes.map((p, i) => (
-            <div key={i} className="grid gap-3 rounded-xl border border-line bg-panel p-3 sm:grid-cols-[1fr_12rem_auto]">
-              <Campo rotulo={`Nome completo · integrante ${i + 1}`} valor={p.nome} aoMudar={(v) => mudarIntegrante(i, "nome", v)} />
-              <Campo rotulo="Matrícula" valor={p.matricula} aoMudar={(v) => mudarIntegrante(i, "matricula", v)} inputMode="numeric" />
+            <div key={i} className="rounded-xl border border-line bg-panel p-3">
+              <CampoAluno
+                turma={turma}
+                valor={p}
+                aoMudar={(v) => mudarIntegrante(i, v)}
+                rotulo={`Integrante ${i + 1}`}
+                compacto
+              />
               {i === 2 && (
                 <button
                   type="button"
                   onClick={() => setIntegrantes((l) => l.slice(0, 2))}
-                  className="self-end pb-2 text-sm text-alert hover:underline"
+                  className="mt-2 text-sm text-alert hover:underline"
                 >
                   Remover
                 </button>
@@ -157,7 +163,7 @@ export function EntregaRelatorio({
         {integrantes.length < 3 && (
           <button
             type="button"
-            onClick={() => setIntegrantes((l) => [...l, { nome: "", matricula: "" }])}
+            onClick={() => setIntegrantes((l) => [...l, VAZIO])}
             className="mt-2 text-sm text-primary hover:underline"
           >
             + Adicionar terceiro integrante

@@ -5,6 +5,7 @@ import { conteudoDa } from "@/content";
 import { clienteAdmin } from "@/lib/supabase/servidor";
 import { LIMITE_PDF_BYTES } from "./datas";
 import { passouDoPrazo } from "./portfolio";
+import { identificar } from "./turma";
 
 /**
  * Entrega do relatório em PDF, em dois tempos.
@@ -41,12 +42,47 @@ const Equipe = z.object({
     .refine((l) => new Set(l.map((i) => i.matricula)).size === l.length, "Há matrícula repetida na equipe."),
 });
 
-type EntradaEquipe = z.input<typeof Equipe>;
+/**
+ * O que o formulário manda. Cada integrante vem como um identificador da lista
+ * da turma **ou** como nome e matrícula digitados, para quem não está na lista.
+ */
+type EntradaEquipe = Omit<z.input<typeof Equipe>, "integrantes"> & {
+  integrantes: { alunoId?: string | null; nome?: string; matricula?: string }[];
+};
 
 function entregaConfigurada(dados: z.output<typeof Equipe>) {
   return conteudoDa(dados.disciplina)?.regrasNota.entregas.find(
     (e) => e.etapa === dados.etapa && e.fase === dados.fase,
   );
+}
+
+/**
+ * Troca cada integrante escolhido na lista pelo nome e matrícula do diário, e
+ * só então valida a equipe. Assim a matrícula que agrupa as entregas no painel
+ * nunca depende de digitação.
+ */
+async function lerEquipe(dados: EntradaEquipe) {
+  const enviados = Array.isArray(dados.integrantes) ? dados.integrantes.slice(0, 3) : [];
+  const integrantes = [];
+  for (const pessoa of enviados) {
+    const achado = await identificar(String(dados.disciplina), {
+      alunoId: pessoa.alunoId,
+      nome: pessoa.nome ?? "",
+      matricula: pessoa.matricula ?? "",
+    });
+    if (!achado) {
+      return {
+        ok: false as const,
+        erro: "Um dos nomes não está mais na lista da turma. Recarregue a página.",
+      };
+    }
+    integrantes.push(achado);
+  }
+
+  const lido = Equipe.safeParse({ ...dados, integrantes });
+  return lido.success
+    ? { ok: true as const, equipe: lido.data }
+    : { ok: false as const, erro: lido.error.issues[0].message };
 }
 
 export type ResultadoPreparo =
@@ -56,9 +92,9 @@ export type ResultadoPreparo =
 export async function prepararEntrega(
   dados: EntradaEquipe & { tamanho: number; tipo: string },
 ): Promise<ResultadoPreparo> {
-  const lido = Equipe.safeParse(dados);
-  if (!lido.success) return { ok: false, erro: lido.error.issues[0].message };
-  if (!entregaConfigurada(lido.data)) return { ok: false, erro: "Esta entrega não existe." };
+  const lido = await lerEquipe(dados);
+  if (!lido.ok) return { ok: false, erro: lido.erro };
+  if (!entregaConfigurada(lido.equipe)) return { ok: false, erro: "Esta entrega não existe." };
   if (dados.tipo !== "application/pdf") return { ok: false, erro: "Envie o relatório em PDF." };
   if (!(dados.tamanho > 0 && dados.tamanho <= LIMITE_PDF_BYTES)) {
     return { ok: false, erro: "O PDF precisa ter até 15 MB. Reduza a resolução dos prints." };
@@ -67,7 +103,7 @@ export async function prepararEntrega(
   const supabase = clienteAdmin();
   if (!supabase) return { ok: false, erro: "O envio de relatórios ainda não está ativo. Avise o professor." };
 
-  const { disciplina, etapa, fase } = lido.data;
+  const { disciplina, etapa, fase } = lido.equipe;
   const caminho = `${disciplina}/etapa-${etapa}/${fase}/${Date.now()}-${crypto.randomUUID().slice(0, 8)}.pdf`;
   const { data, error } = await supabase.storage.from("relatorios").createSignedUploadUrl(caminho);
   if (error) {
@@ -84,12 +120,12 @@ export type ResultadoEntrega =
 export async function confirmarEntrega(
   dados: EntradaEquipe & { caminho: string },
 ): Promise<ResultadoEntrega> {
-  const lido = Equipe.safeParse(dados);
-  if (!lido.success) return { ok: false, erro: lido.error.issues[0].message };
-  const entrega = entregaConfigurada(lido.data);
+  const lido = await lerEquipe(dados);
+  if (!lido.ok) return { ok: false, erro: lido.erro };
+  const entrega = entregaConfigurada(lido.equipe);
   if (!entrega) return { ok: false, erro: "Esta entrega não existe." };
 
-  const { disciplina, etapa, fase, equipe, integrantes } = lido.data;
+  const { disciplina, etapa, fase, equipe, integrantes } = lido.equipe;
 
   // O caminho volta do navegador: só é aceito se tiver exatamente a forma que
   // `prepararEntrega` gera para esta mesma entrega.

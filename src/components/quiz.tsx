@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState, useTransition } from "react";
 import { enviarQuiz } from "@/lib/acoes-quiz";
 import type { Correcao, QuizPublico } from "@/lib/quiz";
 import { acertosParaCredito } from "@/lib/quiz";
+import { CampoAluno, identificado, useTurma, VAZIO, type Identificacao } from "./identificacao";
 import { cx } from "./ui";
 
 /**
@@ -48,10 +49,10 @@ function useObservacoes(encontro: number, quantidade: number) {
  * O quiz semanal: 3 perguntas de leitura + 3 observações de laboratório, num
  * envio só.
  *
- * Nome e matrícula não ficam guardados no navegador de propósito: o aluno
- * responde nos computadores do laboratório, que são compartilhados. As
- * observações, sim — elas usam a mesma chave dos rascunhos do roteiro, então o
- * que foi escrito durante a prática já chega preenchido aqui.
+ * Quem o aluno é não fica guardado no navegador de propósito: ele responde nos
+ * computadores do laboratório, que são compartilhados. As observações, sim —
+ * elas usam a mesma chave dos rascunhos do roteiro, então o que foi escrito
+ * durante a prática já chega preenchido aqui.
  */
 export function FormularioQuiz({
   disciplina,
@@ -68,8 +69,8 @@ export function FormularioQuiz({
   const [encerrado, setEncerrado] = useState(false);
   useEffect(() => setEncerrado(Date.now() > new Date(prazo).getTime()), [prazo]);
   const [atrasado, setAtrasado] = useState(false);
-  const [nome, setNome] = useState("");
-  const [matricula, setMatricula] = useState("");
+  const turma = useTurma(disciplina);
+  const [aluno, setAluno] = useState<Identificacao>(VAZIO);
   const [respostas, setRespostas] = useState<(number | null)[]>(quiz.perguntas.map(() => null));
   const [erro, setErro] = useState<string | null>(null);
   const [correcao, setCorrecao] = useState<Correcao | null>(null);
@@ -85,6 +86,7 @@ export function FormularioQuiz({
     evento.preventDefault();
     setErro(null);
 
+    if (!identificado(aluno)) return setErro("Diga quem você é antes de enviar.");
     const faltando = respostas.findIndex((r) => r === null);
     if (faltando >= 0) return setErro(`Responda a pergunta ${faltando + 1}.`);
     const curta = quiz.observacoes.findIndex((o, i) => observacoes[i].trim().length < o.minimo);
@@ -98,8 +100,7 @@ export function FormularioQuiz({
       const resultado = await enviarQuiz({
         disciplina,
         encontro: quiz.encontro,
-        nome,
-        matricula,
+        ...aluno,
         respostas: respostas as number[],
         observacoes,
       });
@@ -134,16 +135,7 @@ export function FormularioQuiz({
         <legend className="px-1 font-mono text-xs tracking-[0.12em] text-primary uppercase">
           Identificação
         </legend>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Campo rotulo="Nome completo" valor={nome} aoMudar={setNome} autoComplete="name" />
-          <Campo
-            rotulo="Matrícula"
-            valor={matricula}
-            aoMudar={setMatricula}
-            inputMode="numeric"
-            autoComplete="off"
-          />
-        </div>
+        <CampoAluno turma={turma} valor={aluno} aoMudar={setAluno} />
       </fieldset>
 
       <section>
@@ -254,34 +246,6 @@ function Resultado({
         </button>
         {apagado && <span className="ml-2 text-secondary">apagadas.</span>}
       </p>
-    </div>
-  );
-}
-
-function Campo({
-  rotulo,
-  valor,
-  aoMudar,
-  ...props
-}: {
-  rotulo: string;
-  valor: string;
-  aoMudar: (v: string) => void;
-} & Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange">) {
-  const id = useId();
-  return (
-    <div>
-      <label htmlFor={id} className="block text-sm font-medium text-ink">
-        {rotulo}
-      </label>
-      <input
-        id={id}
-        value={valor}
-        onChange={(e) => aoMudar(e.target.value)}
-        required
-        className="mt-1.5 w-full rounded-lg border border-line bg-card px-3 py-2 text-sm text-ink focus:border-primary"
-        {...props}
-      />
     </div>
   );
 }
