@@ -126,8 +126,32 @@ sobre a leitura e as observações do laboratório, num envio só. O conteúdo f
   justificativas não melhora a nota) e as observações do último (o aluno pode voltar para
   completá-las).
 - As observações usam a mesma chave de `localStorage` dos rascunhos do roteiro: o que o aluno
-  escreveu durante a prática chega preenchido. Nome e matrícula **não** ficam guardados, porque os
+  escreveu durante a prática chega preenchido. Quem é o aluno **não** fica guardado, porque os
   computadores do laboratório são compartilhados.
+
+### A lista da turma
+
+Com a turma importada, o aluno **escolhe o nome numa lista** em vez de digitar nome e matrícula —
+tanto no quiz quanto na entrega do relatório. Some assim a fonte de erro mais cara do semestre:
+matrícula digitada errada, que faz o envio não cair no portfólio de ninguém.
+
+```bash
+npm run turma:importar -- curso/turmas/so-2026-2.csv --disciplina so --turma 2026.2
+```
+
+- **A lista vive só no banco** (`turma_alunos`), nunca em `src/content/`: este repositório é
+  público e nome de aluno é dado pessoal. O CSV fica em `curso/`, que está no `.gitignore`.
+- **A matrícula não chega ao navegador.** A lista é carregada depois que a página abre (Server
+  Action `src/lib/acoes-turma.ts`) e traz só nome e um identificador opaco; é o servidor que
+  resolve a matrícula oficial ao gravar o envio. Como o carregamento não é feito no build, a lista
+  também não entra no HTML estático nem em buscador.
+- **Quem não está na lista continua podendo digitar** ("Não encontrei meu nome"), e **sem turma
+  importada o formulário é o de antes** — nada deixa de funcionar.
+- Reimportar atualiza os nomes e **inativa quem saiu** do CSV, sem apagar: os envios que essa
+  pessoa já fez continuam no painel. Não precisa publicar o site depois.
+- A lista de nomes fica visível para quem abrir a página do quiz. É a contrapartida consciente da
+  comodidade; se um dia isso incomodar, basta esvaziar a tabela e o formulário volta a pedir nome e
+  matrícula digitados.
 - `/professor` é o painel: login pelo Supabase Auth, aceito só para o e-mail de `PROFESSOR_EMAIL`.
   Tem três abas: envios por quiz (com as marcas do professor), portfólio consolidado por etapa e
   relatórios entregues, com exportação `.csv`.
