@@ -111,15 +111,19 @@ const Checklist_ = createContext<ContextoChecklist | null>(null);
 /** Checklist final, com barra de progresso e memória entre sessões. */
 export function Checklist({
   encontro,
+  chave: chaveDada,
   titulo,
   children,
 }: {
-  encontro: number;
+  /** O encontro a que o checklist pertence — vira a chave de armazenamento. */
+  encontro?: number;
+  /** Chave própria, para checklists que não são de um encontro (o projeto). */
+  chave?: string;
   /** Cadeia vazia omite o cabeçalho — a seção em volta já nomeia o checklist. */
   titulo?: string;
   children: ReactNode;
 }) {
-  const chave = `roteiro:${encontro}:checklist`;
+  const chave = chaveDada ?? `roteiro:${encontro}:checklist`;
   const [bruto, setBruto] = useLocal(chave, "{}");
 
   const marcados = useMemo<Record<string, boolean>>(() => {

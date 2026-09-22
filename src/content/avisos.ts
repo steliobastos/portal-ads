@@ -25,6 +25,16 @@ export type Aviso = {
 
 export const AVISOS: Aviso[] = [
   {
+    data: "2026-09-22",
+    titulo: "Raio-X: roteiro passo a passo para a entrega parcial",
+    texto:
+      "Se a sua equipe não sabe por onde começar, o roteiro mostra o caminho: três sessões de trabalho, como capturar as evidências sem retrabalho, o molde de uma evidência bem escrita e o que conferir antes de enviar. A parcial é só das seções 1 a 4.",
+    etiqueta: "Avaliação",
+    disciplina: "so",
+    href: "/so/projeto/1/roteiro",
+    fixado: true,
+  },
+  {
     data: "2026-09-15",
     titulo: "Raio-X: o enunciado do projeto da 1ª etapa está no ar",
     texto:

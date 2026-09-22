@@ -1,0 +1,559 @@
+<Abertura sobretitulo="Raio-X · entrega parcial" titulo="Como fazer a parcial, do zero ao PDF">
+
+O [enunciado](/so/projeto/1) diz **o que** o relatório precisa ter. Esta página diz **como chegar
+lá**: a ordem dos passos, como capturar as evidências sem retrabalho e como montar o PDF. São três
+sessões de trabalho de uns 50 minutos, que cabem em dias diferentes.
+
+</Abertura>
+
+<Partes>
+  <Parte rotulo="Sessão 1">Preparar e capturar as seções 1 e 2</Parte>
+  <Parte rotulo="Sessão 2">Capturar as seções 3 e 4</Parte>
+  <Parte rotulo="Sessão 3">Escrever, revisar e enviar</Parte>
+</Partes>
+
+<Destaque titulo="A parcial são só as seções 1 a 4" tom="positivo">
+
+Identificação do sistema, arquitetura e chamadas de sistema, virtualização e processos. As seções 5,
+6 e 7 ficam para a entrega final — não comece por elas agora.
+
+</Destaque>
+
+<Secao sobretitulo="Antes de tudo" titulo="Quinze minutos que economizam horas">
+
+<Intro>
+
+Quase todo o sofrimento nesse tipo de trabalho vem de duas coisas: evidência capturada de um jeito
+que não dá para reaproveitar, e equipe que descobre no último dia que cada um entendeu a divisão de
+um jeito. Resolva as duas agora.
+
+</Intro>
+
+<Lista>
+  <Ponto marca="1">**Escolham a VM.** Uma só, de um integrante. Toda evidência sai dela. Anotem de quem é: isso vai na capa.</Ponto>
+  <Ponto marca="2">**Marquem as sessões.** Combinem quando as três acontecem. A captura (sessões 1 e 2) é melhor com todo mundo junto, porque é uma VM só.</Ponto>
+  <Ponto marca="3">**Criem o documento agora**, compartilhado entre a equipe, já com os títulos das quatro seções e a capa. Documento vazio com estrutura pronta é muito mais fácil de preencher do que página em branco.</Ponto>
+  <Ponto marca="4">**Dividam a escrita, não a investigação.** Todos veem tudo ser capturado; depois cada um redige uma ou duas seções. Na defesa, a pergunta vai para quem o professor escolher.</Ponto>
+</Lista>
+
+<Dica titulo="Somos um trio e só um tem VM funcionando">
+
+Normal e previsto. A VM é de um integrante só mesmo. Os outros dois acompanham a captura na tela
+dele — presencialmente ou por compartilhamento de tela — e depois assumem a redação. O que **não**
+pode é cada um rodar na sua máquina e colar tudo junto: aí deixa de ser o raio-x de um sistema.
+
+</Dica>
+
+</Secao>
+
+<Passo numero={1} de={7} titulo="Preparar a captura de evidências">
+
+<Intro>
+
+Este passo é o que separa um trabalho tranquilo de uma noite de domingo refazendo comandos. Em vez de
+tirar print de cada saída, você vai **gravar as saídas em um arquivo de texto** e só depois escolher
+o que entra no relatório.
+
+</Intro>
+
+<Comando passo={1} cmd="mkdir -p ~/raio-x && cd ~/raio-x">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    Cria e entra numa pasta só para este trabalho, dentro da sua pasta pessoal. Tudo o que for
+    capturado fica junto, em um lugar que você sabe achar depois.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    Evidência espalhada pela área de trabalho some. E, se a equipe precisar refazer uma captura,
+    basta voltar para esta pasta.
+
+    </Caixa>
+  </Explica>
+
+</Comando>
+
+<Comando passo={2} cmd="uname -a 2>&1 | tee -a evidencias.txt">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    O padrão que você vai repetir a cada comando do relatório. `tee` mostra a saída na tela **e**
+    grava no arquivo ao mesmo tempo; `-a` acrescenta no fim, sem apagar o que já está lá.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    É o Encontro 6 aplicado no seu próprio trabalho: o `|` liga a saída de um programa à entrada de
+    outro, e o `2>&1` manda o canal de erro junto com o de saída — senão, comando que falha grava
+    nada no arquivo e você só descobre depois.
+
+    </Caixa>
+  </Explica>
+
+  <Terminal>{`$ uname -a 2>&1 | tee -a evidencias.txt
+Linux ubuntu-vm 6.8.0-45-generic #45-Ubuntu SMP x86_64 GNU/Linux`}</Terminal>
+
+  <Esperar>
+    a saída aparece normalmente na tela, como sempre. A diferença é invisível: ela também foi
+    escrita em `evidencias.txt`. Confira com `cat evidencias.txt`.
+  </Esperar>
+
+</Comando>
+
+<Comando passo={3} cmd={'echo "== lscpu ==" | tee -a evidencias.txt'}>
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    Escreve uma linha de título no arquivo, antes de capturar o próximo comando. Custa dois segundos.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    Sem isso, `evidencias.txt` vira um bloco único e você não sabe onde uma saída termina e a outra
+    começa. Com isso, o arquivo já está quase na ordem do relatório.
+
+    </Caixa>
+  </Explica>
+
+</Comando>
+
+<Destaque titulo="A regra: texto em vez de print">
+
+Capture as saídas como **texto**, não como imagem. Três motivos práticos:
+
+- Texto em PDF continua legível com zoom; print de terminal borra.
+- O PDF tem limite de 15 MB. Prints estouram esse limite rápido; texto não pesa nada.
+- Você pode recortar o trecho que interessa em vez de mostrar a tela inteira — e tela inteira não é
+  evidência, é ruído.
+
+**A exceção é o `top`**, que é uma tela viva: dele, tire print mesmo. Se quiser a saída em texto,
+use `top -b -n 1 | head -20`.
+
+</Destaque>
+
+<Dica titulo="Prefiro gravar a sessão inteira">
+
+Dá também: `script -a sessao.txt` grava tudo o que acontece no terminal até você digitar `exit`. É
+mais completo e mais bagunçado — você vai ter que garimpar depois. O `tee` a cada comando dá menos
+trabalho no fim.
+
+</Dica>
+
+</Passo>
+
+<Passo numero={2} de={7} titulo="Seção 1 — Identificação do sistema">
+
+<Intro>
+
+**A pergunta que esta seção responde:** que recursos este sistema gerencia, e quanto de cada um ele
+tem para distribuir?
+
+</Intro>
+
+<Comando passo={4} cmd="os-release, hostname, whoami, uname -a">
+
+  <Explica>
+    <Caixa titulo="O que capturar">
+
+    `cat /etc/os-release` (distribuição e versão) · `uname -a` (kernel) · `hostname` (nome da
+    máquina) · `whoami` (usuário).
+
+    </Caixa>
+    <Caixa titulo="O que olhar na saída">
+
+    A versão do kernel e a da distribuição são coisas diferentes — e é isso que muita gente confunde.
+    Repare que o `uname` mostra também a arquitetura (`x86_64`).
+
+    </Caixa>
+  </Explica>
+
+</Comando>
+
+<Comando passo={5} cmd="lscpu, free -h, df -h">
+
+  <Explica>
+    <Caixa titulo="O que capturar">
+
+    Os três, um por vez, cada um com o `| tee -a evidencias.txt`. São os três recursos que o sistema
+    reparte: processador, memória e disco.
+
+    </Caixa>
+    <Caixa titulo="O que olhar na saída">
+
+    No `lscpu`, quantos núcleos a VM enxerga (devem ser 2) e o modelo do processador — que é o da
+    máquina real, não um processador virtual. No `free -h`, a coluna `available`. No `df -h`, o
+    ponto de montagem `/` e quanto já está em uso.
+
+    </Caixa>
+  </Explica>
+
+  <Esperar>
+    números que batem com o que foi configurado na Semana 0: 2 núcleos, cerca de 4 GB de memória,
+    25 GB de disco. Se não bater, registre a diferença no relatório — é um achado legítimo.
+  </Esperar>
+
+</Comando>
+
+<Teoria>
+
+**Para conectar:** o sistema operacional como **gerenciador de recursos** — ele é quem decide como
+processador, memória e disco são repartidos entre os programas. E o `/proc` como sistema de arquivos
+**virtual**: `cat /proc/cpuinfo` parece ler um arquivo, mas não existe arquivo nenhum no disco; o
+kernel monta a resposta na hora. Vale rodar `ls -l /proc/cpuinfo` e reparar no tamanho zero.
+
+</Teoria>
+
+</Passo>
+
+<Passo numero={3} de={7} titulo="Seção 2 — Arquitetura e chamadas de sistema">
+
+<Intro>
+
+**A pergunta que esta seção responde:** o que um programa simples precisa pedir ao kernel para
+funcionar?
+
+</Intro>
+
+<Comando passo={6} cmd="strace -c ls 2>&1 | tee -a evidencias.txt">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    O `-c` faz um resumo: conta quantas vezes cada chamada de sistema foi usada, em vez de listar
+    uma por uma.
+
+    </Caixa>
+    <Caixa titulo="Por que o 2>&1 é obrigatório aqui">
+
+    O `strace` escreve no canal de **erro**, não no de saída. Sem o `2>&1`, o arquivo fica vazio e
+    parece que o comando não funcionou. É a mesma separação stdout/stderr do Encontro 6, agora
+    atrapalhando de verdade.
+
+    </Caixa>
+  </Explica>
+
+  <Esperar>
+    uma tabela com `openat`, `mmap`, `write`, `close` e outras, cada uma com a contagem. Um `ls`
+    "simples" faz dezenas de pedidos ao kernel.
+  </Esperar>
+
+</Comando>
+
+<Comando passo={7} cmd="strace -c comparando dois programas">
+
+  <Explica>
+    <Caixa titulo="O que capturar">
+
+    Rode o mesmo `strace -c` para dois programas diferentes — por exemplo `ls` e `cat /etc/hostname`,
+    ou `date`. Guarde as duas tabelas.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    A comparação é o que transforma a seção em análise em vez de descrição. Qual deles pede mais ao
+    kernel? Quais chamadas aparecem nos dois, e por quê?
+
+    </Caixa>
+  </Explica>
+
+</Comando>
+
+<Teoria>
+
+**Para conectar:** modo usuário × modo núcleo, e a chamada de sistema como a porta entre os dois. Um
+programa comum não fala com o disco: ele **pede** ao kernel. E o Linux é um núcleo **monolítico** —
+esses serviços todos moram dentro do mesmo núcleo, o que explica por que a troca de modo é rápida e
+por que um defeito no kernel derruba o sistema inteiro.
+
+</Teoria>
+
+</Passo>
+
+<Passo numero={4} de={7} titulo="Seção 3 — Virtualização">
+
+<Intro>
+
+**A pergunta que esta seção responde:** nesta máquina, o que é físico, o que é virtual e o que é só
+isolado?
+
+</Intro>
+
+<Comando passo={8} cmd="systemd-detect-virt e hostnamectl">
+
+  <Explica>
+    <Caixa titulo="O que capturar">
+
+    `systemd-detect-virt` responde em uma palavra qual virtualização está em uso. `hostnamectl`
+    mostra o conjunto: sistema, kernel, arquitetura e tipo de máquina.
+
+    </Caixa>
+    <Caixa titulo="O que olhar na saída">
+
+    A resposta deve ser `oracle` (VirtualBox). É a própria VM dizendo que sabe que é uma VM — e isso
+    rende um bom parágrafo sobre hipervisor **tipo 2**, que roda sobre o Windows do laboratório.
+
+    </Caixa>
+  </Explica>
+
+</Comando>
+
+<Comando passo={9} cmd="time docker run --rm alpine echo oi">
+
+  <Explica>
+    <Caixa titulo="O que capturar">
+
+    A saída do `time` — três linhas: `real`, `user`, `sys`. Rode duas vezes e guarde as duas: a
+    primeira baixa a imagem, a segunda não.
+
+    </Caixa>
+    <Caixa titulo="Por que importa">
+
+    É a diferença entre VM e container **medida**, não descrita. Compare esse tempo com o que a VM
+    leva para iniciar. Container não inicia sistema operacional nenhum: ele usa o kernel que já está
+    rodando.
+
+    </Caixa>
+  </Explica>
+
+  <Esperar>
+    na segunda execução, algo abaixo de um segundo. Se der erro de permissão, use `sudo docker` ou
+    confira se o serviço está no ar com `systemctl status docker`.
+  </Esperar>
+
+</Comando>
+
+<Dica titulo="Prova de que o kernel é o mesmo">
+
+Rode `uname -r` na VM e depois `docker run --rm alpine uname -r`. **A versão é idêntica**, embora o
+sistema de dentro seja Alpine e o de fora, Ubuntu. É a evidência mais forte que esta seção pode ter —
+e a que costuma render a melhor pergunta na defesa.
+
+</Dica>
+
+</Passo>
+
+<Passo numero={5} de={7} titulo="Seção 4 — Processos">
+
+<Intro>
+
+**A pergunta que esta seção responde:** o que está rodando nesta máquina agora, e quem começou cada
+coisa?
+
+</Intro>
+
+<Comando passo={10} cmd="ps aux | wc -l e ps -ef --forest">
+
+  <Explica>
+    <Caixa titulo="O que capturar">
+
+    A contagem (`ps aux | wc -l`) com a VM recém-ligada, e um recorte do `ps -ef --forest` mostrando
+    a linhagem do **seu** terminal até o PID 1.
+
+    </Caixa>
+    <Caixa titulo="Como recortar sem perder o sentido">
+
+    A árvore inteira tem centenas de linhas. Use `ps -ef --forest | grep -A 5 -B 5 bash` ou copie
+    só o trecho que contém o seu `bash` e os pais dele. Diga no texto que é um recorte.
+
+    </Caixa>
+  </Explica>
+
+</Comando>
+
+<Comando passo={11} cmd="cat /proc/$$/status | head -20">
+
+  <Explica>
+    <Caixa titulo="O que é">
+
+    `$$` é o PID do shell em que você está digitando. Este comando mostra o processo olhando para
+    si mesmo.
+
+    </Caixa>
+    <Caixa titulo="O que olhar na saída">
+
+    `Name`, `State`, `Pid` e `PPid`. O `PPid` é o pai — e ele aparece na árvore do comando anterior.
+    Ligar essas duas evidências uma à outra vale mais que as duas separadas.
+
+    </Caixa>
+  </Explica>
+
+</Comando>
+
+<Comando passo={12} cmd="o mesmo processo, de dentro e de fora do container">
+
+  <Explica>
+    <Caixa titulo="O que capturar">
+
+    Suba um container que fica vivo: `docker run -d --name meuproc alpine sleep 300`. Depois, de
+    **fora**: `ps aux | grep sleep` (anote o PID). E de **dentro**:
+    `docker exec meuproc ps aux`.
+
+    </Caixa>
+    <Caixa titulo="O que olhar na saída">
+
+    É o mesmo processo, com **números diferentes**: um número alto no host e `1` dentro do
+    container. Não são dois processos — é um só, visto de dois lugares.
+
+    </Caixa>
+  </Explica>
+
+  <Esperar>
+    de dentro, uma lista curtíssima: o container praticamente só enxerga a si mesmo. Ao terminar,
+    limpe com `docker rm -f meuproc`.
+  </Esperar>
+
+</Comando>
+
+<Teoria>
+
+**Para conectar:** processo × programa; a hierarquia de pais e filhos com o PID 1 na raiz; e o
+**namespace de PID**, que é o mecanismo por trás da numeração dupla. É também o gancho do container
+da entrega final.
+
+</Teoria>
+
+</Passo>
+
+<Passo numero={6} de={7} titulo="Escrever: o molde de uma evidência">
+
+<Intro>
+
+Com `evidencias.txt` na mão, escrever fica mecânico. Toda evidência do relatório tem as mesmas
+quatro partes, sempre nesta ordem. Copie o molde abaixo para cada uma.
+
+</Intro>
+
+<Arquivo nome="molde — copie isto para cada evidência">{`[1] O QUE FIZEMOS
+    Uma frase dizendo o que a equipe queria descobrir.
+
+[2] COMANDO E SAÍDA
+    $ o comando exatamente como foi rodado
+    a saída real, recortada no trecho que importa
+
+[3] O QUE ISSO MOSTRA
+    Duas ou três frases, com as palavras da equipe, apontando os
+    números que aparecem na saída acima.
+
+[4] O CONCEITO
+    O que explica o que foi visto, com a fonte citada:
+    (Tanenbaum, 2.1, p. 79)  ou  (Laureano, cap. 10, p. 145)`}</Arquivo>
+
+<Exemplos titulo="O molde preenchido — antes e depois">
+  <Exemplo tipo="fraca" rotulo="Como não fazer">
+
+  "Rodamos o `strace -c ls`. Apareceram várias chamadas de sistema. Chamada de sistema é quando o
+  programa pede algo pro kernel."
+
+  *Por que perde nota:* não tem saída real (dá para escrever isso sem ter rodado nada), não aponta
+  nenhum número, e a fonte não foi citada.
+
+  </Exemplo>
+  <Exemplo tipo="forte" rotulo="Como fazer">
+
+  "Queríamos saber quanto um comando trivial depende do kernel. O `strace -c ls` contou **58**
+  chamadas de sistema, sendo 21 `mmap` e 9 `openat`, para listar uma pasta com 4 arquivos. Ou seja:
+  mesmo um programa que parece não fazer nada precisa abrir bibliotecas, mapeá-las na memória e
+  escrever na saída — e cada uma dessas ações é um pedido ao kernel, porque o programa roda em modo
+  usuário e não pode tocar no hardware direto (Tanenbaum, 1.6, p. 50)."
+
+  </Exemplo>
+</Exemplos>
+
+<Destaque titulo="O teste dos trinta segundos" tom="positivo">
+
+Leia cada evidência que escreveu e pergunte: **alguém conseguiria escrever isso sem ter rodado o
+comando?** Se sim, falta número, falta recorte da saída, ou falta dizer o que aquele número
+específico significa nesta máquina. É exatamente aí que a nota se decide.
+
+</Destaque>
+
+</Passo>
+
+<Passo numero={7} de={7} titulo="Montar o PDF e enviar">
+
+<Intro>Estrutura mínima do documento, na ordem:</Intro>
+
+<Lista>
+  <Ponto marca="1">**Capa:** nome da equipe, nome e matrícula de cada integrante, e de quem é a VM investigada.</Ponto>
+  <Ponto marca="2">**Uma página por seção**, na ordem 1, 2, 3, 4, cada uma começando pela pergunta-guia.</Ponto>
+  <Ponto marca="3">**Referências** no fim: livro, capítulo ou seção, e página. As páginas exatas de cada encontro estão no [mapa de leituras](/so/leituras).</Ponto>
+</Lista>
+
+<Dica titulo="Como gerar o PDF e conferir o tamanho">
+
+No Google Docs, *Arquivo → Fazer download → PDF*. No LibreOffice, *Arquivo → Exportar como PDF*. Em
+qualquer um dos dois, use fonte monoespaçada nos blocos de comando e saída — ajuda quem lê a
+distinguir o que é texto de vocês do que é saída da máquina. Se o arquivo passar de 15 MB, o culpado
+são os prints: troque-os por texto ou reduza a resolução.
+
+</Dica>
+
+<Secao sobretitulo="Antes de enviar" titulo="Leia como o professor vai ler">
+
+<Intro>
+
+A nota sai de três critérios, com estes pesos. Confira um por um antes de enviar — dá para ganhar
+pontos em dez minutos aqui.
+
+</Intro>
+
+<Cartoes>
+  <Cartao rotulo="Peso 4" titulo="Cobertura">
+
+  As quatro seções estão presentes e cada uma responde à sua pergunta-guia? Seção que existe só como
+  título conta como ausente.
+
+  </Cartao>
+  <Cartao rotulo="Peso 3" titulo="Evidência">
+
+  Cada afirmação tem comando **e** saída real da VM da equipe? Saída copiada de tutorial, de outra
+  máquina ou inventada derruba este critério inteiro.
+
+  </Cartao>
+  <Cartao rotulo="Peso 3" titulo="Conexão com o conceito">
+
+  Cada seção liga o que foi visto a um conceito, com fonte citada? Citar é dizer de onde veio a
+  ideia — não é copiar o parágrafo do livro.
+
+  </Cartao>
+</Cartoes>
+
+</Secao>
+
+<Aviso titulo="Erros que custam nota todo semestre">
+
+- **Print da tela inteira** em vez do trecho que importa. Quem lê não deveria ter que procurar.
+- **Saída sem comando**, ou comando sem saída. Os dois juntos, sempre.
+- **Conceito solto no fim da seção**, sem ligação com o número que apareceu na saída.
+- **Citação sem página.** "(Tanenbaum)" não é referência.
+- **Capa sem matrícula**, ou com matrícula errada: é por ela que a nota chega a cada integrante.
+- **Enviar e não conferir.** Abra o PDF depois de enviado e veja se ficou legível.
+
+</Aviso>
+
+<Checklist chave="projeto:1:parcial" titulo="Checklist antes de enviar">
+  <Item id="vm">Todas as evidências saíram da mesma VM, declarada na capa</Item>
+  <Item id="secoes">As seções 1, 2, 3 e 4 estão completas</Item>
+  <Item id="perguntas">Cada seção responde à pergunta-guia dela</Item>
+  <Item id="evidencias">Toda afirmação tem comando + saída real</Item>
+  <Item id="recorte">As saídas estão recortadas no que importa</Item>
+  <Item id="conceitos">Cada seção conecta a prática a um conceito</Item>
+  <Item id="fontes">As citações têm livro, seção e página</Item>
+  <Item id="capa">Capa com equipe, nomes, matrículas e dono da VM</Item>
+  <Item id="tamanho">O PDF abre e tem menos de 15 MB</Item>
+  <Item id="todos">Todos da equipe sabem explicar todas as seções</Item>
+</Checklist>
+
+<Destaque titulo="Enviar" tom="positivo">
+
+O formulário está no fim do [enunciado](/so/projeto/1#entrega), junto com o prazo. Um integrante
+envia pela equipe inteira. **Pode reenviar quantas vezes quiser** até o prazo: vale o envio mais
+recente, e o recibo traz um número de protocolo — guarde-o.
+
+</Destaque>
+
+</Passo>

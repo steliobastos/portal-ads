@@ -23,12 +23,32 @@ const CARREGADORES_PROJETO: Record<string, (etapa: number) => Promise<ModuloRote
   so: (etapa) => import(`./so/projetos/${etapa}.mdx`),
 };
 
+/**
+ * O roteiro de execução do projeto: o enunciado diz o que entregar, este diz
+ * como chegar lá. Arquivo opcional — etapa sem `<etapa>-roteiro.mdx` não ganha
+ * a página nem o link.
+ */
+const CARREGADORES_ROTEIRO_PROJETO: Record<string, (etapa: number) => Promise<ModuloRoteiro>> = {
+  so: (etapa) => import(`./so/projetos/${etapa}-roteiro.mdx`),
+};
+
 export async function carregarProjeto(
   disciplina: string,
   etapa: number,
 ): Promise<ComponentType | null> {
   try {
     return (await CARREGADORES_PROJETO[disciplina]?.(etapa))?.default ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export async function carregarRoteiroProjeto(
+  disciplina: string,
+  etapa: number,
+): Promise<ComponentType | null> {
+  try {
+    return (await CARREGADORES_ROTEIRO_PROJETO[disciplina]?.(etapa))?.default ?? null;
   } catch {
     return null;
   }

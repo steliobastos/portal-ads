@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { EntregaRelatorio } from "@/components/entrega-relatorio";
 import { Cartao, Selo, TituloSecao } from "@/components/ui";
 import { conteudoDa, slugsPublicados } from "@/content";
-import { carregarProjeto } from "@/content/roteiros";
+import { carregarProjeto, carregarRoteiroProjeto } from "@/content/roteiros";
 import { momentoCampus } from "@/lib/datas";
 
 type Props = { params: Promise<{ disciplina: string; etapa: string }> };
@@ -36,6 +36,7 @@ export default async function PaginaProjeto({ params }: Props) {
   const etapa = Number(etapaTexto) as 1 | 2;
   const Enunciado = conteudo && (await carregarProjeto(slug, etapa));
   if (!conteudo || !Enunciado) notFound();
+  const temRoteiro = Boolean(await carregarRoteiroProjeto(slug, etapa));
 
   const { regrasNota } = conteudo;
   const entregas = regrasNota.entregas.filter((e) => e.etapa === etapa);
@@ -55,6 +56,27 @@ export default async function PaginaProjeto({ params }: Props) {
         {" / "}
         <span className="text-ink-dim">projeto {etapa}ª etapa</span>
       </nav>
+
+      {temRoteiro && (
+        <Cartao className="mb-10 border-primary/40 bg-primary-soft">
+          <p className="font-mono text-xs tracking-[0.12em] text-primary uppercase">
+            Não sabe por onde começar?
+          </p>
+          <p className="mt-2 text-ink">
+            Esta página diz <strong>o que</strong> o relatório precisa ter. O roteiro diz{" "}
+            <strong>como chegar lá</strong>: capturar as evidências sem retrabalho, escrever cada
+            seção e montar o PDF.
+          </p>
+          <p className="mt-3">
+            <Link
+              href={`/${slug}/projeto/${etapa}/roteiro`}
+              className="font-medium text-primary hover:underline"
+            >
+              Abrir o roteiro da entrega parcial →
+            </Link>
+          </p>
+        </Cartao>
+      )}
 
       <Enunciado />
 
