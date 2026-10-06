@@ -8,6 +8,7 @@ import {
   quizzesDaEtapa,
   type CelulaPortfolio,
 } from "./portfolio";
+import { consolidar, type Consolidado, type EnvioQuiz } from "./envios";
 import { clienteAdmin } from "./supabase/servidor";
 
 /**
@@ -17,16 +18,6 @@ import { clienteAdmin } from "./supabase/servidor";
  * chave secreta e não confere sessão sozinho. Todas as páginas e rotas que o
  * usam fazem a checagem na primeira linha.
  */
-
-type Linha = {
-  encontro: number;
-  matricula: string;
-  nome: string;
-  acertos: number;
-  aprovado: boolean;
-  observacoes: string[];
-  enviado_em: string;
-};
 
 type LinhaMarca = {
   encontro: number;
@@ -57,10 +48,10 @@ async function enviosEMarcas(disciplina: string, encontros: number[]) {
   if (!supabase || encontros.length === 0) return { envios: [], marcas: [] };
 
   const [envios, marcas] = await Promise.all([
-    lerTudo<Linha>((de, ate) =>
+    lerTudo<EnvioQuiz>((de, ate) =>
       supabase
         .from("submissoes_quiz")
-        .select("encontro, matricula, nome, acertos, aprovado, observacoes, enviado_em")
+        .select("id, encontro, matricula, nome, acertos, aprovado, observacoes, enviado_em, anulado_em")
         .eq("disciplina", disciplina)
         .in("encontro", encontros)
         .order("enviado_em", { ascending: true })
@@ -80,44 +71,17 @@ async function enviosEMarcas(disciplina: string, encontros: number[]) {
 }
 
 /**
- * A situação de um aluno num quiz, consolidando todos os envios dele.
- *
- * Regra: vale o acerto do **primeiro** envio (reenviar depois de ver as
- * justificativas não melhora a nota) e as observações do **último** (o aluno
- * pode voltar para completá-las).
+ * A situação de um aluno num quiz, consolidando todos os envios dele. A regra
+ * de qual envio vale está em `envios.ts`.
  */
-export type SituacaoAluno = {
+export type SituacaoAluno = Consolidado & {
   matricula: string;
   nome: string;
-  acertos: number;
-  aprovado: boolean;
-  envios: number;
-  observacoes: string[];
-  primeiroEnvio: string;
-  ultimoEnvio: string;
-  /** Envios com nomes diferentes na mesma matrícula — vale conferir. */
-  nomesDivergentes: string[];
+  /** Pelo primeiro envio válido; `false` se não houver nenhum. */
   atrasado: boolean;
   observacoesInsuficientes: boolean;
   atrasoAceito: boolean;
 };
-
-function consolidar(envios: Linha[]) {
-  const primeiro = envios[0];
-  const ultimo = envios[envios.length - 1];
-  const nomes = [...new Set(envios.map((e) => e.nome.trim()))];
-  return {
-    matricula: primeiro.matricula,
-    nome: ultimo.nome,
-    acertos: primeiro.acertos,
-    aprovado: primeiro.aprovado,
-    envios: envios.length,
-    observacoes: ultimo.observacoes,
-    primeiroEnvio: primeiro.enviado_em,
-    ultimoEnvio: ultimo.enviado_em,
-    nomesDivergentes: nomes.length > 1 ? nomes : [],
-  };
-}
 
 function agrupar<T, K>(itens: T[], chave: (item: T) => K): Map<K, T[]> {
   const mapa = new Map<K, T[]>();
@@ -135,10 +99,13 @@ export async function situacaoDoEncontro(
   return [...agrupar(envios, (e) => e.matricula).values()]
     .map((lista) => {
       const aluno = consolidar(lista);
-      const marca = marcas.find((m) => m.matricula === aluno.matricula);
+      const matricula = lista[0].matricula;
+      const marca = marcas.find((m) => m.matricula === matricula);
       return {
         ...aluno,
-        atrasado: passouDoPrazo(prazo, aluno.primeiroEnvio),
+        matricula,
+        nome: lista[lista.length - 1].nome,
+        atrasado: aluno.valido ? passouDoPrazo(prazo, aluno.valido.primeiroEnvio) : false,
         observacoesInsuficientes: marca?.observacoes_insuficientes ?? false,
         atrasoAceito: marca?.atraso_aceito ?? false,
       };
@@ -172,12 +139,12 @@ export async function portfolioDaEtapa(conteudo: ConteudoDisciplina, etapa: 1 | 
     ([matricula, doAluno]) => {
       const porEncontro = agrupar(doAluno, (e) => e.encontro);
       const celulas = quizzes.map((quiz) => {
-        const lista = porEncontro.get(quiz.encontro);
+        const valido = consolidar(porEncontro.get(quiz.encontro) ?? []).valido;
         const marca = marcas.find((m) => m.matricula === matricula && m.encontro === quiz.encontro);
         return celulaDoQuiz(
           regras,
           quiz,
-          lista && { primeiroEnvio: lista[0].enviado_em, aprovado: lista[0].aprovado },
+          valido ?? undefined,
           marca && {
             observacoesInsuficientes: marca.observacoes_insuficientes,
             atrasoAceito: marca.atraso_aceito,

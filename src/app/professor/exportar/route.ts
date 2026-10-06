@@ -55,22 +55,26 @@ export async function GET(request: Request) {
     "atraso aceito",
     "observacoes insuficientes",
     "envios",
+    "desconsiderados",
     "primeiro envio",
     "ultimo envio",
     ...quiz.observacoes.map((_, i) => `observacao ${i + 1}`),
   ];
-  const corpo = alunos.map((a) => [
+  // Aluno com todos os envios desconsiderados aparece com as colunas de
+  // situação vazias — está na planilha para o professor ver, mas não conta.
+  const corpo = alunos.map(({ valido: v, ...a }) => [
     a.matricula,
     a.nome,
-    String(a.acertos),
-    simNao(a.aprovado),
+    v ? String(v.acertos) : "",
+    v ? simNao(v.aprovado) : "",
     simNao(a.atrasado),
     a.atrasado ? simNao(a.atrasoAceito) : "",
     simNao(a.observacoesInsuficientes),
-    String(a.envios),
-    momentoCampus(a.primeiroEnvio),
-    momentoCampus(a.ultimoEnvio),
-    ...a.observacoes,
+    String(a.historico.length),
+    String(a.desconsiderados),
+    v ? momentoCampus(v.primeiroEnvio) : "",
+    v ? momentoCampus(v.ultimoEnvio) : "",
+    ...(v?.observacoes ?? []),
   ]);
   return planilha(
     `quiz-${disciplina}-encontro-${String(encontro).padStart(2, "0")}.csv`,

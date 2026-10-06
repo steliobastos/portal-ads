@@ -39,7 +39,15 @@ const Aluno = z.object({
 });
 
 export type ResultadoEnvio =
-  | { ok: true; correcao: Correcao; atrasado: boolean }
+  | {
+      ok: true;
+      correcao: Correcao;
+      atrasado: boolean;
+      /** Já havia um envio válido deste aluno para este quiz. */
+      reenvio: boolean;
+      protocolo: number;
+      enviadoEm: string;
+    }
   | { ok: false; erro: string };
 
 export async function enviarQuiz(
@@ -75,8 +83,20 @@ export async function enviarQuiz(
     };
   }
 
+  // Para a leitura vale o primeiro envio: a tela precisa saber se este é um
+  // reenvio para não prometer um crédito que não vai contar. Só se devolve
+  // isso (sim ou não), nunca o conteúdo do envio anterior.
+  const { count: anteriores, error: erroContagem } = await supabase
+    .from("submissoes_quiz")
+    .select("id", { count: "exact", head: true })
+    .eq("disciplina", envio.disciplina)
+    .eq("encontro", envio.encontro)
+    .eq("matricula", envio.matricula)
+    .is("anulado_em", null);
+  if (erroContagem) console.error("Falha ao conferir envios anteriores:", erroContagem.message);
+
   const correcao = corrigir(quiz, envio.respostas);
-  const { error } = await supabase.from("submissoes_quiz").insert({
+  const { data: gravado, error } = await supabase.from("submissoes_quiz").insert({
     disciplina: envio.disciplina,
     encontro: envio.encontro,
     matricula: envio.matricula,
@@ -85,7 +105,7 @@ export async function enviarQuiz(
     acertos: correcao.acertos,
     aprovado: correcao.aprovado,
     observacoes: envio.observacoes.map((o) => o.trim()),
-  });
+  }).select("id, enviado_em").single();
 
   if (error) {
     console.error("Falha ao gravar envio de quiz:", error.message);
@@ -98,5 +118,12 @@ export async function enviarQuiz(
   // Envio atrasado é aceito e gravado; o painel mostra a marca e o professor
   // decide se conta. Aqui só se avisa o aluno.
   const conteudo = conteudoDa(envio.disciplina)!;
-  return { ok: true, correcao, atrasado: passouDoPrazo(prazoDoQuiz(conteudo, envio.encontro)) };
+  return {
+    ok: true,
+    correcao,
+    atrasado: passouDoPrazo(prazoDoQuiz(conteudo, envio.encontro), gravado.enviado_em),
+    reenvio: (anteriores ?? 0) > 0,
+    protocolo: gravado.id,
+    enviadoEm: gravado.enviado_em,
+  };
 }

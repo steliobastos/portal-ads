@@ -5,7 +5,7 @@ import { conteudoDa, slugsPublicados } from "@/content";
 import { momentoCampus, situacao } from "@/lib/datas";
 import { situacaoDoEncontro, type SituacaoAluno } from "@/lib/painel-quiz";
 import { prazoDoQuiz } from "@/lib/portfolio";
-import { marcar } from "./acoes";
+import { anularEnvio, marcar } from "./acoes";
 import { Moldura, exigirProfessor } from "./moldura";
 
 export const metadata: Metadata = {
@@ -39,7 +39,7 @@ export default async function PaginaQuizzes({ searchParams }: Props) {
   const prazo = prazoDoQuiz(conteudo, encontro.numero);
 
   const alunos = await situacaoDoEncontro(conteudo, encontro.numero);
-  const comCredito = alunos.filter((a) => a.aprovado).length;
+  const comCredito = alunos.filter((a) => a.valido?.aprovado).length;
   const atrasosPendentes = alunos.filter((a) => a.atrasado && !a.atrasoAceito).length;
 
   return (
@@ -89,6 +89,7 @@ export default async function PaginaQuizzes({ searchParams }: Props) {
       <p className="mb-6 text-sm text-ink-faint">
         Acertos contam do primeiro envio; observações, do último. Observações ficam aceitas até você
         marcá-las como insuficientes. Atraso é medido pelo primeiro envio e só conta se você aceitar.
+        Envio desconsiderado continua no histórico, mas deixa de contar — o seguinte vira o primeiro.
       </p>
 
       {alunos.length === 0 ? (
@@ -103,19 +104,24 @@ export default async function PaginaQuizzes({ searchParams }: Props) {
                     <span className="block font-medium text-ink">{a.nome}</span>
                     <span className="font-mono text-xs text-ink-faint">{a.matricula}</span>
                   </span>
-                  <Selo tom={a.aprovado ? "secondary" : "alert"}>
-                    {a.acertos}/{quiz.perguntas.length}
-                  </Selo>
+                  {a.valido ? (
+                    <Selo tom={a.valido.aprovado ? "secondary" : "alert"}>
+                      {a.valido.acertos}/{quiz.perguntas.length}
+                    </Selo>
+                  ) : (
+                    <Selo tom="alert">nenhum envio válido</Selo>
+                  )}
                   {a.observacoesInsuficientes && <Selo tom="alert">obs. insuficientes</Selo>}
                   {a.atrasado && (
                     <Selo tom={a.atrasoAceito ? "neutro" : "alert"}>
                       {a.atrasoAceito ? "atraso aceito" : "atrasado"}
                     </Selo>
                   )}
-                  {a.envios > 1 && <Selo>{a.envios} envios</Selo>}
+                  {a.historico.length > 1 && <Selo>{a.historico.length} envios</Selo>}
+                  {a.desconsiderados > 0 && <Selo>{a.desconsiderados} desconsiderado(s)</Selo>}
                   {a.nomesDivergentes.length > 0 && <Selo tom="alert">nomes diferentes</Selo>}
                   <span className="font-mono text-xs text-ink-faint">
-                    {momentoCampus(a.ultimoEnvio)}
+                    {momentoCampus(a.historico[a.historico.length - 1].enviadoEm)}
                   </span>
                 </summary>
 
@@ -125,18 +131,46 @@ export default async function PaginaQuizzes({ searchParams }: Props) {
                       Envios desta matrícula com nomes diferentes: {a.nomesDivergentes.join(" · ")}
                     </p>
                   )}
-                  {quiz.observacoes.map((o, i) => (
-                    <div key={i}>
-                      <p className="text-xs font-medium text-ink-dim">
-                        {i + 1}. {o.enunciado}
-                      </p>
-                      <p className="mt-1 text-sm whitespace-pre-wrap text-ink">{a.observacoes[i]}</p>
-                    </div>
-                  ))}
-                  <p className="font-mono text-xs text-ink-faint">
-                    primeiro envio {momentoCampus(a.primeiroEnvio)}
-                    {a.envios > 1 && ` · último ${momentoCampus(a.ultimoEnvio)}`}
-                  </p>
+                  {a.valido &&
+                    quiz.observacoes.map((o, i) => (
+                      <div key={i}>
+                        <p className="text-xs font-medium text-ink-dim">
+                          {i + 1}. {o.enunciado}
+                        </p>
+                        <p className="mt-1 text-sm whitespace-pre-wrap text-ink">
+                          {a.valido!.observacoes[i]}
+                        </p>
+                      </div>
+                    ))}
+
+                  <div>
+                    <p className="text-xs font-medium text-ink-dim">Envios</p>
+                    <ol className="mt-2 space-y-1.5">
+                      {a.historico.map((h) => (
+                        <li key={h.id} className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                          <span
+                            className={cx(
+                              "font-mono text-xs",
+                              h.anulado ? "text-ink-faint line-through" : "text-ink",
+                            )}
+                          >
+                            nº {h.id} · {momentoCampus(h.enviadoEm)} · {h.acertos}/{quiz.perguntas.length}
+                          </span>
+                          {h.anulado && <Selo>desconsiderado</Selo>}
+                          <form action={anularEnvio}>
+                            <input type="hidden" name="id" value={h.id} />
+                            <input type="hidden" name="anular" value={String(!h.anulado)} />
+                            <button
+                              type="submit"
+                              className="rounded-md border border-line px-2 py-0.5 text-xs text-ink-dim hover:border-primary-dim hover:text-primary"
+                            >
+                              {h.anulado ? "Restaurar" : "Desconsiderar"}
+                            </button>
+                          </form>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
 
                   <div className="flex flex-wrap gap-2 border-t border-line-soft pt-4">
                     <BotaoMarca

@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useId, useRef, useState, useTransition } from "react";
-import { enviarQuiz } from "@/lib/acoes-quiz";
+import { enviarQuiz, type ResultadoEnvio } from "@/lib/acoes-quiz";
+import { momentoCampus } from "@/lib/datas";
 import type { Correcao, QuizPublico } from "@/lib/quiz";
-import { acertosParaCredito } from "@/lib/quiz";
+import { acertosParaCredito, resumoDoEnvio } from "@/lib/quiz";
 import { CampoAluno, identificado, useTurma, VAZIO, type Identificacao } from "./identificacao";
 import { cx } from "./ui";
 
@@ -68,12 +69,12 @@ export function FormularioQuiz({
   // sabe. Calculado depois da hidratação para não divergir do HTML do servidor.
   const [encerrado, setEncerrado] = useState(false);
   useEffect(() => setEncerrado(Date.now() > new Date(prazo).getTime()), [prazo]);
-  const [atrasado, setAtrasado] = useState(false);
   const turma = useTurma(disciplina);
   const [aluno, setAluno] = useState<Identificacao>(VAZIO);
   const [respostas, setRespostas] = useState<(number | null)[]>(quiz.perguntas.map(() => null));
   const [erro, setErro] = useState<string | null>(null);
-  const [correcao, setCorrecao] = useState<Correcao | null>(null);
+  const [envio, setEnvio] = useState<Extract<ResultadoEnvio, { ok: true }> | null>(null);
+  const correcao = envio?.correcao ?? null;
   const [enviando, iniciar] = useTransition();
   const resultadoRef = useRef<HTMLDivElement>(null);
 
@@ -105,8 +106,7 @@ export function FormularioQuiz({
         observacoes,
       });
       if (!resultado.ok) return setErro(resultado.erro);
-      setCorrecao(resultado.correcao);
-      setAtrasado(resultado.atrasado);
+      setEnvio(resultado);
       requestAnimationFrame(() =>
         resultadoRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }),
       );
@@ -126,9 +126,7 @@ export function FormularioQuiz({
       )}
 
       <div ref={resultadoRef} className="scroll-mt-6">
-        {correcao && (
-          <Resultado correcao={correcao} atrasado={atrasado} aoApagar={apagarObservacoes} />
-        )}
+        {envio && <Resultado envio={envio} aoApagar={apagarObservacoes} />}
       </div>
 
       <fieldset className="rounded-2xl border border-line bg-card p-5 sm:p-6">
@@ -198,35 +196,45 @@ export function FormularioQuiz({
 }
 
 function Resultado({
-  correcao,
-  atrasado,
+  envio,
   aoApagar,
 }: {
-  correcao: Correcao;
-  atrasado: boolean;
+  envio: Extract<ResultadoEnvio, { ok: true }>;
   aoApagar: () => void;
 }) {
   const [apagado, setApagado] = useState(false);
+  const resumo = resumoDoEnvio(envio.correcao, envio);
 
   return (
     <div
       role="status"
       className={cx(
         "rounded-2xl border p-5 sm:p-6",
-        correcao.aprovado ? "border-secondary bg-secondary-soft" : "border-alert/30 bg-alert-soft",
+        resumo.tom === "secondary" && "border-secondary bg-secondary-soft",
+        resumo.tom === "alert" && "border-alert/30 bg-alert-soft",
+        resumo.tom === "neutro" && "border-line bg-card",
       )}
     >
-      <p className="font-mono text-xs tracking-[0.12em] text-ink-dim uppercase">Envio registrado</p>
-      <p className="mt-2 text-2xl text-ink">
-        {correcao.acertos} de {correcao.total} acertos
-        {correcao.aprovado ? " — crédito no portfólio ✓" : " — ainda sem crédito"}
+      <p className="font-mono text-xs tracking-[0.12em] text-ink-dim uppercase">
+        Envio registrado · protocolo nº {envio.protocolo} · {momentoCampus(envio.enviadoEm)}
       </p>
+      <p className="mt-2 text-2xl text-ink">{resumo.titulo}</p>
+      {resumo.avisoReenvio ? (
+        <p className="mt-2 text-sm text-ink-dim">
+          Para a leitura vale o seu <strong>primeiro</strong> envio — estes acertos não mudam sua
+          nota. As observações deste reenvio substituem as anteriores.
+        </p>
+      ) : (
+        <p className="mt-2 text-sm text-ink-dim">
+          As justificativas estão abaixo de cada pergunta. Vale o acerto do seu{" "}
+          <strong>primeiro</strong> envio; se precisar completar as observações, pode reenviar — delas,
+          vale a versão mais recente.
+        </p>
+      )}
       <p className="mt-2 text-sm text-ink-dim">
-        As justificativas estão abaixo de cada pergunta. Vale o acerto do seu{" "}
-        <strong>primeiro</strong> envio; se precisar completar as observações, pode reenviar — delas,
-        vale a versão mais recente.
+        Guarde o número do protocolo: ele comprova o envio.
       </p>
-      {atrasado && (
+      {resumo.avisoAtraso && (
         <p className="mt-2 text-sm text-alert">
           Este envio chegou depois do prazo: ele fica registrado, mas só entra no portfólio se o
           professor aceitar o atraso.

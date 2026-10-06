@@ -59,3 +59,23 @@ export async function marcar(form: FormData) {
 
   revalidatePath("/professor", "layout");
 }
+
+/**
+ * Desconsidera um envio de quiz, ou o restaura. O envio nunca é apagado: fica
+ * no histórico do painel, só deixa de contar (regra em `lib/envios.ts`).
+ */
+export async function anularEnvio(form: FormData) {
+  if (!(await professorLogado())) return;
+
+  const id = Number(form.get("id"));
+  const anular = form.get("anular") === "true";
+  if (!Number.isInteger(id) || id <= 0) return;
+
+  const { error } = await clienteAdmin()!
+    .from("submissoes_quiz")
+    .update({ anulado_em: anular ? new Date().toISOString() : null })
+    .eq("id", id);
+  if (error) throw new Error(`Falha ao gravar: ${error.message}`);
+
+  revalidatePath("/professor", "layout");
+}

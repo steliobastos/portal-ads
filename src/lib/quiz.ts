@@ -67,3 +67,27 @@ export function problemaNoEnvio(
   }
   return null;
 }
+
+/**
+ * O que a tela diz depois de um envio.
+ *
+ * Num **reenvio** não se promete crédito: para a leitura vale o primeiro envio,
+ * então os acertos de agora não mudam nada — dizer "crédito ✓" a quem errou da
+ * primeira vez seria enganar. Pelo mesmo motivo, reenvio depois do prazo não é
+ * atraso: o atraso também é medido pelo primeiro envio.
+ */
+export function resumoDoEnvio(
+  correcao: Correcao,
+  envio: { reenvio: boolean; atrasado: boolean },
+): { titulo: string; tom: "secondary" | "alert" | "neutro"; avisoReenvio: boolean; avisoAtraso: boolean } {
+  const placar = `${correcao.acertos} de ${correcao.total} acertos`;
+  if (envio.reenvio) {
+    return { titulo: `${placar} neste reenvio`, tom: "neutro", avisoReenvio: true, avisoAtraso: false };
+  }
+  return {
+    titulo: correcao.aprovado ? `${placar} — crédito no portfólio ✓` : `${placar} — ainda sem crédito`,
+    tom: correcao.aprovado ? "secondary" : "alert",
+    avisoReenvio: false,
+    avisoAtraso: envio.atrasado,
+  };
+}
