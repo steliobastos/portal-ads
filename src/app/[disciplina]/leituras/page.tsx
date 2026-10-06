@@ -4,7 +4,11 @@ import { notFound } from "next/navigation";
 import { ItemLeitura, LegendaFaixas } from "@/components/leitura";
 import { Cartao, Selo, TituloSecao } from "@/components/ui";
 import { conteudoDa } from "@/content";
+import { conteudoVigente } from "@/lib/calendario";
 import { dataCurta } from "@/lib/datas";
+
+/** As datas vêm do calendário vigente: a página se renova sozinha a cada hora. */
+export const revalidate = 3600;
 
 type Props = { params: Promise<{ disciplina: string }> };
 
@@ -30,7 +34,7 @@ const LIVROS = [
 
 export default async function PaginaLeituras({ params }: Props) {
   const { disciplina: slug } = await params;
-  const conteudo = conteudoDa(slug);
+  const conteudo = await conteudoVigente(slug);
   if (!conteudo) notFound();
 
   return (

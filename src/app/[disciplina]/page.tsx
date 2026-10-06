@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ListaMateriais, materiaisDo } from "@/components/material";
 import { BotaoLink, Cartao, Selo, TituloSecao } from "@/components/ui";
 import { conteudoDa } from "@/content";
+import { proximoEncontroDe } from "@/lib/agenda";
 import { conteudoVigente } from "@/lib/calendario";
 import { dataExtensa, paraData } from "@/lib/datas";
 
@@ -31,7 +32,8 @@ export default async function PaginaDisciplina({ params }: Props) {
 
   const hoje = new Date();
   const referencia = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
-  const proximo = encontros.find((e) => paraData(e.data) >= referencia) ?? null;
+  // Pela data, não pela ordem: um encontro adiado pode cair depois do seguinte.
+  const proximo = proximoEncontroDe(conteudo, hoje);
   // A Semana 0 é extracurricular: conta como encontro dado, mas não entra no total de 17.
   const regulares = encontros.filter((e) => e.numero > 0);
   const concluidos = regulares.filter((e) => paraData(e.data) < referencia).length;

@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Selo } from "@/components/ui";
 import { slugsPublicados } from "@/content";
+import { proximoEncontroDe } from "@/lib/agenda";
 import { conteudoVigente } from "@/lib/calendario";
-import { dataCurta, situacao } from "@/lib/datas";
+import { dataCurta } from "@/lib/datas";
 import { listarDocumentos, type Documento } from "@/lib/documentos-professor";
 import { Moldura, exigirProfessor } from "../moldura";
 
@@ -21,7 +22,7 @@ export default async function PaginaRoteiros() {
   const conteudo = (await conteudoVigente(slugsPublicados()[0]))!;
   const documentos = await listarDocumentos();
   const transversais = documentos.filter((d) => d.encontro === null);
-  const proximo = conteudo.encontros.find((e) => situacao(e.data) === "futuro");
+  const proximo = proximoEncontroDe(conteudo) ?? undefined;
 
   return (
     <Moldura aba="roteiros" email={acesso.email}>

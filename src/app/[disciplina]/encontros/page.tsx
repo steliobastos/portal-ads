@@ -5,6 +5,7 @@ import { SeloFaixa } from "@/components/leitura";
 import { materiaisDo } from "@/components/material";
 import { Cartao, Selo, TituloSecao } from "@/components/ui";
 import { conteudoDa } from "@/content";
+import { proximoEncontroDe } from "@/lib/agenda";
 import { conteudoVigente } from "@/lib/calendario";
 import { dataCurta, paraData } from "@/lib/datas";
 
@@ -25,7 +26,8 @@ export default async function PaginaEncontros({ params }: Props) {
 
   const hoje = new Date();
   const referencia = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
-  const proximoNumero = conteudo.encontros.find((e) => paraData(e.data) >= referencia)?.numero;
+  // Pela data, não pela ordem: um encontro adiado pode cair depois do seguinte.
+  const proximoNumero = proximoEncontroDe(conteudo, hoje)?.numero;
 
   const porEtapa = [1, 2].map((etapa) => ({
     etapa,

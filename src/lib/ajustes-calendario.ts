@@ -37,8 +37,17 @@ function somarDias(iso: string, dias: number): string {
   return new Date(utc(iso) + dias * DIA_MS).toISOString().slice(0, 10);
 }
 
+/**
+ * Instante completo e com fuso. Sem fuso, o servidor (UTC na Vercel) leria a
+ * hora como de Greenwich, e o prazo fecharia três horas antes em Horizonte.
+ */
 function prazoValido(valor: string | null): valor is string {
-  return Boolean(valor && /^\d{4}-\d{2}-\d{2}T/.test(valor) && !Number.isNaN(Date.parse(valor)));
+  return Boolean(
+    valor &&
+      /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?(Z|[+-]\d{2}:\d{2})$/.test(valor) &&
+      dataValida(valor.slice(0, 10)) &&
+      !Number.isNaN(Date.parse(valor)),
+  );
 }
 
 export function chaveDaEntrega(entrega: { etapa: number; fase: string }): string {

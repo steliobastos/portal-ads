@@ -120,6 +120,14 @@ describe("aplicarAjustes", () => {
     expect(r).toEqual(aplicarAjustes(base, []));
   });
 
+  it("ignora prazo sem fuso ou em dia que não existe", () => {
+    const r = aplicarAjustes(base, [
+      ajuste("prazo-quiz", "2", "2026-09-30T23:59:59"),
+      ajuste("prazo-entrega", "1-parcial", "2026-02-30T23:59:59-03:00"),
+    ]);
+    expect(r).toEqual(aplicarAjustes(base, []));
+  });
+
   it("não altera o conteúdo recebido", () => {
     const antes = JSON.stringify(base);
     aplicarAjustes(base, [ajuste("encontro", "2", "2026-09-04"), ajuste("sem-aula", "2026-11-02", "Recesso")]);
