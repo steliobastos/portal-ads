@@ -1,0 +1,24 @@
+# Roda a cada push e pull request: lint, tipos, testes e build.
+# O build não precisa das variáveis do Supabase — sem elas o portal funciona,
+# só com o envio de quiz desativado.
+name: Verificar
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build

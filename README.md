@@ -32,6 +32,8 @@ Outros comandos:
 npm run build             # build de produção
 npm run typecheck         # tsc --noEmit
 npm run lint              # ESLint
+npm test                  # testes das regras de nota (Vitest)
+npm run banco:copiar      # cópia de segurança do banco e dos PDFs em curso/backups/
 npm run material:preparar # prepara o material publicado (as duas tarefas abaixo)
 npm run material:voltar   # injeta o botão "voltar ao portal" nos HTMLs de material
 npm run material:indexar  # regenera o índice dos arquivos de material
@@ -190,6 +192,24 @@ projeto e o painel leem dali. Mudar um peso ou prazo é mudar esse arquivo.
 5. Copie `.env.example` para `.env.local` e preencha. Na Vercel, cadastre as mesmas variáveis e
    faça um novo deploy.
 
+#### Banco ativo e cópia de segurança
+
+O plano gratuito do Supabase **pausa o projeto depois de cerca de uma semana sem uso**, e pausado o
+envio de quiz e de relatório falha. Um agendamento da Vercel (`vercel.json`) chama
+`/api/manter-ativo` uma vez por dia; a rota só conta os alunos da turma, o que basta para o banco
+contar como usado. Exige a variável `CRON_SECRET` na Vercel.
+
+O plano gratuito também não oferece backup para baixar. Para ter uma cópia no computador:
+
+```bash
+npm run banco:copiar
+```
+
+O comando só lê o banco e cria `curso/backups/<data-hora>/` (fora do git) com cada tabela em
+`.json` (cópia fiel, para restaurar) e `.csv` (para abrir no Excel), os PDFs dos relatórios e um
+`resumo.txt` com as contagens. Vale rodar depois de cada prazo de entrega. Para restaurar uma
+tabela, importe o `.json` pelo painel do Supabase ou peça ajuda — não há restauração automática.
+
 ### Por que o material recebe um botão injetado
 
 Os HTMLs de material foram escritos antes do portal: são documentos avulsos, com CSS próprio e
@@ -231,6 +251,7 @@ minuto. Branches ganham URL de preview automaticamente.
 | `SUPABASE_PUBLISHABLE_KEY` | quiz | Chave pública, usada só no login do professor |
 | `SUPABASE_SECRET_KEY` | quiz | Chave secreta, que ignora a RLS. Só no servidor |
 | `PROFESSOR_EMAIL` | quiz | Único e-mail com acesso a `/professor` |
+| `CRON_SECRET` | Vercel | Segredo do agendamento diário (`vercel.json`) que chama `/api/manter-ativo` para o Supabase gratuito não pausar o banco por falta de uso. A Vercel o envia sozinha nas chamadas agendadas |
 
 O endereço absoluto alimenta o `metadataBase` (prévia do link em WhatsApp e Classroom), o
 `sitemap.xml` e o `robots.txt`.
@@ -243,7 +264,9 @@ O endereço absoluto alimenta o `metadataBase` (prévia do link em WhatsApp e Cl
       por decisão: são apresentação, não documento
 - [x] **Fase 3** — quiz nativo com Supabase: envio por Server Action, correção no servidor,
       painel do professor autenticado com exportação para planilha
-- [ ] **Fase 4** — testes (Vitest + Playwright) e CI no GitHub Actions
+- [ ] **Fase 4** — em andamento: testes das regras de nota com Vitest (correção do quiz, prazos,
+      qual envio vale, portfólio) e verificação automática no GitHub Actions a cada push (lint,
+      tipos, testes e build). Falta: testes de navegador com Playwright
 
 ## Material do professor
 

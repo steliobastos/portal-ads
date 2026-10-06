@@ -8,11 +8,13 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
     "material:indexar": "node scripts/indexar-materiais.mjs",
     "material:voltar": "node scripts/injetar-volta-ao-portal.mjs",
     "material:preparar": "npm run material:voltar && npm run material:indexar",
     "professor:publicar": "node --env-file=.env.local scripts/publicar-professor.mjs",
-    "turma:importar": "node --env-file=.env.local scripts/importar-turma.mjs"
+    "turma:importar": "node --env-file=.env.local scripts/importar-turma.mjs",
+    "banco:copiar": "node --env-file=.env.local scripts/copiar-banco.mjs"
   },
   "dependencies": {
     "@mdx-js/loader": "^3.1.1",
@@ -31,13 +33,14 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
+    "@types/node": "^22.20.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "^15.5.25",
     "node-html-parser": "^9.0.1",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^5.0.3"
   }
 }
