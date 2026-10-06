@@ -137,9 +137,11 @@ Com a turma importada, o aluno **escolhe o nome numa lista** em vez de digitar n
 tanto no quiz quanto na entrega do relatório. Some assim a fonte de erro mais cara do semestre:
 matrícula digitada errada, que faz o envio não cair no portfólio de ninguém.
 
-```bash
-npm run turma:importar -- curso/turmas/so-2026-2.csv --disciplina so --turma 2026.2
-```
+A importação é feita no painel, aba **Turma** (`/professor/turma`): anexe o CSV exportado do
+diário e o portal mostra o que vai mudar (quem entra, quem muda de nome, quem sai) antes de gravar.
+Linha fora do formato faz a importação inteira ser recusada. A leitura do CSV e a comparação com
+a lista atual são funções puras, com testes, em `src/lib/importar-turma.ts`; o arquivo salvo de
+novo pelo Excel (Windows-1252) também é lido com os acentos certos.
 
 - **A lista vive só no banco** (`turma_alunos`), nunca em `src/content/`: este repositório é
   público e nome de aluno é dado pessoal. O CSV fica em `curso/`, que está no `.gitignore`.
@@ -155,8 +157,9 @@ npm run turma:importar -- curso/turmas/so-2026-2.csv --disciplina so --turma 202
   comodidade; se um dia isso incomodar, basta esvaziar a tabela e o formulário volta a pedir nome e
   matrícula digitados.
 - `/professor` é o painel: login pelo Supabase Auth, aceito só para o e-mail de `PROFESSOR_EMAIL`.
-  Tem três abas: envios por quiz (com as marcas do professor), portfólio consolidado por etapa e
-  relatórios entregues, com exportação `.csv`.
+  Tem cinco abas: envios por quiz (com as marcas do professor e o botão de desconsiderar um
+  envio), portfólio consolidado por etapa, relatórios entregues, roteiros do professor e a lista
+  da turma, com exportação `.csv` onde faz sentido.
 
 Os quizzes começaram como HTML avulso que gravava com `window.storage`, uma API que só existe
 dentro dos artefatos do Claude. Publicados no portal, eles não salvavam nada. Por isso saíram de

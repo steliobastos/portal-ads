@@ -10,6 +10,7 @@ const ABAS = [
   { href: "/professor/portfolio", id: "portfolio", rotulo: "Portfólio" },
   { href: "/professor/relatorios", id: "relatorios", rotulo: "Relatórios" },
   { href: "/professor/roteiros", id: "roteiros", rotulo: "Roteiros" },
+  { href: "/professor/turma", id: "turma", rotulo: "Turma" },
 ] as const;
 
 export type Aba = (typeof ABAS)[number]["id"];

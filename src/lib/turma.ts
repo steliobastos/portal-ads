@@ -90,3 +90,20 @@ export async function turmaCompleta(disciplina: string): Promise<AlunoDaTurma[]>
   }
   return (data ?? []) as AlunoDaTurma[];
 }
+
+/** A turma inteira, ativos e inativos — para a aba Turma do painel. */
+export async function turmaParaPainel(
+  disciplina: string,
+): Promise<(AlunoDaTurma & { ativo: boolean; turma: string })[]> {
+  const supabase = clienteAdmin();
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from("turma_alunos")
+    .select("id, nome, matricula, ativo, turma")
+    .eq("disciplina", disciplina)
+    .order("nome");
+
+  if (error) throw new Error(`Falha ao ler a turma: ${error.message}`);
+  return (data ?? []) as (AlunoDaTurma & { ativo: boolean; turma: string })[];
+}
