@@ -1,6 +1,6 @@
 # Calendário editável pelo painel — desenho
 
-**Data:** 06/10/2026 · **Status:** aprovado em conversa, aguardando revisão da especificação escrita
+**Data:** 06/10/2026 · **Status:** implementado em 06/10/2026
 
 ## Problema
 

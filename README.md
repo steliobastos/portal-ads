@@ -157,9 +157,9 @@ novo pelo Excel (Windows-1252) também é lido com os acentos certos.
   comodidade; se um dia isso incomodar, basta esvaziar a tabela e o formulário volta a pedir nome e
   matrícula digitados.
 - `/professor` é o painel: login pelo Supabase Auth, aceito só para o e-mail de `PROFESSOR_EMAIL`.
-  Tem cinco abas: envios por quiz (com as marcas do professor e o botão de desconsiderar um
-  envio), portfólio consolidado por etapa, relatórios entregues, roteiros do professor e a lista
-  da turma, com exportação `.csv` onde faz sentido.
+  Tem seis abas: envios por quiz (com as marcas do professor e o botão de desconsiderar um
+  envio), portfólio consolidado por etapa, entregas (PDF e .zip), roteiros do professor, a lista
+  da turma e o calendário do semestre, com exportação `.csv` onde faz sentido.
 
 Os quizzes começaram como HTML avulso que gravava com `window.storage`, uma API que só existe
 dentro dos artefatos do Claude. Publicados no portal, eles não salvavam nada. Por isso saíram de
@@ -172,7 +172,16 @@ avisa que ainda não está ativo.
 
 As regras de nota de SO vivem em `src/content/so/avaliacao.ts`: pesos de cada etapa, valor de cada
 quiz, descarte do pior, prazos e rubricas. A página de avaliação, a página do quiz, o enunciado do
-projeto e o painel leem dali. Mudar um peso ou prazo é mudar esse arquivo.
+projeto e o painel leem dali. Mudar um peso é mudar esse arquivo; os prazos também podem ser
+ajustados pelo painel, como explicado logo abaixo.
+
+**As datas são editáveis pelo painel.** O planejamento do semestre continua no código
+(`encontros.ts`, `avaliacao.ts`, `curso.ts`); a aba **Calendário** de `/professor` grava só os
+ajustes, na tabela `calendario_ajustes`: data de encontro, prazo de quiz, prazo de entrega e dias
+sem aula. `src/lib/ajustes-calendario.ts` aplica a precedência (função pura, com testes) e
+`conteudoVigente(slug)`, em `src/lib/calendario.ts`, é a porta de entrada de toda página e ação
+que lida com data. Salvar regenera o site em instantes, sem deploy; com o banco fora do ar, vale o
+planejamento. Desenho completo em `docs/superpowers/specs/2026-10-06-calendario-editavel-design.md`.
 
 - **Prazo do quiz:** quinta-feira seguinte ao encontro, 23:59 de Horizonte, salvo prazo especial.
   Envio atrasado é aceito e marcado; vale zero no portfólio até o professor aceitar o atraso.
