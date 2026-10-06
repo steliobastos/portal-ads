@@ -53,6 +53,7 @@ export const REGRAS_NOTA: RegrasNota = {
       fase: "parcial",
       nome: "Raio-X parcial",
       secoes: "seções 1 a 4",
+      formato: "pdf",
       prazo: "2026-09-25T23:59:59-03:00",
     },
     {
@@ -60,7 +61,17 @@ export const REGRAS_NOTA: RegrasNota = {
       fase: "final",
       nome: "Raio-X final",
       secoes: "seções 1 a 7",
+      formato: "pdf",
       prazo: "2026-10-01T23:59:59-03:00",
+    },
+    {
+      etapa: 2,
+      fase: "final",
+      nome: "Toolkit",
+      secoes: "scripts, Dockerfile e README",
+      formato: "zip",
+      // Véspera da apresentação (Encontro 17) no cronograma atual.
+      prazo: "2026-12-10T23:59:59-03:00",
     },
   ],
 

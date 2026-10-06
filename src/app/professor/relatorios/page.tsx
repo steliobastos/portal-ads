@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Selo } from "@/components/ui";
 import { conteudoDa, slugsPublicados } from "@/content";
+import { FORMATOS } from "@/lib/arquivo-entrega";
 import { momentoCampus } from "@/lib/datas";
 import { entregasDaFase } from "@/lib/painel-quiz";
 import { Moldura, exigirProfessor } from "../moldura";
@@ -64,7 +65,7 @@ export default async function PaginaRelatorios() {
                       href={`/professor/relatorios/${e.id}`}
                       className="rounded-lg border border-line bg-panel px-3 py-1.5 text-sm text-ink hover:border-primary-dim hover:text-primary"
                     >
-                      Baixar PDF
+                      Baixar {FORMATOS[config.formato].nome}
                     </a>
                   </li>
                 ))}

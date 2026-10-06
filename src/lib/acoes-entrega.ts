@@ -3,26 +3,25 @@
 import { z } from "zod";
 import { conteudoDa } from "@/content";
 import { clienteAdmin } from "@/lib/supabase/servidor";
-import { LIMITE_PDF_BYTES } from "./datas";
+import { FORMATOS, nomeGeradoValido, problemaNoArquivo } from "./arquivo-entrega";
 import { passouDoPrazo } from "./portfolio";
 import { identificar } from "./turma";
 
 /**
- * Entrega do relatório em PDF, em dois tempos.
+ * Entrega de arquivo (relatório em PDF, toolkit em .zip), em dois tempos.
  *
  * O arquivo não passa pelo servidor do portal: uma função da Vercel recusa
  * corpo acima de 4,5 MB, e relatório com prints passa disso fácil. Então:
  *
  * 1. `prepararEntrega` valida a equipe e devolve uma URL assinada, que só
  *    permite gravar **um** caminho, escolhido aqui, no bucket privado;
- * 2. o navegador envia o PDF direto ao Supabase por essa URL;
+ * 2. o navegador envia o arquivo direto ao Supabase por essa URL;
  * 3. `confirmarEntrega` confere que o arquivo chegou e registra a entrega.
  *
- * O bucket só aceita `application/pdf` e até 15 MB — a regra vale mesmo para
- * quem chamar a URL assinada sem passar pelo formulário.
- *
- * (Um arquivo `"use server"` só pode exportar funções assíncronas — por isso o
- * limite de tamanho mora em `datas.ts`, onde o formulário também o enxerga.)
+ * O formato de cada entrega vem de `avaliacao.ts`, e a regra do arquivo, de
+ * `arquivo-entrega.ts` — que o formulário também usa. O bucket só aceita PDF e
+ * .zip, até 15 MB: a regra vale mesmo para quem chamar a URL assinada sem
+ * passar pelo formulário.
  */
 
 const Matricula = z
@@ -90,21 +89,25 @@ export type ResultadoPreparo =
   | { ok: false; erro: string };
 
 export async function prepararEntrega(
-  dados: EntradaEquipe & { tamanho: number; tipo: string },
+  dados: EntradaEquipe & { nome: string; tamanho: number; tipo: string },
 ): Promise<ResultadoPreparo> {
   const lido = await lerEquipe(dados);
   if (!lido.ok) return { ok: false, erro: lido.erro };
-  if (!entregaConfigurada(lido.equipe)) return { ok: false, erro: "Esta entrega não existe." };
-  if (dados.tipo !== "application/pdf") return { ok: false, erro: "Envie o relatório em PDF." };
-  if (!(dados.tamanho > 0 && dados.tamanho <= LIMITE_PDF_BYTES)) {
-    return { ok: false, erro: "O PDF precisa ter até 15 MB. Reduza a resolução dos prints." };
-  }
+  const entrega = entregaConfigurada(lido.equipe);
+  if (!entrega) return { ok: false, erro: "Esta entrega não existe." };
+  const problema = problemaNoArquivo(entrega.formato, {
+    nome: String(dados.nome ?? ""),
+    tipo: String(dados.tipo ?? ""),
+    tamanho: Number(dados.tamanho),
+  });
+  if (problema) return { ok: false, erro: problema };
 
   const supabase = clienteAdmin();
   if (!supabase) return { ok: false, erro: "O envio de relatórios ainda não está ativo. Avise o professor." };
 
   const { disciplina, etapa, fase } = lido.equipe;
-  const caminho = `${disciplina}/etapa-${etapa}/${fase}/${Date.now()}-${crypto.randomUUID().slice(0, 8)}.pdf`;
+  const extensao = FORMATOS[entrega.formato].extensao;
+  const caminho = `${disciplina}/etapa-${etapa}/${fase}/${Date.now()}-${crypto.randomUUID().slice(0, 8)}.${extensao}`;
   const { data, error } = await supabase.storage.from("relatorios").createSignedUploadUrl(caminho);
   if (error) {
     console.error("Falha ao preparar envio de relatório:", error.message);
@@ -131,7 +134,7 @@ export async function confirmarEntrega(
   // `prepararEntrega` gera para esta mesma entrega.
   const pasta = `${disciplina}/etapa-${etapa}/${fase}`;
   const nome = dados.caminho.slice(pasta.length + 1);
-  if (!dados.caminho.startsWith(`${pasta}/`) || !/^\d+-[0-9a-f]{8}\.pdf$/.test(nome)) {
+  if (!dados.caminho.startsWith(`${pasta}/`) || !nomeGeradoValido(entrega.formato, nome)) {
     return { ok: false, erro: "Envio inválido. Recarregue a página e tente de novo." };
   }
 

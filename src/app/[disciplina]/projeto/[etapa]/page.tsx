@@ -144,13 +144,13 @@ export default async function PaginaProjeto({ params }: Props) {
       {entregas.length > 0 && (
         <section id="entrega" className="scroll-mt-24">
           <TituloSecao sobretitulo="Envio" descricao="Um integrante envia pela equipe inteira. Confira nomes e matrículas: é por elas que a nota chega a cada um.">
-            Enviar o relatório
+            {entregas.every((e) => e.formato === "zip") ? "Enviar o código" : "Enviar o relatório"}
           </TituloSecao>
           <Cartao>
             <EntregaRelatorio
               disciplina={slug}
               etapa={etapa}
-              entregas={entregas.map(({ fase, nome, secoes, prazo }) => ({ fase, nome, secoes, prazo }))}
+              entregas={entregas.map(({ fase, nome, secoes, formato, prazo }) => ({ fase, nome, secoes, formato, prazo }))}
             />
           </Cartao>
         </section>

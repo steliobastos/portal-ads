@@ -79,6 +79,9 @@ export type Quiz = {
 
 export type FaseEntrega = "parcial" | "final";
 
+/** O arquivo que uma entrega recebe: relatório em PDF ou código em .zip. */
+export type FormatoEntrega = "pdf" | "zip";
+
 /** Composição da nota de uma disciplina: pesos, portfólio, entregas e rubricas. */
 export type RegrasNota = {
   etapas: {
@@ -96,7 +99,14 @@ export type RegrasNota = {
     /** Prazos que fogem da regra "quinta seguinte ao encontro, 23:59". */
     prazosEspeciais: { encontros: number[]; prazo: string }[];
   };
-  entregas: { etapa: 1 | 2; fase: FaseEntrega; nome: string; secoes: string; prazo: string }[];
+  entregas: {
+    etapa: 1 | 2;
+    fase: FaseEntrega;
+    nome: string;
+    secoes: string;
+    formato: FormatoEntrega;
+    prazo: string;
+  }[];
   /** Como as notas das duas etapas viram média final — regra institucional, não do professor. */
   mediaFinal: {
     /** Pesos da 1ª e da 2ª etapa na média parcial. */

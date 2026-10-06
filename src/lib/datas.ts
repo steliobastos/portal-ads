@@ -57,9 +57,6 @@ export function momentoCampus(iso: string, comDiaDaSemana = false): string {
   return `${semana}${v("day")}/${v("month")} às ${v("hour")}:${v("minute")}`;
 }
 
-/** Tamanho máximo do PDF de relatório — o mesmo configurado no bucket do Supabase. */
-export const LIMITE_PDF_BYTES = 15 * 1024 * 1024;
-
 export type SituacaoEncontro = "concluido" | "proximo" | "futuro";
 
 /**

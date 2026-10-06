@@ -128,7 +128,7 @@ export default async function PaginaEncontro({ params }: Props) {
               href={`/${slug}/projeto/${encontro.marco.etapa}`}
               className="mt-2 inline-block text-sm font-medium text-primary hover:underline"
             >
-              Enunciado, prazos e envio do relatório →
+              Enunciado, prazos e envio →
             </Link>
           ) : (
             <Link

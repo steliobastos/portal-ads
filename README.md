@@ -180,10 +180,14 @@ projeto e o painel leem dali. Mudar um peso ou prazo é mudar esse arquivo.
   em `src/lib/painel-quiz.ts`.
 - **Enunciado do projeto** em `src/content/so/projetos/<etapa>.mdx`, publicado em
   `/so/projeto/<etapa>`, com o formulário de envio do PDF.
-- **Envio do PDF em dois tempos** (`src/lib/acoes-entrega.ts`): o servidor gera uma URL assinada
-  de uso único para um caminho no bucket privado `relatorios`, e o navegador envia direto ao
-  Supabase. Isso contorna o limite de 4,5 MB do corpo das funções da Vercel. Depois o servidor
+- **Envio do arquivo em dois tempos** (`src/lib/acoes-entrega.ts`): o servidor gera uma URL
+  assinada de uso único para um caminho no bucket privado `relatorios`, e o navegador envia direto
+  ao Supabase. Isso contorna o limite de 4,5 MB do corpo das funções da Vercel. Depois o servidor
   confere que o arquivo chegou e registra a entrega. O professor baixa por URL assinada de 60 s.
+- **Formato por entrega:** cada entrega em `avaliacao.ts` declara `formato: "pdf"` (relatórios
+  da 1ª etapa) ou `"zip"` (toolkit da 2ª). A regra do arquivo — tipo, extensão e 15 MB — fica em
+  `src/lib/arquivo-entrega.ts`, usada igualmente pelo formulário e pelo servidor; o bucket repete a
+  regra por conta própria.
 
 #### Configurar o banco (uma vez por ambiente)
 

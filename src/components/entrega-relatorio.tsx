@@ -1,17 +1,19 @@
 "use client";
 
 import { useEffect, useId, useState } from "react";
-import type { FaseEntrega } from "@/content/tipos";
+import type { FaseEntrega, FormatoEntrega } from "@/content/tipos";
 import { confirmarEntrega, prepararEntrega } from "@/lib/acoes-entrega";
-import { LIMITE_PDF_BYTES, momentoCampus } from "@/lib/datas";
+import { FORMATOS, problemaNoArquivo } from "@/lib/arquivo-entrega";
+import { momentoCampus } from "@/lib/datas";
 import { CampoAluno, identificado, useTurma, VAZIO, type Identificacao } from "./identificacao";
 import { cx } from "./ui";
 
-type Entrega = { fase: FaseEntrega; nome: string; secoes: string; prazo: string };
+type Entrega = { fase: FaseEntrega; nome: string; secoes: string; formato: FormatoEntrega; prazo: string };
 type Recibo = { protocolo: number; enviadoEm: string; atrasado: boolean; nome: string };
 
 /**
- * Envio do relatório em PDF. O arquivo vai direto do navegador para o
+ * Envio do arquivo de uma entrega — relatório em PDF ou toolkit em .zip,
+ * conforme `avaliacao.ts`. O arquivo vai direto do navegador para o
  * armazenamento privado, por uma URL assinada que o servidor gera — ver
  * `lib/acoes-entrega.ts` para o porquê dos dois tempos.
  *
@@ -45,6 +47,7 @@ export function EntregaRelatorio({
   }, [entregas]);
 
   const escolhida = entregas.find((e) => e.fase === fase)!;
+  const formato = FORMATOS[escolhida.formato];
   const enviando = etapaEnvio !== null;
 
   function mudarIntegrante(i: number, valor: Identificacao) {
@@ -59,21 +62,22 @@ export function EntregaRelatorio({
     if (!integrantes.every(identificado)) {
       return setErro("Identifique todos os integrantes da equipe.");
     }
-    if (!arquivo) return setErro("Escolha o PDF do relatório.");
-    // Alguns navegadores entregam `type` vazio: vale também a extensão.
-    const ehPdf = arquivo.type === "application/pdf" || /\.pdf$/i.test(arquivo.name);
-    if (!ehPdf) return setErro("O arquivo precisa ser um PDF.");
-    if (arquivo.size > LIMITE_PDF_BYTES) {
-      return setErro("O PDF passa de 15 MB. Reduza a resolução dos prints.");
-    }
+    if (!arquivo) return setErro(`Escolha o arquivo (${formato.nome}).`);
+    const problema = problemaNoArquivo(escolhida.formato, {
+      nome: arquivo.name,
+      tipo: arquivo.type,
+      tamanho: arquivo.size,
+    });
+    if (problema) return setErro(problema);
 
     const dados = { disciplina, etapa, fase, equipe, integrantes };
     try {
       setEtapaEnvio("Conferindo a equipe…");
       const preparo = await prepararEntrega({
         ...dados,
+        nome: arquivo.name,
         tamanho: arquivo.size,
-        tipo: "application/pdf",
+        tipo: arquivo.type,
       });
       if (!preparo.ok) return setErro(preparo.erro);
 
@@ -81,14 +85,16 @@ export function EntregaRelatorio({
       const corpo = new FormData();
       corpo.append("cacheControl", "3600");
       // O bucket confere o tipo declarado aqui, então ele vai sempre explícito.
-      corpo.append("", new Blob([arquivo], { type: "application/pdf" }), "relatorio.pdf");
+      corpo.append("", new Blob([arquivo], { type: formato.tipoEnvio }), `entrega.${formato.extensao}`);
       const resposta = await fetch(preparo.url, {
         method: "PUT",
         body: corpo,
         headers: { "x-upsert": "false" },
       });
       if (!resposta.ok) {
-        return setErro("O arquivo não pôde ser enviado. Confira se é um PDF de até 15 MB e tente de novo.");
+        return setErro(
+          `O arquivo não pôde ser enviado. Confira se é ${formato.artigo} de até 15 MB e tente de novo.`,
+        );
       }
 
       setEtapaEnvio("Registrando a entrega…");
@@ -173,12 +179,12 @@ export function EntregaRelatorio({
 
       <div>
         <label htmlFor={idArquivo} className="block text-sm font-medium text-ink">
-          Relatório em PDF (até 15 MB)
+          Arquivo {formato.nome} (até 15 MB)
         </label>
         <input
           id={idArquivo}
           type="file"
-          accept="application/pdf,.pdf"
+          accept={[...formato.tiposAceitos, `.${formato.extensao}`].join(",")}
           onChange={(e) => setArquivo(e.target.files?.[0] ?? null)}
           className="mt-1.5 block w-full text-sm text-ink-dim file:mr-3 file:rounded-lg file:border file:border-line file:bg-card file:px-3 file:py-2 file:text-sm file:text-ink"
         />

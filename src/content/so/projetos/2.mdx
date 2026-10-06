@@ -1,0 +1,291 @@
+<Abertura sobretitulo="Projeto integrador · 2ª etapa" titulo="Toolkit de automação">
+
+Sua equipe vai construir um **toolkit**: um conjunto de scripts em bash que opera um serviço rodando
+em container. Um script sobe o serviço, outro guarda cópias dos dados, outro vigia se está tudo bem.
+Não é um trabalho sobre automação, é a automação funcionando.
+
+</Abertura>
+
+<Destaque titulo="Por que este projeto" tom="positivo">
+
+É o que uma equipe de sustentação ou DevOps mantém no dia a dia, em escala pequena. E ele junta quase
+tudo do semestre: processos, memória, E/S, containers e shell. Um toolkit que funciona mostra que os
+conceitos foram entendidos, não decorados.
+
+</Destaque>
+
+<Secao sobretitulo="Visão geral" titulo="Como funciona">
+
+<Cartoes>
+  <Cartao rotulo="Equipe" titulo="A mesma da 1ª etapa">
+
+  Salvo ajuste combinado com o professor. Na apresentação, qualquer integrante pode ser chamado a
+  explicar qualquer script.
+
+  </Cartao>
+  <Cartao rotulo="Linguagem" titulo="Bash">
+
+  O objetivo é exercitar shell script, o conteúdo da Unidade VI. O núcleo do trabalho são scripts
+  escritos pela equipe.
+
+  </Cartao>
+  <Cartao rotulo="Entrega" titulo=".zip enviado por esta página">
+
+  Scripts, `Dockerfile` e `README.md` num `.zip` de até 15 MB. O formulário está no fim da página,
+  junto com o prazo. Pode reenviar: vale o envio mais recente.
+
+  </Cartao>
+  <Cartao rotulo="Apresentação" titulo="Encontro 17">
+
+  Cerca de 10 minutos por equipe, com o toolkit rodando ao vivo, incluindo a restauração de um
+  backup.
+
+  </Cartao>
+</Cartoes>
+
+</Secao>
+
+<Secao sobretitulo="O objeto" titulo="O serviço que o toolkit opera">
+
+<Intro>
+
+Cada equipe escolhe um serviço simples para rodar em container. Algumas ideias, ou proponham outra:
+
+</Intro>
+
+<Lista>
+  <Ponto marca="•">Um servidor web servindo páginas HTML (imagem `nginx` ou parecida).</Ponto>
+  <Ponto marca="•">Uma API mínima que responde a requisições, na linguagem que a equipe dominar.</Ponto>
+  <Ponto marca="•">Um banco de dados leve, com dados de exemplo.</Ponto>
+  <Ponto marca="•">Um script que gera arquivos o tempo todo.</Ponto>
+</Lista>
+
+<Intro>
+
+O serviço precisa cumprir três condições: **rodar em container**, **ter algum dado que valha guardar
+em backup** e **ter algum estado que valha vigiar**.
+
+</Intro>
+
+<Dica titulo="Quanto mais simples o serviço, melhor">
+
+O mérito está no toolkit, não no serviço. Um `nginx` servindo três páginas, operado por scripts
+caprichados, vale mais do que um sistema sofisticado operado por scripts frágeis. E podem reaproveitar
+o container da 1ª etapa, se ele cumprir as três condições: vocês já o conhecem.
+
+</Dica>
+
+</Secao>
+
+<Secao sobretitulo="O conteúdo" titulo="Os três scripts obrigatórios">
+
+<Painel titulo="deploy.sh · subir ou atualizar o serviço">
+
+**O que ele faz:** põe no ar a versão nova do serviço, tirando a antiga do caminho.
+
+**No mínimo, ele precisa:**
+
+- conferir as condições antes de agir: a imagem existe? já há um container com esse nome? há espaço
+  em disco?
+- construir a imagem a partir do `Dockerfile` da equipe;
+- derrubar a versão anterior de forma limpa, se houver uma;
+- subir a nova com **limite de memória** (`--memory`) e **volume**, como nos Encontros 10 e 11;
+- conferir se o serviço subiu de verdade e dizer o resultado;
+- terminar com o código de saída certo: 0 se deu certo, diferente de 0 se falhou.
+
+**Pergunta-guia:** se eu rodar este script agora, o serviço termina no ar, e eu fico sabendo se não
+terminar?
+
+</Painel>
+
+<Painel titulo="backup.sh · guardar os dados">
+
+**O que ele faz:** tira uma cópia dos dados do serviço e guarda num lugar seguro.
+
+**No mínimo, ele precisa:**
+
+- copiar os dados que importam, do volume ou do container;
+- compactar a cópia, com a data no nome do arquivo;
+- gravar num lugar separado do original;
+- registrar a operação num log, com data e hora;
+- terminar com o código de saída certo.
+
+**E a restauração:** a equipe precisa **mostrar na apresentação** que consegue trazer o backup de
+volta. Pode ser um `restore.sh` ou um modo do próprio `backup.sh`. Backup que nunca foi restaurado
+não conta como backup.
+
+**Pergunta-guia:** se os dados sumissem agora, daria para trazê-los de volta?
+
+</Painel>
+
+<Painel titulo="monitor.sh · vigiar e avisar">
+
+**O que ele faz:** confere a saúde do serviço e avisa quando algo passa do limite.
+
+**No mínimo, ele precisa:**
+
+- medir pelo menos **três coisas** entre estas: uso de disco, memória do container, se o container
+  está no ar, uso de CPU;
+- comparar cada uma com um limite que se muda num lugar só (uma variável no topo do script);
+- registrar o resultado num log, com data e hora;
+- avisar quando um limite for ultrapassado;
+- terminar com o código de saída certo.
+
+**Pergunta-guia:** se o serviço começasse a dar problema, quanto tempo levaríamos para saber?
+
+</Painel>
+
+</Secao>
+
+<Secao sobretitulo="A régua" titulo="Requisitos que valem para os três scripts">
+
+<Lista>
+  <Ponto marca="1">**Shebang e permissão de execução.** Sem isso o script não roda (Encontro 13).</Ponto>
+  <Ponto marca="2">**Configuração no topo.** Limites e caminhos em variáveis no começo do script, não espalhados pelo código.</Ponto>
+  <Ponto marca="3">**Aspas em volta de toda variável.** Evita que um valor vazio ou com espaço quebre o comando (Encontro 13).</Ponto>
+  <Ponto marca="4">**Uma função de log reaproveitada.** Um só formato, um só lugar para corrigir.</Ponto>
+  <Ponto marca="5">**Código de saída correto.** É o que permite encadear scripts e perceber falhas.</Ponto>
+  <Ponto marca="6">**Caminhos absolutos onde precisar.** Script agendado não roda na pasta que você imagina.</Ponto>
+  <Ponto marca="7">**Pelo menos um script no `cron`.** Automação que depende de alguém lembrar não é automação.</Ponto>
+  <Ponto marca="8">**Container com `--memory` e volume.** Os Encontros 10 e 11 aplicados.</Ponto>
+</Lista>
+
+</Secao>
+
+<Secao sobretitulo="O que entregar" titulo="Entregáveis">
+
+<Lista>
+  <Ponto marca="1">**Os scripts:** `deploy.sh`, `backup.sh`, `monitor.sh` e os demais que a equipe criar.</Ponto>
+  <Ponto marca="2">**O `Dockerfile`** do serviço.</Ponto>
+  <Ponto marca="3">**O `README.md`**, com o que está descrito logo abaixo.</Ponto>
+  <Ponto marca="4">**A demonstração ao vivo** no Encontro 17.</Ponto>
+</Lista>
+
+<Painel titulo="O que o README precisa ter">
+
+- O que o toolkit faz e qual serviço ele opera.
+- Como usar cada script: o comando, os parâmetros e o que esperar.
+- Onde ficam os logs e os backups.
+- Quais limites de monitoramento a equipe escolheu, e **por quê**.
+- Como restaurar um backup.
+- **Conexão com a disciplina:** pelo menos **três conceitos** do semestre, dizendo onde cada um
+  aparece no toolkit e citando a fonte, do mesmo jeito que nos relatórios da 1ª etapa.
+- **Uso de IA:** a seção descrita mais abaixo.
+- **Limitações conhecidas:** o que o toolkit não faz, ou ainda não faz direito.
+
+</Painel>
+
+</Secao>
+
+<Secao sobretitulo="Regra do projeto" titulo="Uso de IA: permitido, com declaração">
+
+<Intro>
+
+Vocês podem usar ferramentas de IA para escrever, revisar ou entender os scripts. Em troca, o
+`README` precisa de uma seção **"Uso de IA"** dizendo:
+
+</Intro>
+
+<Lista>
+  <Ponto marca="•">**qual ferramenta** foi usada;</Ponto>
+  <Ponto marca="•">**para quê**: gerar um script, corrigir um erro, explicar um comando…;</Ponto>
+  <Ponto marca="•">**o que a equipe conferiu ou mudou** no que a IA entregou.</Ponto>
+</Lista>
+
+<Destaque titulo="Quem entrega precisa saber explicar">
+
+Na apresentação, qualquer integrante pode ser chamado a explicar qualquer linha. Código que ninguém da
+equipe sabe explicar não conta como trabalho da equipe.
+
+</Destaque>
+
+<Dica titulo="Se não usaram IA">
+
+Escrevam isso na seção: "Não usamos ferramentas de IA neste projeto." A seção existe nos dois casos.
+
+</Dica>
+
+</Secao>
+
+<Secao sobretitulo="A régua de qualidade" titulo="O que faz um bom toolkit">
+
+<Lista>
+  <Ponto marca="•">**Roda mais de uma vez sem estragar nada.** Rodar o `deploy.sh` duas vezes seguidas funciona: não dá erro e não duplica o container.</Ponto>
+  <Ponto marca="•">**Falha de um jeito claro.** Quando algo dá errado, o script diz o quê. Não morre calado, nem despeja uma mensagem que ninguém entende.</Ponto>
+  <Ponto marca="•">**Não confia de olhos fechados.** Confere antes de agir: a pasta existe? a variável está preenchida? o container está mesmo no ar?</Ponto>
+  <Ponto marca="•">**Tem escolhas justificadas.** Os limites do monitoramento foram pensados, não copiados, e o `README` explica o porquê.</Ponto>
+  <Ponto marca="•">**É honesto sobre o que não faz.** Um `README` que registra limitações vale mais do que um que promete o que o script não entrega.</Ponto>
+</Lista>
+
+</Secao>
+
+<Secao sobretitulo="Calendário" titulo="Do lançamento à apresentação">
+
+<Lista>
+  <Ponto marca="14">**Lançamento:** equipes, escolha do serviço e início do desenvolvimento.</Ponto>
+  <Ponto marca="15">**Desenvolvimento em aula,** com o professor circulando como mentor.</Ponto>
+  <Ponto marca="16">**Finalização e ensaio** da apresentação.</Ponto>
+  <Ponto marca="17">**Apresentação final:** a N2 da 2ª etapa.</Ponto>
+</Lista>
+
+<Dica titulo="A meta do Encontro 15">
+
+Terminem o Encontro 15 com o `deploy.sh` funcionando. Os outros dois scripts dependem de o serviço já
+subir de forma confiável.
+
+</Dica>
+
+</Secao>
+
+<Secao sobretitulo="Forma" titulo="Como montar o .zip">
+
+<Intro>
+
+Uma pasta com tudo que a equipe escreveu, compactada. Logs e backups gerados **ficam de fora**: são
+resultado do toolkit, não parte dele, e fazem o arquivo passar de 15 MB.
+
+</Intro>
+
+<Terminal>{`$ cd ~
+$ zip -r toolkit-equipe.zip toolkit/ -x "toolkit/backups/*" "toolkit/logs/*"
+$ unzip -l toolkit-equipe.zip`}</Terminal>
+
+<Lista>
+  <Ponto marca="•">Se o Ubuntu disser que `zip` não existe, instale com `sudo apt install zip`.</Ponto>
+  <Ponto marca="•">O `unzip -l` lista o que entrou no arquivo. Confiram antes de enviar.</Ponto>
+  <Ponto marca="•">Dá para enviar de dentro da própria VM: abram esta página no navegador do Ubuntu.</Ponto>
+</Lista>
+
+</Secao>
+
+<Secao sobretitulo="Dúvidas comuns" titulo="Perguntas frequentes">
+
+<Painel titulo="Podemos reaproveitar o container da 1ª etapa?">
+
+Sim, se ele cumprir as três condições do serviço. É até recomendável: vocês já o conhecem.
+
+</Painel>
+
+<Painel titulo="E se um script não ficar pronto?">
+
+Entreguem o que existe e registrem no `README` o que faltou e por quê. Honestidade sobre limitações
+conta a favor. Script quebrado apresentado como se funcionasse, não.
+
+</Painel>
+
+<Painel titulo="Podemos usar ferramentas prontas de automação?">
+
+O núcleo do trabalho precisa ser de scripts próprios. Citar no `README` o que usariam numa empresa de
+verdade (Ansible, Kubernetes, um serviço de monitoramento) conta a favor: mostra que vocês conhecem o
+contexto profissional.
+
+</Painel>
+
+<Painel titulo="E se a equipe perder o prazo?">
+
+O formulário continua aceitando o envio, mas ele fica marcado como atrasado. Como o atraso será
+tratado é decisão do professor.
+
+</Painel>
+
+</Secao>
