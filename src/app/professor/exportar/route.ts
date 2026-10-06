@@ -1,4 +1,5 @@
-import { conteudoDa, quizDo } from "@/content";
+import { quizDo } from "@/content";
+import { conteudoVigente } from "@/lib/calendario";
 import { momentoCampus } from "@/lib/datas";
 import { portfolioDaEtapa, situacaoDoEncontro } from "@/lib/painel-quiz";
 import { professorLogado } from "@/lib/supabase/servidor";
@@ -16,7 +17,7 @@ export async function GET(request: Request) {
 
   const url = new URL(request.url);
   const disciplina = url.searchParams.get("disciplina") ?? "";
-  const conteudo = conteudoDa(disciplina);
+  const conteudo = await conteudoVigente(disciplina);
   if (!conteudo) return new Response("Disciplina não encontrada", { status: 404 });
 
   if (url.searchParams.get("tipo") === "portfolio") {

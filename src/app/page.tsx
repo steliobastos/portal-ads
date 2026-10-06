@@ -6,13 +6,14 @@ import { avisosRecentes } from "@/content/avisos";
 import { CATEGORIAS, TOTAL_LINKS } from "@/content/links";
 import { PORTAL } from "@/content/portal";
 import { proximasAulas } from "@/lib/agenda";
+import { conteudosVigentes } from "@/lib/calendario";
 import { dataExtensa, diaEMes } from "@/lib/datas";
 
 /** Revalida de hora em hora: "próxima aula" não pode congelar no build. */
 export const revalidate = 3600;
 
-export default function Home() {
-  const proximas = proximasAulas();
+export default async function Home() {
+  const proximas = proximasAulas(await conteudosVigentes());
   const avisos = avisosRecentes(3);
 
   return (

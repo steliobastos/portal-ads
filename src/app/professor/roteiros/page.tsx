@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Selo } from "@/components/ui";
-import { conteudoDa, slugsPublicados } from "@/content";
+import { slugsPublicados } from "@/content";
+import { conteudoVigente } from "@/lib/calendario";
 import { dataCurta, situacao } from "@/lib/datas";
 import { listarDocumentos, type Documento } from "@/lib/documentos-professor";
 import { Moldura, exigirProfessor } from "../moldura";
@@ -17,7 +18,7 @@ export default async function PaginaRoteiros() {
   const acesso = await exigirProfessor();
   if ("bloqueio" in acesso) return acesso.bloqueio;
 
-  const conteudo = conteudoDa(slugsPublicados()[0])!;
+  const conteudo = (await conteudoVigente(slugsPublicados()[0]))!;
   const documentos = await listarDocumentos();
   const transversais = documentos.filter((d) => d.encontro === null);
   const proximo = conteudo.encontros.find((e) => situacao(e.data) === "futuro");

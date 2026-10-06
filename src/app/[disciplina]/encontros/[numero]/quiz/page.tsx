@@ -3,9 +3,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { FormularioQuiz } from "@/components/quiz";
 import { conteudoDa, quizDo, slugsPublicados } from "@/content";
+import { conteudoVigente } from "@/lib/calendario";
 import { momentoCampus } from "@/lib/datas";
 import { prazoDoQuiz } from "@/lib/portfolio";
 import { quizPublico } from "@/lib/quiz";
+
+/** As datas vêm do calendário vigente: a página se renova sozinha a cada hora. */
+export const revalidate = 3600;
 
 type Props = { params: Promise<{ disciplina: string; numero: string }> };
 
@@ -21,8 +25,8 @@ export function generateStaticParams() {
 /** Só encontros com quiz geram rota — os demais caem no 404. */
 export const dynamicParams = false;
 
-function buscar(slug: string, numero: string) {
-  const conteudo = conteudoDa(slug);
+async function buscar(slug: string, numero: string) {
+  const conteudo = await conteudoVigente(slug);
   const encontro = conteudo?.encontros.find((e) => String(e.numero) === numero);
   const quiz = encontro && quizDo(slug, encontro.numero);
   return conteudo && encontro && quiz ? { conteudo, encontro, quiz } : null;
@@ -30,7 +34,7 @@ function buscar(slug: string, numero: string) {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { disciplina, numero } = await params;
-  const achado = buscar(disciplina, numero);
+  const achado = await buscar(disciplina, numero);
   if (!achado) return {};
   return {
     title: `Quiz da semana · Encontro ${achado.encontro.numero}`,
@@ -40,7 +44,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function PaginaQuiz({ params }: Props) {
   const { disciplina: slug, numero } = await params;
-  const achado = buscar(slug, numero);
+  const achado = await buscar(slug, numero);
   if (!achado) notFound();
 
   const { conteudo, encontro, quiz } = achado;

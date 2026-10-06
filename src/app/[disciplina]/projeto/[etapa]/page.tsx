@@ -3,9 +3,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { EntregaRelatorio } from "@/components/entrega-relatorio";
 import { Cartao, Selo, TituloSecao } from "@/components/ui";
-import { conteudoDa, slugsPublicados } from "@/content";
+import { slugsPublicados } from "@/content";
+import { conteudoVigente } from "@/lib/calendario";
 import { carregarProjeto, carregarRoteiroProjeto } from "@/content/roteiros";
 import { momentoCampus } from "@/lib/datas";
+
+/** As datas vêm do calendário vigente: a página se renova sozinha a cada hora. */
+export const revalidate = 3600;
 
 type Props = { params: Promise<{ disciplina: string; etapa: string }> };
 
@@ -32,7 +36,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function PaginaProjeto({ params }: Props) {
   const { disciplina: slug, etapa: etapaTexto } = await params;
-  const conteudo = conteudoDa(slug);
+  const conteudo = await conteudoVigente(slug);
   const etapa = Number(etapaTexto) as 1 | 2;
   const Enunciado = conteudo && (await carregarProjeto(slug, etapa));
   if (!conteudo || !Enunciado) notFound();

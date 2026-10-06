@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ListaMateriais, materiaisDo } from "@/components/material";
 import { BotaoLink, Cartao, Selo, TituloSecao } from "@/components/ui";
 import { conteudoDa } from "@/content";
+import { conteudoVigente } from "@/lib/calendario";
 import { dataExtensa, paraData } from "@/lib/datas";
 
 /** Revalida de hora em hora para que "próximo encontro" não congele no build. */
@@ -23,7 +24,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function PaginaDisciplina({ params }: Props) {
   const { disciplina: slug } = await params;
-  const conteudo = conteudoDa(slug);
+  const conteudo = await conteudoVigente(slug);
   if (!conteudo) notFound();
 
   const { disciplina, encontros, unidades, avaliacoes, regras } = conteudo;

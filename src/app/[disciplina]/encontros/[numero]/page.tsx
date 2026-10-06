@@ -5,9 +5,13 @@ import { ItemLeitura, LegendaFaixas } from "@/components/leitura";
 import { ListaMateriais, materiaisDo } from "@/components/material";
 import { Cartao, Selo, TituloSecao } from "@/components/ui";
 import { conteudoDa, quizDo, slugsPublicados } from "@/content";
+import { conteudoVigente } from "@/lib/calendario";
 import { carregarProjeto } from "@/content/roteiros";
 import { dataExtensa } from "@/lib/datas";
 import { temRoteiro } from "@/lib/roteiros";
+
+/** As datas vêm do calendário vigente: a página se renova sozinha a cada hora. */
+export const revalidate = 3600;
 
 type Props = { params: Promise<{ disciplina: string; numero: string }> };
 
@@ -20,8 +24,8 @@ export function generateStaticParams() {
   );
 }
 
-function buscar(slug: string, numero: string) {
-  const conteudo = conteudoDa(slug);
+async function buscar(slug: string, numero: string) {
+  const conteudo = await conteudoVigente(slug);
   if (!conteudo) return null;
   const encontro = conteudo.encontros.find((e) => String(e.numero) === numero);
   return encontro ? { conteudo, encontro } : null;
@@ -29,7 +33,7 @@ function buscar(slug: string, numero: string) {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { disciplina, numero } = await params;
-  const achado = buscar(disciplina, numero);
+  const achado = await buscar(disciplina, numero);
   if (!achado) return {};
   const rotulo = achado.encontro.numero === 0 ? "Semana 0" : `Encontro ${achado.encontro.numero}`;
   return {
@@ -40,7 +44,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function PaginaEncontro({ params }: Props) {
   const { disciplina: slug, numero } = await params;
-  const achado = buscar(slug, numero);
+  const achado = await buscar(slug, numero);
   if (!achado) notFound();
 
   const { conteudo, encontro } = achado;

@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Selo, cx } from "@/components/ui";
-import { conteudoDa, slugsPublicados } from "@/content";
+import { slugsPublicados } from "@/content";
+import { conteudoVigente } from "@/lib/calendario";
 import { momentoCampus, situacao } from "@/lib/datas";
 import { situacaoDoEncontro, type SituacaoAluno } from "@/lib/painel-quiz";
 import { prazoDoQuiz } from "@/lib/portfolio";
@@ -27,7 +28,7 @@ export default async function PaginaQuizzes({ searchParams }: Props) {
   const slug = slugsPublicados().includes(params.disciplina ?? "")
     ? params.disciplina!
     : slugsPublicados()[0];
-  const conteudo = conteudoDa(slug)!;
+  const conteudo = (await conteudoVigente(slug))!;
   const comQuiz = conteudo.encontros.filter((e) =>
     conteudo.quizzes.some((q) => q.encontro === e.numero),
   );

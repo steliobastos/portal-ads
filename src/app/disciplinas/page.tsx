@@ -3,6 +3,7 @@ import Link from "next/link";
 import { BotaoLink, Cartao, Selo, TituloSecao } from "@/components/ui";
 import { DISCIPLINAS, conteudoDa } from "@/content";
 import { proximoEncontroDe } from "@/lib/agenda";
+import { conteudosVigentes } from "@/lib/calendario";
 import { dataExtensa } from "@/lib/datas";
 
 export const revalidate = 3600;
@@ -13,7 +14,9 @@ export const metadata: Metadata = {
     "As disciplinas publicadas no portal, com cronograma, material dos encontros e critérios de avaliação.",
 };
 
-export default function PaginaDisciplinas() {
+export default async function PaginaDisciplinas() {
+  const vigentes = new Map((await conteudosVigentes()).map((c) => [c.disciplina.slug, c]));
+
   return (
     <main className="mx-auto w-full max-w-6xl flex-1 px-5 py-12 sm:py-16">
       <header className="mb-12">
@@ -27,8 +30,8 @@ export default function PaginaDisciplinas() {
 
       <ul className="space-y-6">
         {DISCIPLINAS.map((d) => {
-          const conteudo = conteudoDa(d.slug);
-          const proximo = d.ativa ? proximoEncontroDe(d.slug) : null;
+          const conteudo = vigentes.get(d.slug) ?? conteudoDa(d.slug);
+          const proximo = d.ativa ? proximoEncontroDe(vigentes.get(d.slug)) : null;
 
           return (
             <li key={d.slug}>

@@ -1,7 +1,8 @@
 "use server";
 
 import { z } from "zod";
-import { conteudoDa, quizDo } from "@/content";
+import { quizDo } from "@/content";
+import { conteudoVigente } from "./calendario";
 import { clienteAdmin } from "@/lib/supabase/servidor";
 import { passouDoPrazo, prazoDoQuiz } from "./portfolio";
 import { corrigir, problemaNoEnvio, type Correcao } from "./quiz";
@@ -117,7 +118,7 @@ export async function enviarQuiz(
 
   // Envio atrasado é aceito e gravado; o painel mostra a marca e o professor
   // decide se conta. Aqui só se avisa o aluno.
-  const conteudo = conteudoDa(envio.disciplina)!;
+  const conteudo = (await conteudoVigente(envio.disciplina))!;
   return {
     ok: true,
     correcao,

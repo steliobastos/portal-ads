@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { cx } from "@/components/ui";
-import { conteudoDa, slugsPublicados } from "@/content";
+import { slugsPublicados } from "@/content";
+import { conteudoVigente } from "@/lib/calendario";
 import { portfolioDaEtapa } from "@/lib/painel-quiz";
 import type { CelulaPortfolio } from "@/lib/portfolio";
 import { Moldura, exigirProfessor } from "../moldura";
@@ -23,7 +24,7 @@ export default async function PaginaPortfolio({ searchParams }: Props) {
   const slug = slugsPublicados().includes(params.disciplina ?? "")
     ? params.disciplina!
     : slugsPublicados()[0];
-  const conteudo = conteudoDa(slug)!;
+  const conteudo = (await conteudoVigente(slug))!;
   const etapa = params.etapa === "2" ? 2 : 1;
   const regras = conteudo.regrasNota.portfolio;
   const peso = conteudo.regrasNota.etapas

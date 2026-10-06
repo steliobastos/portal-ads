@@ -3,8 +3,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Cartao, Selo, TituloSecao } from "@/components/ui";
 import { conteudoDa } from "@/content";
+import { conteudoVigente } from "@/lib/calendario";
 import { carregarProjeto } from "@/content/roteiros";
 import { dataExtensa, momentoCampus } from "@/lib/datas";
+
+/** As datas vêm do calendário vigente: a página se renova sozinha a cada hora. */
+export const revalidate = 3600;
 
 type Props = { params: Promise<{ disciplina: string }> };
 
@@ -36,7 +40,7 @@ const decimal = (n: number) => n.toFixed(1).replace(".", ",");
 
 export default async function PaginaAvaliacao({ params }: Props) {
   const { disciplina: slug } = await params;
-  const conteudo = conteudoDa(slug);
+  const conteudo = await conteudoVigente(slug);
   if (!conteudo) notFound();
 
   const { regrasNota } = conteudo;
@@ -216,10 +220,11 @@ export default async function PaginaAvaliacao({ params }: Props) {
                 Cada quiz fica aberto até a quinta-feira seguinte ao encontro, às 23:59, véspera da
                 próxima aula. O prazo aparece na página de cada quiz.
                 {portfolio.prazosEspeciais.map((p) => (
-                  <span key={p.prazo}>
+                  <span key={`${p.encontros.join("-")}-${p.prazo}`}>
                     {" "}
-                    Excepcionalmente, os quizzes dos Encontros {p.encontros[0]} a{" "}
-                    {p.encontros[p.encontros.length - 1]} ficam abertos até{" "}
+                    {p.encontros.length === 1
+                      ? `Excepcionalmente, o quiz do Encontro ${p.encontros[0]} fica aberto até `
+                      : `Excepcionalmente, os quizzes dos Encontros ${p.encontros[0]} a ${p.encontros[p.encontros.length - 1]} ficam abertos até `}
                     {momentoCampus(p.prazo, true)}.
                   </span>
                 ))}{" "}

@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { conteudoDa } from "@/content";
+import { conteudoVigente } from "./calendario";
 import { clienteAdmin } from "@/lib/supabase/servidor";
 import { FORMATOS, nomeGeradoValido, problemaNoArquivo } from "./arquivo-entrega";
 import { passouDoPrazo } from "./portfolio";
@@ -49,8 +49,8 @@ type EntradaEquipe = Omit<z.input<typeof Equipe>, "integrantes"> & {
   integrantes: { alunoId?: string | null; nome?: string; matricula?: string }[];
 };
 
-function entregaConfigurada(dados: z.output<typeof Equipe>) {
-  return conteudoDa(dados.disciplina)?.regrasNota.entregas.find(
+async function entregaConfigurada(dados: z.output<typeof Equipe>) {
+  return (await conteudoVigente(dados.disciplina))?.regrasNota.entregas.find(
     (e) => e.etapa === dados.etapa && e.fase === dados.fase,
   );
 }
@@ -93,7 +93,7 @@ export async function prepararEntrega(
 ): Promise<ResultadoPreparo> {
   const lido = await lerEquipe(dados);
   if (!lido.ok) return { ok: false, erro: lido.erro };
-  const entrega = entregaConfigurada(lido.equipe);
+  const entrega = await entregaConfigurada(lido.equipe);
   if (!entrega) return { ok: false, erro: "Esta entrega não existe." };
   const problema = problemaNoArquivo(entrega.formato, {
     nome: String(dados.nome ?? ""),
@@ -125,7 +125,7 @@ export async function confirmarEntrega(
 ): Promise<ResultadoEntrega> {
   const lido = await lerEquipe(dados);
   if (!lido.ok) return { ok: false, erro: lido.erro };
-  const entrega = entregaConfigurada(lido.equipe);
+  const entrega = await entregaConfigurada(lido.equipe);
   if (!entrega) return { ok: false, erro: "Esta entrega não existe." };
 
   const { disciplina, etapa, fase, equipe, integrantes } = lido.equipe;

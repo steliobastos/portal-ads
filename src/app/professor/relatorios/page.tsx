@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Selo } from "@/components/ui";
-import { conteudoDa, slugsPublicados } from "@/content";
+import { slugsPublicados } from "@/content";
+import { conteudoVigente } from "@/lib/calendario";
 import { FORMATOS } from "@/lib/arquivo-entrega";
 import { momentoCampus } from "@/lib/datas";
 import { entregasDaFase } from "@/lib/painel-quiz";
@@ -18,7 +19,7 @@ export default async function PaginaRelatorios() {
   if ("bloqueio" in acesso) return acesso.bloqueio;
 
   const slug = slugsPublicados()[0];
-  const conteudo = conteudoDa(slug)!;
+  const conteudo = (await conteudoVigente(slug))!;
   const entregas = await Promise.all(
     conteudo.regrasNota.entregas.map(async (config) => ({
       config,
