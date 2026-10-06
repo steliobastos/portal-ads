@@ -130,3 +130,73 @@ export function aplicarAjustes(conteudo: ConteudoDisciplina, ajustes: AjusteCale
     },
   };
 }
+
+/** Fuso do campus. Fortaleza não tem horário de verão, então o deslocamento é fixo. */
+const FUSO = "-03:00";
+
+/**
+ * Data e hora do formulário → instante de Horizonte. Vale até o fim do minuto
+ * (":59"), como os prazos do código ("23:59:59"). Aceita a hora com segundos,
+ * que alguns navegadores enviam, e os descarta.
+ */
+export function prazoDeCampos(data: string, hora: string): string | null {
+  const h = /^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/.exec(hora);
+  if (!dataValida(data) || !h) return null;
+  return `${data}T${h[1]}:${h[2]}:59${FUSO}`;
+}
+
+/** Instante → data e hora de Horizonte, para preencher o formulário. */
+export function camposDoPrazo(prazo: string): { data: string; hora: string } {
+  const local = new Date(Date.parse(prazo) - 3 * 60 * 60 * 1000).toISOString();
+  return { data: local.slice(0, 10), hora: local.slice(11, 16) };
+}
+
+export type EntradaAjuste = {
+  tipo: string;
+  chave: string;
+  data?: string;
+  hora?: string;
+  motivo?: string;
+  ocultar?: boolean;
+};
+
+type Validado = { ok: true; ajuste: AjusteCalendario } | { ok: false; erro: string };
+
+/**
+ * O que a aba Calendário enviou vira um ajuste — ou o motivo da recusa.
+ * `conteudo` é sempre o planejamento do código (`conteudoDa`), nunca o vigente.
+ */
+export function validarAjuste(conteudo: ConteudoDisciplina, e: EntradaAjuste): Validado {
+  const erro = (mensagem: string): Validado => ({ ok: false, erro: mensagem });
+
+  switch (e.tipo) {
+    case "encontro": {
+      if (!conteudo.encontros.some((x) => String(x.numero) === e.chave)) return erro("Encontro desconhecido.");
+      if (!dataValida(e.data ?? "")) return erro("Data inválida.");
+      return { ok: true, ajuste: { tipo: "encontro", chave: e.chave, valor: e.data! } };
+    }
+    case "prazo-quiz":
+    case "prazo-entrega": {
+      const existe =
+        e.tipo === "prazo-quiz"
+          ? conteudo.quizzes.some((q) => String(q.encontro) === e.chave)
+          : conteudo.regrasNota.entregas.some((x) => chaveDaEntrega(x) === e.chave);
+      if (!existe) return erro(e.tipo === "prazo-quiz" ? "Este encontro não tem quiz." : "Entrega desconhecida.");
+      const prazo = prazoDeCampos(e.data ?? "", e.hora ?? "");
+      if (!prazo) return erro("Data ou hora inválida.");
+      return { ok: true, ajuste: { tipo: e.tipo, chave: e.chave, valor: prazo } };
+    }
+    case "sem-aula": {
+      if (!dataValida(e.chave)) return erro("Data inválida.");
+      if (e.ocultar) {
+        if (!conteudo.semAula.some((d) => d.data === e.chave)) return erro("Só dá para ocultar um dia do planejamento.");
+        return { ok: true, ajuste: { tipo: "sem-aula", chave: e.chave, valor: null } };
+      }
+      const motivo = (e.motivo ?? "").replace(/\s+/g, " ").trim();
+      if (motivo.length < 3 || motivo.length > 120) return erro("Informe o motivo (de 3 a 120 caracteres).");
+      return { ok: true, ajuste: { tipo: "sem-aula", chave: e.chave, valor: motivo } };
+    }
+    default:
+      return erro("Tipo de ajuste desconhecido.");
+  }
+}
