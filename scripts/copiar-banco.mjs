@@ -27,6 +27,7 @@ const TABELAS = [
   ["entregas_relatorio", "id"],
   ["avaliacoes_portfolio", "atualizado_em"],
   ["turma_alunos", "nome"],
+  ["calendario_ajustes", "tipo"],
 ];
 const BUCKET = "relatorios";
 const POR_PAGINA = 1000;
